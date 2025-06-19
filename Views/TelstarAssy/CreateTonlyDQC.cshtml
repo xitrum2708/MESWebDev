@@ -1,0 +1,164 @@
+﻿@using MESWebDev.Models.TELSTAR.VM
+@using MESWebDev.Services
+@inject ITranslationService T
+@model EASTECH_OQC_VM
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] =T.GetTranslation("TONLYDQCCheck",languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var recent = ViewBag.RecentEntries as List<MESWebDev.Models.TELSTAR.TONLY_DQC>;
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left column: input form -->
+            <div class="col-md-2">
+                <h4>@T.GetTranslation("TONLYDQCCheck", languageCode)</h4>
+                <form id="dqcForm" method="post">
+                    <div class="form-group">
+                        <label for="QRCode">@T.GetTranslation("QRCode", languageCode)</label>
+                        <input type="text" name="QRCode" class="form-control" id="QRCode" autofocus required />
+                    </div>
+                    <div class="form-group">
+                        <label for="Status">@T.GetTranslation("Status",languageCode)</label>
+                        <select name="Status" class="form-select" id="Status">
+                            <option value="OK">OK</option>
+                            <option value="NG">NG</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="remarkDiv" style="display:none">
+                        <label for="Remark">@T.GetTranslation("Remark",languageCode)</label>
+                        <textarea name="Remark" class="form-control" id="Remark"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-2">@T.GetTranslation("Save",languageCode)</button>
+                </form>
+                <div id="message" class="mt-3"></div>
+            </div>
+
+            <!-- Right column: scanned result -->
+            <div class="col-md-10">
+                <h4>@T.GetTranslation("RecentEntries", languageCode)</h4>
+                <h5 id="totalCount">@T.GetTranslation("TotalRecords", languageCode): @(recent?.Count ?? 0)</h5>
+                <table class="table table-bordered table-sm" style="margin:0;">
+                    <thead class="thead-light" style="position: sticky; top:0; z-index:1; background-color:white;">
+                        <tr>
+                            <th>QRCode</th>
+                            <th>Status</th>
+                            <th>Remark</th>
+                            <th>Date</th>
+                            <th>Model</th>
+                            <th>LotNo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultTable">
+                        @if (recent != null)
+                        {
+                            foreach (var item in recent)
+                            {
+                                <tr>
+                                    <td>@item.QRCode</td>
+                                    <td>@item.Status</td>
+                                    <td>@item.Remark</td>
+                                    <td>@item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                    <td>@item.Model</td>
+                                    <td>@item.LotNo</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#Status').change(function () {
+                $('#remarkDiv').toggle($(this).val() === 'NG');
+            });
+
+            $('#QRCode').keypress(function (e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                     //$('#Status').focus();
+                    $('#dqcForm').submit();
+                }
+            });
+
+            $('#dqcForm').submit(function (e) {
+                e.preventDefault();
+                console.log("Data:" , $(this).serialize());
+                 const status = $('#Status').val();
+                 const remark = $('#Remark').val();
+
+                 if (status === 'NG' && !remark.trim()) {
+                     toastr.error('@T.GetTranslation("RemarkForNG",languageCode)','',{
+                         closeButton: true,
+                         progressBar: true,
+                         timeOut: 5000
+                         });
+                     //toastr.error('Please enter a remark for NG status');
+                     return;
+            }
+                $.ajax({
+                    
+                    url: '/TelstarAssy/CreateTonlyDQC',
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    success: function (res) {
+                        toastr.success(res.message,'',{
+                            closeButton: true,
+                             progressBar: true,
+                             timeOut: 1000
+                        });                        
+                        $('#QRCode').val('').focus();
+                        $('#Remark').val('');
+                        $('#Status').val('OK');
+                        $('#remarkDiv').hide();
+
+                        // Prepend new entry to result table
+                        $('#resultTable').prepend(`
+                        <tr>
+                            <td>${res.data.qrCode}</td>
+                            <td>${res.data.status}</td>
+                            <td>${res.data.remark || ''}</td>
+                            <td>${res.data.createdDate}</td>
+                            <td>${res.data.model}</td>
+                            <td>${res.data.lotNo}</td>
+                        </tr>`
+                        );
+                        if (!res.isUpdate) {
+                                let currentTotal = parseInt($('#totalCount').text().match(/\d+/)) || 0;
+                                $('#totalCount').text('Total Records: ' + (currentTotal + 1));
+                            }
+                        // let currentTotal = parseInt($('#totalCount').text().match(/\d+/)) || 0;
+                        // $('#totalCount').text('Total Records: ' + (currentTotal + 1));
+                    },
+                    error: function (xhr) {
+                        $('#QRCode').val('').focus();
+                        let errorMsg = xhr.responseText;
+                             // Optional: better handling if server returns JSON
+                        try {
+                            const json = JSON.parse(xhr.responseText);
+                            errorMsg = json.message || xhr.responseText;
+                        } catch (err) {
+                            // Keep as text
+                        }
+                         toastr.error(errorMsg||'Error Occur:','',{
+                             closeButton: true,
+                             progressBar: true,
+                             timeOut: 1000
+                         });
+                    }
+                });
+            });
+        });
+    </script>
+}

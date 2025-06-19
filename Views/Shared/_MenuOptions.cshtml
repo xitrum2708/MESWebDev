@@ -1,0 +1,18 @@
+﻿@using MESWebDev.Models.VM
+@model (List<MenuViewModel> Menus, int Level)
+
+@{
+    var menus = Model.Menus;
+    var level = Model.Level;
+
+    foreach (var menu in menus)
+    {
+        var indent = new string('—', level) + (level > 0 ? " " : "");
+        <option value="@menu.MenuId">@indent@menu.Title</option>
+
+        if (menu.Children.Any())
+        {
+            await Html.RenderPartialAsync("_MenuOptions", (Menus: menu.Children, Level: level + 1));
+        }
+    }
+}

@@ -1,0 +1,44 @@
+﻿@model List<dynamic>
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Sidebar {
+    @foreach (var menu in Model)
+    {
+        <li class="nav-item">
+            <a href="@menu.Url" class="nav-link">
+                <i class="nav-icon fas fa-circle"></i>
+                <p>@menu.Title</p>
+            </a>
+        </li>
+    }
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Dashboard</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Welcome to the Dashboard</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Select a menu item from the sidebar to get started.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,71 @@
+﻿@using MESWebDev.Models.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+
+@model PermissionViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("CreatePermission", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+@* <div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">         
+            <div class="col-sm-12">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Language")">@TranslationService.GetTranslation("PermissionManagement", languageCode)</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("CreatePermission", languageCode)</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div> *@
+}
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("AddNewLanguage", languageCode)</h3>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="Create" method="post">
+                            @Html.AntiForgeryToken()
+                            @* <div class="form-group">
+                                <label asp-for="PermissionKey">@TranslationService.GetTranslation("PermissionKey", languageCode)</label>
+                                <input asp-for="PermissionKey" class="form-control" />
+                                <span asp-validation-for="PermissionKey" class="text-danger"></span>
+                            </div> *@
+                            <div class="form-group">
+                                <label asp-for="PermissionKey">@TranslationService.GetTranslation("PermissionKey", languageCode)</label>
+                                <input asp-for="PermissionKey" class="form-control" data-val="true" data-val-remote=@TranslationService.GetTranslation("ThisPermissionKeyalreadyexists", languageCode) data-val-remote-url="@Url.Action("CheckPermissionKey", "Permission")" />
+                                <span asp-validation-for="PermissionKey" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Description">@TranslationService.GetTranslation("PermissionDescription", languageCode)</label>
+                                <input asp-for="Description" class="form-control" />
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>                            
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Create", languageCode)</button>
+                                <a asp-action="Index" class="btn btn-secondary">@TranslationService.GetTranslation("BackToList", languageCode)</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

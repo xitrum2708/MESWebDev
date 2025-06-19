@@ -1,0 +1,23 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+
+@model IPagedResult
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    var controller = ViewContext.RouteData.Values["controller"].ToString();
+    var action = ViewContext.RouteData.Values["action"].ToString();
+}
+
+<form asp-action="@action" asp-controller="@controller" method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="searchTerm" class="form-control" placeholder="@TranslationService.GetTranslation("Search", languageCode)" value="@Model.SearchTerm" />
+        <div class="input-group-append" style="padding-left:5px;">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> @TranslationService.GetTranslation("Search", languageCode)
+            </button>
+        </div>
+    </div>
+    <input type="hidden" name="period" value="@ViewBag.Period" />
+</form>

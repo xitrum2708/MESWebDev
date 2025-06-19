@@ -1,0 +1,370 @@
+﻿@using MESWebDev.Services
+@model MESWebDev.Models.UVASSY.VM.ReportVM
+@inject ITranslationService T
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = T.GetTranslation("KPIReport",languageCode);    
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<div class="app-content">
+    <div class="container-fluid">        
+        <form method="post" onsubmit="showLoadingOverlay()">
+            @Html.AntiForgeryToken()
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="fromDate">@T.GetTranslation("StartDate", languageCode)</label>
+                    <input asp-for="fromDate" class="form-control" type="date"
+                           value="@(Model.fromDate.HasValue ? Model.fromDate.Value.ToString("yyyy-MM-dd") : "")" />
+                </div>
+                <div class="col-md-3">
+                    <label for="toDate">@T.GetTranslation("EndDate", languageCode)</label>
+                    <input asp-for="toDate" class="form-control" type="date"
+                           value="@(Model.toDate.HasValue ? Model.toDate.Value.ToString("yyyy-MM-dd") : "")" />
+                </div>               
+                <div class="col-md-3 align-self-end">
+                    <button type="submit" class="btn btn-primary">@T.GetTranslation("Search", languageCode)</button>
+                </div>
+            </div>
+        </form>
+
+        <hr />
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="home-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#part-tab-pane" 
+                    type="button" r
+                    ole="tab" 
+                    aria-controls="part-tab-pane"
+                        aria-selected="true">
+                    @T.GetTranslation("PartError", languageCode)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="profile-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#error-tab-pane" 
+                    type="button" 
+                    role="tab" 
+                    aria-controls="error-tab-pane" 
+                    aria-selected="false">@T.GetTranslation("ErrorType",languageCode)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="contact-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#dept-tab-pane" 
+                    type="button" 
+                    role="tab" 
+                    aria-controls="dept-tab-pane"
+                        aria-selected="false">
+                    @T.GetTranslation("DeptError", languageCode)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="disabled-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#disabled-tab-pane" 
+                    type="button" 
+                    role="tab" 
+                    aria-controls="disabled-tab-pane"
+                        aria-selected="false">
+                    @T.GetTranslation("Download", languageCode)
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content mt-3" id="reportTabsContent">
+            @if (Model.PartDetailTable.Rows.Count > 0)
+            {
+                <div class="tab-pane fade show active" 
+                    id="part-tab-pane" 
+                    role="tabpanel"
+                    aria-labelledby="home-tab">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="partChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-bordered">
+                                    <thead class="thead-light" style="position: sticky; top: 0; z-index: 1; background-color: white;">
+                                        <tr>
+                                            @foreach (System.Data.DataColumn column in Model.PartDetailTable.Columns)
+                                            {
+                                                <th>@column.ColumnName</th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (System.Data.DataRow row in Model.PartDetailTable.Rows)
+                                        {
+                                            <tr>
+                                                @for (int i = 0; i < row.ItemArray.Length; i++)
+                                                {
+                                                    var value = row.ItemArray[i];
+                                                    var column = Model.PartDetailTable.Columns[i];
+                                                    if (column.ColumnName == "NGRate")
+                                                    {
+                                                        <td>@String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", value)</td>
+                                                    }
+                                                    else if (value is int || value is long || value is decimal)
+                                                    {
+                                                        <td>@String.Format("{0:#,0}", value)</td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td>@value</td>
+                                                    }
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            @if (Model.ErrorDetailTable.Rows.Count > 0)
+            {
+                <div class="tab-pane fade show"
+                    id="error-tab-pane" 
+                    role="tabpanel"
+                    aria-labelledby="profile-tab">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="errorChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-bordered">
+                                    <thead class="thead-light" style="position: sticky; top: 0; z-index: 1; background-color: white;">
+                                        <tr>
+                                            @foreach (System.Data.DataColumn column in Model.ErrorDetailTable.Columns)
+                                            {
+                                                <th>@column.ColumnName</th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (System.Data.DataRow row in Model.ErrorDetailTable.Rows)
+                                        {
+                                            <tr>
+                                                @for (int i = 0; i < row.ItemArray.Length; i++)
+                                                {
+                                                    var value = row.ItemArray[i];
+                                                    var column = Model.ErrorDetailTable.Columns[i];
+                                                    if (column.ColumnName == "NGRate")
+                                                    {
+                                                        <td>@String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", value)</td>
+                                                    }
+                                                    else if (value is int || value is long || value is decimal)
+                                                    {
+                                                        <td>@String.Format("{0:#,0}", value)</td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td>@value</td>
+                                                    }
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            @if (Model.DeptDetailTable.Rows.Count > 0)
+            {
+                <div class="tab-pane fade show" 
+                    id="dept-tab-pane" 
+                    role="tabpanel"
+                     aria-labelledby="contact-tab">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="deptChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-bordered">
+                                    <thead class="thead-light" style="position: sticky; top: 0; z-index: 1; background-color: white;">
+                                        <tr>
+                                            @foreach (System.Data.DataColumn column in Model.DeptDetailTable.Columns)
+                                            {
+                                                <th>@column.ColumnName</th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (System.Data.DataRow row in Model.DeptDetailTable.Rows)
+                                        {
+                                            <tr>
+                                                @for (int i = 0; i < row.ItemArray.Length; i++)
+                                                {
+                                                    var value = row.ItemArray[i];
+                                                    var column = Model.DeptDetailTable.Columns[i];
+                                                    if (column.ColumnName == "NGRate")
+                                                    {
+                                                        <td>@String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", value)</td>
+                                                    }
+                                                    else if (value is int || value is long || value is decimal)
+                                                    {
+                                                        <td>@String.Format("{0:#,0}", value)</td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td>@value</td>
+                                                    }
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+     
+            @if (Model.ExportTopError.Rows.Count > 0)
+            {
+                <div class="tab-pane fade show"
+                     id="disabled-tab-pane"
+                     role="tabpanel"
+                     aria-labelledby="disabled-tab">
+                    <div class="row">
+                        <form asp-controller="RepairReport" asp-action="ExportTopErrorReport" method="post" onsubmit="fillExportDates()">
+                            <input type="hidden" id="exportFromDate" name="fromDate" />
+                            <input type="hidden" id="exportToDate" name="toDate" />
+                            <button type="submit" class="btn btn-success mb-2">Export to Excel</button>
+                        </form>
+                        <div class="col-md-12">
+                            <div style="max-height: 600px; overflow-y: auto;">
+                                <table class="table table-bordered">
+                                    <thead class="thead-light" style="position: sticky; top: 0; z-index: 1; background-color: white;">
+                                        <tr>
+                                            @foreach (System.Data.DataColumn column in Model.ExportTopError.Columns)
+                                            {
+                                                <th>@column.ColumnName</th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (System.Data.DataRow row in Model.ExportTopError.Rows)
+                                        {
+                                            <tr>
+                                                @for (int i = 0; i < row.ItemArray.Length; i++)
+                                                {
+                                                    var value = row.ItemArray[i];                                                    
+                                                     <td>@value</td>                                                    
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>        
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/chart.js"></script>
+    <script src="~/js/chartjs-plugin-datalabels.js"></script>
+    <script>
+        function renderChart(chartId, labels, inputData, ngData, rateData) {
+            const chartElement  = document.getElementById(chartId);
+            if(!chartElement) {
+                //console.error(`Chart element with ID ${chartId} not found.`);
+                return;
+            }
+            new Chart(document.getElementById(chartId), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Input',
+                            data: inputData,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                        },
+                        {
+                            label: 'NG',
+                            data: ngData,
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)'
+                        },
+                        {
+                            label: 'NG Rate',
+                            type: 'line',
+                            data: rateData,
+                            borderColor: 'rgba(255, 206, 86, 1)',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.raw.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => value.toLocaleString()
+                            }
+                        },
+                        y1: {
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: { drawOnChartArea: false },
+                            ticks: {
+                                callback: value => value.toLocaleString()
+                            }
+                        }
+                    }
+                },
+                 plugins: [ChartDataLabels]
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            renderChart('partChart', @Html.Raw(Json.Serialize(Model.PartData.Select(x => x.Partcode))),
+        @Html.Raw(Json.Serialize(Model.PartData.Select(x => x.InputQty))),
+        @Html.Raw(Json.Serialize(Model.PartData.Select(x => x.NGQty))),
+        @Html.Raw(Json.Serialize(Model.PartData.Select(x => x.NGRate))));
+
+            renderChart('errorChart', @Html.Raw(Json.Serialize(Model.ErrorData.Select(x => x.Errortype))),
+        @Html.Raw(Json.Serialize(Model.ErrorData.Select(x => x.InputQty))),
+        @Html.Raw(Json.Serialize(Model.ErrorData.Select(x => x.NGQty))),
+        @Html.Raw(Json.Serialize(Model.ErrorData.Select(x => x.NGRate))));
+
+            renderChart('deptChart', @Html.Raw(Json.Serialize(Model.DeptData.Select(x => x.DeptError))),
+        @Html.Raw(Json.Serialize(Model.DeptData.Select(x => x.InputQty))),
+        @Html.Raw(Json.Serialize(Model.DeptData.Select(x => x.NGQty))),
+        @Html.Raw(Json.Serialize(Model.DeptData.Select(x => x.NGRate))));
+        });
+    </script>
+    <script>
+        function fillExportDates() {
+            document.getElementById("exportFromDate").value = document.getElementById("fromDate").value;
+            document.getElementById("exportToDate").value = document.getElementById("toDate").value;
+        }
+    </script>
+}

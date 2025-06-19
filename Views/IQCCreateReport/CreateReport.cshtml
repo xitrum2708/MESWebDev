@@ -1,0 +1,190 @@
+﻿@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model IQCReportCreateVM
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("ListOfIQCReport", languageCode)</h3>
+                        <div class="card-tools">
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Toast lỗi hiển thị ở giữa trên -->
+                        <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 9999">
+                            <div id="errorToast" class="toast text-white bg-danger border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+                                <div class="d-flex">
+                                    <div class="toast-body" id="toastMessage">
+                                        Lỗi sẽ hiện tại đây...
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Success Toast -->
+                        <div class="mb-3">
+                            <label>Scan Lottag</label>
+                            <input type="text" id="lottagInput" class="form-control" placeholder="Scan barcode..." autofocus />
+                        </div>                   
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" id="scannedLottagTable">
+                                <thead>
+                                    <tr>
+                                        <th>@TranslationService.GetTranslation("LottagId", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("yusen_invno", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("vender_code", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("vender_name", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("partcode", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("partname", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("purchase_order", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("invoice", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("orgcount_pono", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("orgqty", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Action", languageCode)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>                                
+                                </tbody>
+                            </table>
+                            
+                            <form method="post" asp-action="SaveReport">
+                                <select asp-for="SelectedGroupId" class="form-select mt-3" id="inspectionGroupSelect" asp-items="@(new SelectList(Model.AvailableGroups, "InspectionGroupID", "GroupName"))">
+                                    <option value="">-- Chọn nhóm kiểm --</option>
+                                </select>
+                                <div id="ScannedLottagsInputs"></div> <!-- Thay vì 1 input -->
+                                @* <input type="hidden" id="ScannedLottagsInput" name="ScannedLottags" value="${LottagId}" /> *@
+                                <button type="submit" class="btn btn-primary mt-3" id="saveButton" disabled>Lưu báo cáo</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+ <script>
+        const groupSelect = document.getElementById("inspectionGroupSelect");
+        const saveBtn = document.getElementById("saveButton");
+            groupSelect.addEventListener("change", function () {
+            saveBtn.disabled = !this.value;
+        });
+
+        // Nếu user dùng trình duyệt back thì check lại giá trị đã chọn
+        window.addEventListener('DOMContentLoaded', function () {
+            saveBtn.disabled = !groupSelect.value;
+        });
+
+        const lottagInput = document.getElementById("lottagInput");       
+        console.log(lottagInput);
+        let scannedLottags = [];
+         lottagInput.addEventListener("keypress", async function (e)  {
+                if (e.key === "Enter") {
+                    e.preventDefault(); // Prevent form submission
+                    const LottagId = this.value.trim();
+                    if (!LottagId || scannedLottags.includes(LottagId)) return;
+                    const resp = await fetch("/IQCCreateReport/ScanLottag", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(LottagId)
+                    });
+                    const result = await resp.json();
+                    if (result.status === "ok") {
+                        const currentVendor = result.data.vender_code;
+                        const currentPart = result.data.partcode;
+
+                        if (scannedLottags.length > 0) {
+                            const firstRow = document.querySelector("#scannedLottagTable tbody tr");
+                            const existingVendor = firstRow.children[2].innerText.trim(); // cột vender_code
+                            const existingPart = firstRow.children[4].innerText.trim();   // cột partcode
+
+                            if (existingVendor !== currentVendor || existingPart !== currentPart) {
+                                document.getElementById("toastMessage").innerText = "Không thể thêm lottag có VendorCode hoặc PartCode khác với các lottag trước đó.";
+                                const toast = new bootstrap.Toast(document.getElementById("errorToast"));
+                                toast.show();
+                                lottagInput.focus();
+                                lottagInput.select();
+                                return;
+                            }
+                        }
+                        scannedLottags.push(LottagId);
+                        const row = `<tr>
+                                <td>${LottagId}</td>
+                                <td>${result.data.yusen_invno}</td>
+                                <td>${result.data.vender_code}</td>
+                                <td>${result.data.vender_name}</td>
+                                <td>${result.data.partcode}</td>
+                                <td>${result.data.partname}</td>
+                                <td>${result.data.purchase_order}</td>
+                                <td>${result.data.invoice}</td>
+                                <td>${result.data.orgcount_pono}</td>
+                                <td>${result.data.orgqty}</td>
+                                <td><button type="button" onclick="removeLottag('${LottagId}')" class="btn btn-danger btn-sm">Xóa</button></td>
+                         </tr>`;
+                        document.querySelector("#scannedLottagTable tbody").insertAdjacentHTML("beforeend", row);
+                        updateHidden();
+                        lottagInput.value = "";
+                    }
+                    else if (result.status === "resume")
+                    {
+                             // Chuyển hướng hoặc hiển thị nút mở tiếp báo cáo đang xử lý
+                        window.location.href = `/IQCCreateReport/FillItems?reportId=${result.reportId}`;
+                        return;
+                    }
+                    else {
+                            document.getElementById("toastMessage").innerText = result.message;
+                            const toast = new bootstrap.Toast(document.getElementById("errorToast"));
+                            toast.show();
+                            lottagInput.focus();
+                            lottagInput.select();
+                    }
+               }            
+         });
+        
+         function removeLottag(lottag) {
+            scannedLottags = scannedLottags.filter(x => x !== lottag);
+            document.querySelector(`#scannedLottagTable tbody`).innerHTML =
+                scannedLottags.map(tag => `<tr>
+                <td>${tag}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>               
+                <td><button onclick="removeLottag('${tag}')" class="btn btn-danger btn-sm">Xóa</button></td>
+            </tr>`).join("");
+            updateHidden();
+        }
+
+        function updateHidden() {
+            // document.getElementById("ScannedLottagsInput").value = JSON.stringify(scannedLottags);
+                const container = document.getElementById("ScannedLottagsInputs");
+        container.innerHTML = ""; // Clear cũ
+        scannedLottags.forEach(tag => {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "ScannedLottags";
+            input.value = tag;
+            container.appendChild(input);
+        });
+        }
+</script>
+}

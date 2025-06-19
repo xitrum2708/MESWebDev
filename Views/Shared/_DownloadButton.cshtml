@@ -1,0 +1,10 @@
+﻿@model DownloadButtonModel
+
+<div class="form-group mx-2 my-1">
+    <a asp-action="@Model.Action"
+       asp-controller="@Model.Controller"
+       asp-all-route-data="@Model.RouteValues"
+       class="btn btn-success px-3 py-1">
+        @Model.ButtonText
+    </a>
+</div>

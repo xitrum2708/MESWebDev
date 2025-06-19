@@ -1,0 +1,165 @@
+﻿@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model ReportVM
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("ReportDetail", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+    @* <div class="app-content-header">
+        <div class="container-fluid">
+            <div class="row">             
+                <div class="col-12">
+                    <ol class="breadcrumb float-sm-end">
+                        <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("ReportDetail", languageCode)</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div> *@
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("ReportDetail", languageCode) </h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("ReportID", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.ReportID
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("LottagId", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.LottagId
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("VendorCode", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.VendorCode
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("VendorName", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.VendorName
+                            </dd>
+                             <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("PartCode", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.PartCode
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("PartName", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.PartName
+                            </dd>
+                             <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("PO_NO", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.PO_NO
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("POQty", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @string.Format("{0:#,###}",Model.POQty)
+                            </dd>
+                             <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("POCount", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @string.Format("{0:#,###}",Model.POCount)
+                            </dd>
+                             <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("InspectionDate", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.InspectionDate
+                            </dd>                         
+                             <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("GroupName", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.GroupName
+                            </dd>
+                             <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("Status", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.Status
+                            </dd>
+                             <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("CheckerStatus", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.CheckerStatus
+                            </dd>
+                             <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("Remark", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.Remark
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("CreatedBy", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.CreatedBy
+                            </dd>
+                             <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("CreatedDate", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">                                
+                                @Model.CreatedDate.ToString("yyyy/MM/dd")
+                            </dd>
+                             <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("Notes", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.Notes
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("NotesReturn", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.NotesReturn
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("TextRemark", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.TextRemark
+                            </dd>                          
+                            
+                        </dl>
+                        <form asp-action="Delete">                            
+                            <a asp-action="Index" class="btn btn-secondary">@TranslationService.GetTranslation("BackToList", languageCode)</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

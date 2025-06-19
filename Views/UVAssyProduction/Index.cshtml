@@ -1,0 +1,429 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.UVASSY
+@using MESWebDev.Models.VM
+@using MESWebDev.Models.VMProcedure
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model  List<UVAssyProduction>
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("RealTimeProdAssyResult", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<style>
+    /* Ensure the entire layout fits within the viewport */
+    .app-content {
+        min-height: calc(100vh - 150px); /* Adjust based on your layout's header/footer height */
+        overflow-y: auto; /* Allow page-level scrolling if needed */
+    }
+
+    .container-fluid {
+        padding: 3px; /* Add padding for better spacing */
+    }
+
+    .row {
+        margin: 0; /* Remove default Bootstrap margins */
+    }
+
+    /* Left column styling */
+    .left-column {
+        background-color: #f0f0f0; /* Debugging background to confirm visibility */
+    }
+
+        .left-column .table-container {
+            max-height: 250px; /* Limit the table height */
+            overflow-y: auto;
+        }
+
+        .left-column .chart-container {
+            max-height: 200px; /* Limit the chart height */
+        }
+
+    /* Right column styling */
+    .right-column {
+        background-color: #e0e0e0; /* Debugging background to confirm visibility */
+        overflow-y: auto; /* Make the right column scrollable */
+        max-height: calc(100vh - 150px); /* Adjust based on header/footer height */
+    }
+
+        .right-column .table-container {
+            max-height: 550px; /* Reduce height to fit within the right column */
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .right-column .chart-container {
+            max-height: 200px; /* Reduce chart height to fit within the right column */
+        }
+
+    /* General card styling */
+    .card {
+        margin-bottom: 10px; /* Reduced margin for tighter layout */
+    }
+
+    .card-body {
+        padding: 10px; /* Reduced padding to save space */
+    }
+
+    .form-card {
+        margin-bottom: 10px; /* Reduced margin for the form card */
+    }
+
+    .card-header {
+        background-color: #f8f9fa; /* Light background for headers */
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .card-title {
+        font-size: 1.1rem; /* Slightly smaller titles for better fit */
+    }
+
+    .table th, .table td {
+        font-size: 0.9rem; /* Smaller font for tables to fit more content */
+    }
+
+</style>
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+@* <div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">         
+            <div class="col-12">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("RealTimeProdAssyResult", languageCode)</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div> *@
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row" style="height: 100%;">
+            <!-- Left Column: Summary Section -->
+            <div class="col-md-6  left-column ">
+                <!-- Summarized Production Quantities Table -->
+                <div class="card" >
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("HistoryOfAssyProd", languageCode)</h3>
+                    </div>
+                    <div class="card-body table-container">
+                            <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>
+                                            <a asp-action="Index" asp-route-sortOrder="@ViewData["PeriodSort"]">@TranslationService.GetTranslation("Period", languageCode)</a>
+                                        </th>
+                                        <th>
+                                            <a asp-action="Index" asp-route-sortOrder="@ViewData["OutputSort"]">@TranslationService.GetTranslation("OutputQuantity", languageCode)</a>
+                                        </th>
+                                        <th>
+                                            <a asp-action="Index" asp-route-sortOrder="@ViewData["ErrorSort"]">@TranslationService.GetTranslation("ErrorQuantity", languageCode)</a>
+                                        </th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Take(5))
+                                    {
+                                        <tr>
+                                            <td>@item.Period</td>
+                                            <td>@string.Format("{0:#,###}", item.OutputQuantity)</td>
+                                            <td>@string.Format("{0:#,###}", item.ErrorQuantity)</td>
+                                            <td>
+                                                <a asp-action="Details" asp-route-period="@item.Period" class="btn btn-sm btn-primary">@TranslationService.GetTranslation("Details", languageCode)</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- Summary Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("SummaryChart", languageCode)</h3>
+                    </div>
+                    <div class="card-body chart-container">
+                        <canvas id="summaryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Right Column: Search and Daily Result Section -->
+            <div class="col-md-6 right-column">
+                <!-- Date Range Form -->
+                <div class="card form-card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("Real-TimeProductionResults", languageCode)</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="dateRangeForm" asp-action="Index" method="get" onsubmit="showLoadingOverlay()">
+                            <div class="form-row row align-items-end">
+                                <div class="col-md-5">
+                                    <label>@TranslationService.GetTranslation("StartDate", languageCode)</label>
+                                    <input type="date" name="startDate" value="@ViewBag.StartDate" class="form-control" />
+                                </div>
+                                <div class="col-md-5">
+                                    <label>@TranslationService.GetTranslation("EndDate", languageCode)</label>
+                                    <input type="date" name="endDate" value="@ViewBag.EndDate" class="form-control" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label>&nbsp;</label> <!-- empty label to keep alignment -->
+                                    <button type="submit" class="btn btn-primary btn-block">@TranslationService.GetTranslation("Search", languageCode)</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Real-Time Production Results Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("DailyResult", languageCode)</h3>
+                    </div>
+                    <div class="card-body table-container">
+                        <table class="table table-bordered table-hover">                      
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>No</th>
+                                    <th>Div</th>
+                                    <th>Category</th>
+                                    <th>Model</th>
+                                    <th>B-Model</th>
+                                    <th>LotNo</th>
+                                    <th>LotSize</th>
+                                    <th>Target Qty</th>
+                                    <th>Prod Qty</th>
+                                    <th>Prod Date</th>
+                                    <th>Prod Line</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productionResultsBody">
+                                @foreach (var item in (ViewBag.ProductionResults as List<UVAssyProductResult>).Take(100))
+                                {
+                                    <tr>
+                                        <td>@item.No</td>
+                                        <td>@item.Div</td>
+                                        <td>@item.Category</td>
+                                        <td>@item.Model</td>
+                                        <td>@item.BModel</td>
+                                        <td>@item.LotNo</td>
+                                        <td>@string.Format("{0:#,###}",item.LotSize)</td>
+                                        <td>@string.Format("{0:#,###}",item.TargetQty)</td>
+                                        <td>@string.Format("{0:#,###}",item.ProdQty)</td>
+                                        <td>@(item.ProdDate?.ToString("yyyy/MM/dd"))</td>
+                                        <td>@item.ProdLine</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Daily Result Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("DailyResultChart", languageCode)</h3>
+                    </div>
+                    <div class="card-body chart-container">
+                        <canvas id="productionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    @section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            let productionChart;
+            let summaryChart;
+
+            // Initialize Summary Chart
+            function initializeSummaryChart(summaryData) {
+                const ctx = document.getElementById('summaryChart').getContext('2d');
+                const labels = summaryData.map(item => item.period);
+                const outputData = summaryData.map(item => item.outputQuantity);
+                const errorData = summaryData.map(item => item.errorQuantity);
+
+                summaryChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Output Quantity',
+                                data: outputData,
+                                backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Error Quantity',
+                                data: errorData,
+                                backgroundColor: 'rgba(255, 99, 132, 0.6)', // Red
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Quantity'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Period'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+
+            // Initialize Daily Result Chart
+            function initializeProductionChart(chartData) {
+                const ctx = document.getElementById('productionChart').getContext('2d');
+                const labels = chartData.map(item => item.model);
+                const data = chartData.map(item => item.totalProdQty);
+
+                productionChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Daily Production Result',
+                            data: data,
+                            backgroundColor: 'rgba(128, 0, 128, 0.6)', // Purple
+                            borderColor: 'rgba(128, 0, 128, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Production Quantity'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Model'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+
+            // Update Daily Result Chart
+            function updateProductionChart(chartData) {
+                const labels = chartData.map(item => item.model);
+                const data = chartData.map(item => item.totalProdQty);
+
+                productionChart.data.labels = labels;
+                productionChart.data.datasets[0].data = data;
+                productionChart.update();
+            }
+                 // Update Summary Chart
+            function updateSummaryChart(summaryData) {
+                const labels = summaryData.map(item => item.period);
+                const outputData = summaryData.map(item => item.outputQuantity);
+                const errorData = summaryData.map(item => item.errorQuantity);
+
+                summaryChart.data.labels = labels;
+                summaryChart.data.datasets[0].data = outputData;
+                summaryChart.data.datasets[1].data = errorData;
+                summaryChart.update();
+            }
+            // Update Real-Time Production Results and Chart
+            function updateProductionResults() {
+                const startDateInput = document.querySelector('input[name="startDate"]').value;
+                const endDateInput = document.querySelector('input[name="endDate"]').value;
+                console.log(`Fetching production results for startDate: ${startDateInput}, endDate: ${endDateInput}`);
+
+                const startDate = startDateInput || new Date().toISOString().split('T')[0];
+                const endDate = endDateInput || new Date().toISOString().split('T')[0];
+                fetch(`/UVAssyProduction/GetProductionResults?startDate=${startDate}&endDate=${endDate}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch production results');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Update the table
+                        const tbody = document.getElementById('productionResultsBody');
+                        tbody.innerHTML = '';
+                        data.productionResults.slice(0, 100).forEach(item => {
+                            const row = `
+                                <tr>
+                                    <td>${item.no}</td>
+                                    <td>${item.div || ''}</td>
+                                    <td>${item.category || ''}</td>
+                                    <td>${item.model || ''}</td>
+                                    <td>${item.bModel || ''}</td>
+                                    <td>${item.lotNo}</td>
+                                    <td>${item.lotSize.toLocaleString('en-US')}</td>
+                                    <td>${item.targetQty.toLocaleString('en-US')}</td>
+                                    <td>${item.prodQty.toLocaleString('en-US')}</td>
+                                    <td>${item.prodDate ? new Date(item.prodDate).toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/-/g, '/') : ''}</td>
+                                    <td>${item.prodLine || ''}</td>
+                                </tr>`;
+                            tbody.innerHTML += row;
+                        });
+
+                        // Update the daily result chart
+                        updateProductionChart(data.chartData);
+                         // Update the summary chart
+                        updateSummaryChart(data.summaryData);
+                    })
+                    .catch(error => {
+                        console.error('Error updating production results:', error);
+                        alert('Failed to update production results. Please try again.');
+                    });
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                // Initialize Summary Chart
+                const summaryData = @Html.Raw(Json.Serialize(Model.Take(5)));
+                initializeSummaryChart(summaryData);
+
+                // Initialize Daily Result Chart
+                const initialChartData = @Html.Raw(Json.Serialize(ViewBag.ChartData));
+                initializeProductionChart(initialChartData);
+
+                // Auto-update every 2 minutes (120,000 milliseconds)
+                setInterval(updateProductionResults, 120000);
+
+                // Initial update on page load
+                updateProductionResults();
+            });
+        </script>
+    }

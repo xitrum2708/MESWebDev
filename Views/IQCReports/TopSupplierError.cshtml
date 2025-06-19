@@ -1,0 +1,120 @@
+﻿@using MESWebDev.Models.IQC
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model List<TopSupplierErrorReportModel>
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("TopErrorReport", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<style>
+    /* Thêm khoảng cách giữa các section */
+    .section-spacing {
+        margin-top: 10px;
+    }
+    /* Container cho biểu đồ */
+    .chart-container {
+        position: relative;
+        margin-top: 10px; /* Khoảng cách trên dưới */
+        padding: 10px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        overflow: hidden; /* Ẩn phần vượt ra ngoài */
+        height: 400px; /* Điều chỉnh chiều cao phù hợp */
+    }
+        /* Đảm bảo canvas không vượt ra ngoài container */
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+</style>
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <!-- Dropdown chọn năm với khoảng cách -->
+        <div class="row section-spacing">
+            <div class="col-md-4">
+                <form method="get" asp-action="TopSupplierError" class="mb-12">
+                    <div class="row g-3">
+                        <!-- Row 1: StartDate và EndDate -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="startDate">
+                                    @TranslationService.GetTranslation("StartDate", languageCode)
+                                </label>
+                                <input type="date" id="startDate" name="startDate" class="form-control"
+                                       value="@Context.Request.Query["startDate"]" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="endDate">
+                                    @TranslationService.GetTranslation("EndDate", languageCode)
+                                </label>
+                                <input type="date" id="endDate" name="endDate" class="form-control"
+                                       value="@Context.Request.Query["endDate"]" />
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Filter", languageCode)</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Bảng dữ liệu -->
+        <div class="row section-spacing">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("TopSupplierErrorReport", languageCode)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>@TranslationService.GetTranslation("VENDER_NAME", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("ABBRE_GROUP", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("ACCEPTED", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("REJECTED", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("TOTAL", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("RATE_ACCEPT", languageCode)</th>                                   
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>@item.VENDER_NAME</td>
+                                            <td>@item.ABBRE_GROUP</td>
+                                            <td>@item.ACCEPTED</td>
+                                            <td>@item.REJECTED</td>
+                                            <td>@item.TOTAL</td>
+                                            <td>@item.RATE_ACCEPT</td>                                       
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Khung biểu đồ nằm trong container có khoảng cách -->
+       @*  <div class="row section-spacing">
+            <div class="col-12">
+                <div class="chart-container">
+                    <canvas id="chartContainer"></canvas>
+                </div>
+            </div>
+        </div> *@
+    </div>
+</div>
+
+

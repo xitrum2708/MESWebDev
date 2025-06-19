@@ -1,0 +1,103 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.REPAIR
+@using MESWebDev.Models.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model RepairVM
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("ExecutionLogManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)   
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("ListOfExecutionLog", languageCode)</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Tìm kiếm -->
+                        <form asp-action="Index" method="get">                           
+                            <div class="form-group">
+                                <label>@TranslationService.GetTranslation("StartDate", languageCode):</label>
+                                <input type="date" name="startDate" class="form-control" value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <div class="form-group">
+                                <label>@TranslationService.GetTranslation("EndDate", languageCode):</label>
+                                <input type="date" name="endDate" class="form-control" value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <div class="form-group mr-2">
+                                <input type="text" name="SearchTerm" placeholder="Search text..."
+                                       value="@(Model.SearchTerm.ToString()!=""? Model.SearchTerm.ToString() : "")" class="form-control" />
+                            </div>
+
+
+                            <input type="hidden" name="page" value="1" /> <!-- Reset to page 1 when applying new filters -->
+                            <input type="hidden" name="pageSize" value="@Model.RepairResult.PageSize" />
+                            <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Filter", languageCode)</button>
+                            <a asp-action="Index" class="btn btn-secondary">Reset</a>
+                            <a asp-action="ExportToExcel"
+                               asp-route-fromDate="@ViewBag.FromDate"
+                               asp-route-toDate="@ViewBag.ToDate"
+                               asp-route-searchText="@ViewBag.SearchText"
+                               class="btn btn-success">
+                                Export to Excel
+                            </a>
+                            @* <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Filter", languageCode)</button> *@
+                        </form>
+
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>@TranslationService.GetTranslation("TaskName", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("StartTime", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("EndTime", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("Duration(ms)", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("Status", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("ErrorMessage", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("CreatedBy", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("CreatedAt", languageCode)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in Model.RepairResult.Items)
+                                {
+                                    <tr>
+                                        <td>@log.Qrcode</td>
+                                        <td>@log.Model</td>
+                                        <td>@log.Lot</td>
+                                        <td>@log.DailyOutput</td>
+                                        <td>@log.Pcbtype</td>
+                                        <td>@log.Errorposition</td>
+                                        <td>@log.Partcode</td>
+                                       
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <!-- Phân trang -->
+                        @await Html.PartialAsync("_Pagination", Model.RepairResult)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+         document.querySelector('form').addEventListener('submit', function(e) {
+        const startDate = document.querySelector('input[name="startDate"]').value;
+        const endDate = document.querySelector('input[name="endDate"]').value;
+
+        if (startDate && endDate && new Date(startDate) > new Date(endDate))
+        {
+            e.preventDefault();
+            alert('Start Date cannot be later than End Date.');
+        }
+    });
+</script>

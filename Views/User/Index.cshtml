@@ -1,0 +1,83 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model PagedResult<UserViewModel>
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("UserManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+@* <div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">          
+            <div class="col-12">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("UserManagement", languageCode)</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div> *@
+}
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("ListOfUsers", languageCode)</h3>
+                        <div class="card-tools">
+                            <a href="@Url.Action("Create", "User")" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg"></i> @TranslationService.GetTranslation("AddNewUser", languageCode)
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Phân trang -->
+                        @await Html.PartialAsync("_SearchForm", Model)
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>@TranslationService.GetTranslation("Username", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Email", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("FullName", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Language", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("IsActive", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("CreatedAt", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Action", languageCode)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in Model.Items)
+                                    {
+                                        <tr>
+                                            <td>@user.Username</td>
+                                            <td>@user.Email</td>
+                                            <td>@user.FullName</td>
+                                            <td>@user.LanguageName</td>
+                                            <td>@(user.IsActive ? TranslationService.GetTranslation("Yes", languageCode) : TranslationService.GetTranslation("No", languageCode))</td>
+                                            <td>@user.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                            <td>
+                                                <a asp-action="Edit" asp-route-id="@user.UserId" class="btn btn-sm btn-warning">@TranslationService.GetTranslation("Edit", languageCode)</a>
+                                                <a asp-action="Delete" asp-route-id="@user.UserId" class="btn btn-sm btn-danger">@TranslationService.GetTranslation("Delete", languageCode)</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Phân trang -->
+                        @await Html.PartialAsync("_Pagination", Model)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

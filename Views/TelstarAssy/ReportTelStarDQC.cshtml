@@ -1,0 +1,127 @@
+﻿@using MESWebDev.Models.REPAIR
+@using MESWebDev.Models.TELSTAR.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model TELSTAR_ASSY_ViewModel
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("TelstarReportDQC", languageCode);
+    //int pageSize = Model.RepairResult.PageSize;
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+               @*  <div class="card-header">
+                    <h3 class="card-title">@TranslationService.GetTranslation("ListOfTelStarProduct", languageCode)</h3>
+                </div> *@
+                <div class="card-body">
+                    <form asp-action="ReportTelStarDQC" method="get" class="mb-3">
+                        <div class="d-flex flex-wrap align-items-end">                           
+                            <!-- StartDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label>@TranslationService.GetTranslation("StartDate", languageCode):</label>
+                                <input type="date" name="startDate" class="form-control"
+                                       value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <!-- EndDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label>@TranslationService.GetTranslation("EndDate", languageCode):</label>
+                                <input type="date" name="endDate" class="form-control"
+                                       value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <!-- SearchTerm -->
+                            <div class="form-group mx-2 py-1" style="min-width: 200px;">
+                                <label>@TranslationService.GetTranslation("SearchTerm", languageCode):</label>
+                                <input type="text" name="SearchTerm" placeholder="Search text..."
+                                       value="@(Model.SearchTerm ?? "")" class="form-control" />
+                            </div>
+                            <!-- Hidden Fields -->
+                            <input type="hidden" name="page" value="1" />
+                            @if (Model.TelstarDQCVM.Items.Count > 0)
+                            {
+                                <input type="hidden" name="pageSize" value="@Model.TelstarDQCVM.PageSize" />
+                            }
+                            else
+                            {
+                                <input type="hidden" name="pageSize" value="10" />
+                            }
+                            <!-- Filter Button -->
+                            <div class="form-group mx-2 py-1">
+                                <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Filter", languageCode)</button>
+                            </div>
+                            <!-- Download Button -->
+                            @{
+                                var downloadModel = new DownloadButtonModel
+                                {
+                                    Controller = "TelstarAssy",
+                                    Action = "ExportToExcelDQC",
+                                    RouteValues = new Dictionary<string, string>
+                                    {
+                                        { "startDate", Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "" },
+                                        { "endDate", Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "" },
+                                        { "searchText", Model.SearchTerm 
+                                     }
+                                    },
+                                    ButtonText = TranslationService.GetTranslation("ExportToExcel", languageCode)
+                                };
+                            }
+                            @await Html.PartialAsync("_DownloadButton", downloadModel)
+                        </div>
+                    </form>
+                    <!-- Phân trang -->
+                    @if (Model.TelstarDQCVM != null && Model.TelstarDQCVM.TotalPages > 1)
+                    {
+                        @await Html.PartialAsync("_Pagination", Model.TelstarDQCVM)
+                    }
+                    <div style="max-height:600px; overflow-y:auto;">
+                        <table class="table table-bordered table-hover table-sm m-0" style="margin:0;">
+                            <thead style="position: sticky; top:0; z-index:1;">
+                                <tr>
+                                    <th>@TranslationService.GetTranslation("QrCode", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("Status", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("Model", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("LotNo", languageCode)</th>     
+                                    <th>@TranslationService.GetTranslation("Remark", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("CreatedDate", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("CreatedBy", languageCode)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.TelstarDQCVM != null && Model.TelstarDQCVM.Items != null)
+                                {
+                                    @foreach (var log in Model.TelstarDQCVM.Items)
+                                    {
+                                        <tr>
+                                            <td>@log.QRCode</td>
+                                            <td>@log.Status</td>
+                                            <td>@log.Model</td>
+                                            <td>@log.LotNo</td>
+                                            <td>@log.Remark</td>
+                                            <td>@log.CreatedDate.Value.ToString("yyyy/MM/dd")</td>
+                                            <td>@log.CreatedBy</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center">@TranslationService.GetTranslation(ViewBag.Message, languageCode)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                               
+                           
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

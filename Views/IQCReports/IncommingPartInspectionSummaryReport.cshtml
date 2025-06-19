@@ -1,0 +1,214 @@
+﻿@using MESWebDev.Models.IQC
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model List<MonthlyRejectRateModel>
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("TopErrorReport", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<style>
+    /* Thêm khoảng cách giữa các section */
+    .section-spacing {
+        margin-top: 10px;
+    }
+    /* Container cho biểu đồ */
+    .chart-container {
+        position: relative;
+        margin-top: 10px; /* Khoảng cách trên dưới */
+        padding: 10px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        overflow: hidden; /* Ẩn phần vượt ra ngoài */
+        height: 400px; /* Điều chỉnh chiều cao phù hợp */
+    }
+        /* Đảm bảo canvas không vượt ra ngoài container */
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+</style>
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <!-- Dropdown chọn năm với khoảng cách -->
+        <div class="row section-spacing">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="year" class="control-label">@TranslationService.GetTranslation("SelectYear", languageCode)</label>
+                    <select id="year" class="form-select">
+                        <option value="">@TranslationService.GetTranslation("SelectYear", languageCode)</option>
+                        @foreach (var y in (IEnumerable<int>)ViewBag.Years)
+                        {
+                            if (y == DateTime.Now.Year)
+                            {
+                                <option value="@y" selected="selected">@y</option>
+                            }
+                            else
+                            {
+                                <option value="@y">@y</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+        <!-- Bảng dữ liệu -->
+        <div class="row section-spacing">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("IncommingPartInspectionSummaryReport", languageCode)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>@TranslationService.GetTranslation("ABBREGROUP", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("JAN", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("FEB", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("MAR", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("APR", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("MAY", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("JUN", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("JUL", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("AUG", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("SEP", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("OCT", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("NOV", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("DEC", languageCode)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>@item.ABBRE_GROUP</td>
+                                            <td>@item.JAN</td>
+                                            <td>@item.FEB</td>
+                                            <td>@item.MAR</td>
+                                            <td>@item.APR</td>
+                                            <td>@item.MAY</td>
+                                            <td>@item.JUN</td>
+                                            <td>@item.JUL</td>
+                                            <td>@item.AUG</td>
+                                            <td>@item.SEP</td>
+                                            <td>@item.OCT</td>
+                                            <td>@item.NOV</td>
+                                            <td>@item.DEC</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Khung biểu đồ nằm trong container có khoảng cách -->
+        <div class="row section-spacing">
+            <div class="col-12">
+                <div class="chart-container">
+                    <canvas id="chartContainer"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery-3.6.0.min.js"></script>
+    <script src="~/js/chart.js"></script>
+    <script src="~/js/chartjs-plugin-datalabels.js"></script>
+    <script>
+        // Khởi tạo biểu đồ ban đầu với dữ liệu mẫu (rỗng hoặc từ model nếu có)
+        var ctx = document.getElementById('chartContainer').getContext('2d');
+        var chartInstance = new Chart(ctx, {
+            type: 'bar',  // Hoặc loại biểu đồ bạn mong muốn
+            data: {
+                labels: [],  // Sẽ được cập nhật thông qua AJAX
+                datasets: [
+                    {
+                        label: 'IMPORT %',
+                        data: [],
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132,1)',
+                        borderWidth: 1,
+                        barThickness: 20,           // Chiều rộng cố định của cột, bạn có thể điều chỉnh giá trị này
+                        maxBarThickness: 30,        // Chiều rộng tối đa của cột (nếu cần)
+                        categoryPercentage: 0.5,    // Tỷ lệ chiếm không gian của từng cột trong nhóm
+                        barPercentage: 0.8          // Tỷ lệ cột so với không gian dành cho cột
+                    },
+                    {
+                        label: 'LOCAL %',
+                        data: [],
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235,1)',
+                        borderWidth: 1,
+                        barThickness: 20,           // Chiều rộng cố định của cột, bạn có thể điều chỉnh giá trị này
+                        maxBarThickness: 30,        // Chiều rộng tối đa của cột (nếu cần)
+                        categoryPercentage: 0.5,    // Tỷ lệ chiếm không gian của từng cột trong nhóm
+                        barPercentage: 0.8          // Tỷ lệ cột so với không gian dành cho cột
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    datalabels: {
+                        display: true,
+                        color: 'black',
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(value, context) {
+                                 // Nếu giá trị bằng 0, trả về chuỗi rỗng
+                            if (value === 0) {
+                                return '';
+                            }
+                            // Nếu khác 0, hiển thị với 1 chữ số thập phân và ký hiệu %
+                            return value.toFixed(1) + '%';
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: "Percentage (%)" }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+
+        // Khi chọn năm, gọi AJAX để load dữ liệu biểu đồ
+        $('#year').on('change', function(){
+            var selectedYear = $(this).val();
+            if(selectedYear){
+                $.ajax({
+                    url: '@Url.Action("IncommingGetMonthlyChartData", "IQCReports")',
+                    type: 'GET',
+                    data: { year: selectedYear },
+                    dataType: 'json',
+                    success: function(data){
+                        // Cập nhật dữ liệu cho Chart.js
+                        chartInstance.data.labels = data.labels; // mảng các tháng
+                        chartInstance.data.datasets[0].data = data.importData;
+                        chartInstance.data.datasets[1].data = data.localData;
+                        chartInstance.update();
+                    },
+                    error: function(){
+                        alert('Có lỗi xảy ra, vui lòng thử lại.');
+                    }
+                });
+            }
+        });
+
+        // Tự động trigger sự kiện change khi load trang với năm mặc định
+        $('#year').trigger('change');
+    </script>
+}

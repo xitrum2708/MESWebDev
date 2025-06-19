@@ -1,0 +1,143 @@
+﻿@using MESWebDev.Models.COMMON
+@using MESWebDev.Services
+@inject ITranslationService T
+@model MasterViewModel
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = T.GetTranslation("LotControlMaster", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                @*  <div class="card-header">
+                    <h3 class="card-title">@TranslationService.GetTranslation("ListOfTelStarProduct", languageCode)</h3>
+                </div> *@
+                <div class="card-body">
+                    <form asp-action="LotControlMaster" method="get" class="mb-3">
+                        <div class="d-flex flex-wrap align-items-end">
+                            <!-- StartDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label>@T.GetTranslation("StartDate", languageCode):</label>
+                                <input type="date" name="startDate" class="form-control"
+                                       value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <!-- EndDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label>@T.GetTranslation("EndDate", languageCode):</label>
+                                <input type="date" name="endDate" class="form-control"
+                                       value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <!-- SearchTerm -->
+                            <div class="form-group mx-2 py-1" style="min-width: 200px;">
+                                <label>@T.GetTranslation("SearchTerm", languageCode):</label>
+                                <input type="text" name="SearchTerm" placeholder="Search text..."
+                                       value="@(Model.SearchTerm ?? "")" class="form-control" />
+                            </div>
+                            <!-- Hidden Fields -->
+                            <input type="hidden" name="page" value="1" />
+                            @if (Model.LotControlMasterList.Items.Count > 0)
+                            {
+                                <input type="hidden" name="pageSize" value="@Model.LotControlMasterList.PageSize" />
+                            }
+                            else
+                            {
+                                <input type="hidden" name="pageSize" value="10" />
+                            }
+                            <!-- Filter Button -->
+                            <div class="form-group mx-2 py-1">
+                                <button type="submit" class="btn btn-primary">@T.GetTranslation("Filter", languageCode)</button>
+                            </div>
+                            <!-- Download Button -->
+                            @{
+                                var downloadModel = new DownloadButtonModel
+                                {
+                                    Controller = "Master",
+                                    Action = "ExportToExcelLotControlMaster",
+                                    RouteValues = new Dictionary<string, string>
+                                                {
+                                                { "startDate", Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "" },
+                                                { "endDate", Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "" },
+                                                { "searchText", Model.SearchTerm
+                                                }
+                                                },
+                                    ButtonText = T.GetTranslation("ExportToExcel", languageCode)
+                                };
+                            }
+                            @await Html.PartialAsync("_DownloadButton", downloadModel)
+                        </div>
+
+                    </form>
+                    <!-- Phân trang -->
+                    @if (Model.LotControlMasterList != null && Model.LotControlMasterList.TotalPages > 1)
+                    {
+                        @await Html.PartialAsync("_Pagination", Model.LotControlMasterList)
+                    }
+
+                    <div style="max-height:600px; overflow-y:auto;">
+                        <table class="table table-bordered table-hover table-sm m-0" style="margin:0;">
+                            <thead style="position: sticky; top:0; z-index:1;">
+                                <tr>                                    
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("LotControlID", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Model", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("LotNo", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Quantity", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("SpecialInfo", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("DateCode", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Code", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("SerialStart", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("SerialEnd", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("ApprovedBy", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Revised", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("IssuedBy", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("ProDate", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("IssueDate", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("PONumber", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CreatedBy", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CreatedDate", languageCode)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.LotControlMasterList != null && Model.LotControlMasterList.Items != null)
+                                {
+                                    @foreach (var log in Model.LotControlMasterList.Items)
+                                    {
+                                        <tr>
+                                            <td>@log.LotControlID</td>
+                                            <td>@log.Model</td>
+                                            <td>@log.LotNo</td>
+                                            <td>@log.Quantity</td>
+                                            <td>@log.SpecialInfo</td>
+                                            <td>@log.DateCode</td>
+                                            <td>@log.Code</td>
+                                            <td>@log.SerialStart</td>
+                                            <td>@log.SerialEnd</td>
+                                            <td>@log.ApprovedBy</td>
+                                            <td>@log.Revised</td>
+                                            <td>@log.IssuedBy</td>
+                                            <td>@log.ProDate.ToString("yyyy/MM/dd")</td>
+                                            <td>@log.IssueDate.ToString("yyyy/MM/dd")</td>
+                                            <td>@log.PONumber</td>
+                                            <td>@log.CreatedBy</td>
+                                            <td>@log.CreatedDate.ToString("yyyy/MM/dd")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center">@T.GetTranslation(ViewBag.Message, languageCode)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

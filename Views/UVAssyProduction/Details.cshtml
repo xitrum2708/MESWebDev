@@ -1,0 +1,201 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.VM
+@using MESWebDev.Models.VMProcedure
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model UVAssyProductionViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("AssyResultDetail", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var outputDetailsPaged = ViewBag.OutputDetailsPaged as IPagedResult;
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+@* <div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">        
+            <div class="col-12">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("AssyResultDetail", languageCode)</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div> *@
+}
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-primary card-outline mb-4">
+                    <!--begin::Header-->
+                    <div class="card-header"><div class="card-title">@TranslationService.GetTranslation("OutputAndErrorDetail", languageCode)</div></div>
+                    <!--end::Header-->
+                    <!--begin::Body-->
+                    <div class="card-body">
+                        <div class="accordion" id="accordionExample">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                        @TranslationService.GetTranslation("OutputDetail", languageCode)
+                                    </button>
+                                </h2>
+                                <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample" style="">
+                                    <div class="accordion-body">
+                                        <!-- Tìm kiếm -->
+                                        <div class="flex-grow-1">
+                                            @await Html.PartialAsync("_SearchForm", (IPagedResult)ViewBag.OutputDetailsPaged)
+                                        </div>
+                                        <div>
+                                            <a class="btn btn-success" style="padding-top:5px;" href="@Url.Action("DownloadExcelOutputDetails", "UVAssyProduction", new { period = ViewBag.Period })">
+                                                @TranslationService.GetTranslation("DownloadExcel", languageCode)
+                                            </a>
+                                        </div>
+                                        <table class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>Line</th>
+                                                    <th>Model</th>
+                                                    <th>Lot</th>
+                                                    <th>Unit_Carton</th>
+                                                    <th>Model_Serial</th>
+                                                    <th>Carton</th>
+                                                    <th>Dbox_Serial</th>
+                                                    <th>Unit_Serial</th>
+                                                    <th>Date_Time</th>
+                                                    <th>BatchNo</th>
+                                                    <th>ChangeBatchTo</th>
+                                                    <th>ErrorDetail</th>
+                                                    <th>ErrorStatus</th>
+                                                    <th>Qtyunit</th>
+                                                    <th>CreatedBy</th>
+                                                    <th>Remark</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if (ViewBag.OutputDetailsPaged != null && ((IEnumerable<object>)ViewBag.OutputDetailsPaged.Items).Any())
+                                                {
+                                                    foreach (var detail in ViewBag.OutputDetailsPaged.Items)
+                                                    {
+                                                        <tr>
+                                                            <td>@detail.No</td>
+                                                            <td>@detail.Line</td>
+                                                            <td>@detail.Model</td>
+                                                            <td>@detail.Lot</td>
+                                                            <td>@detail.Unit_Carton</td>
+                                                            <td>@detail.Model_Serial</td>
+                                                            <td>@detail.Carton</td>
+                                                            <td>@detail.Dbox_Serial</td>
+                                                            <td>@detail.Unit_Serial</td>
+                                                            <td>@detail.Date_Time</td>
+                                                            <td>@detail.BatchNo</td>
+                                                            <td>@detail.ChangeBatchTo</td>
+                                                            <td>@detail.ErrorDetail</td>
+                                                            <td>@detail.ErrorStatus</td>
+                                                            <td>@detail.Qtyunit</td>
+                                                            <td>@detail.CreatedBy</td>
+                                                            <td>@detail.Remark</td>
+                                                        </tr>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <tr>
+                                                        <td colspan="17">No output details available.</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                        <!-- Phân trang -->
+                                         @await Html.PartialAsync("_Pagination", (IPagedResult)ViewBag.OutputDetailsPaged)
+                                    </div>
+                                    <!-- Render the pagination in a separate container -->
+                                   @*  <div class="pagination-section">
+                                        @if (outputDetailsPaged != null)
+                                        {
+                                            @await Html.PartialAsync("_Pagination", (IPagedResult)outputDetailsPaged)
+                                        }
+                                    </div>   *@                                  
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                        @TranslationService.GetTranslation("ErrorDetail", languageCode)
+                                    </button>
+                                </h2>
+                                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
+                                    <div class="accordion-body">
+                                        <!-- Tìm kiếm -->
+                                        @await Html.PartialAsync("_SearchForm", (IPagedResult)ViewBag.OutputDetailsPaged)
+
+                                        <table class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>QrCode</th>
+                                                    <th>Model</th>
+                                                    <th>Lot</th>
+                                                    <th>Pcbtype</th>
+                                                    <th>Errorposition</th>
+                                                    <th>Partcode</th>
+                                                    <th>Errortype</th>
+                                                    <th>Causetype</th>
+                                                    <th>DeptError</th>
+                                                    <th>Repairmethod</th>
+                                                    <th>Statusresult</th>
+                                                    <th>CreatedDate</th>
+                                                    <th>CreatedBy</th>
+                                                    <th>DailyOutput</th>                                                   
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if (ViewBag.ErrorDetailsPaged != null && ((IEnumerable<object>)ViewBag.ErrorDetailsPaged.Items).Any())
+                                                {
+                                                    foreach (var detail in ViewBag.ErrorDetailsPaged.Items)
+                                                    {
+                                                        <tr>
+                                                            <td>@detail.No</td>
+                                                            <td>@detail.Qrcode</td>
+                                                            <td>@detail.Model</td>
+                                                            <td>@detail.Lot</td>
+                                                            <td>@detail.Pcbtype</td>
+                                                            <td>@detail.Errorposition</td>
+                                                            <td>@detail.Partcode</td>
+                                                            <td>@detail.Errortype</td>
+                                                            <td>@detail.Causetype</td>
+                                                            <td>@detail.DeptError</td>
+                                                            <td>@detail.Repairmethod</td>
+                                                            <td>@detail.Statusresult</td>
+                                                            <td>@detail.CreatedDate</td>
+                                                            <td>@detail.CreatedBy</td>
+                                                            <td>@detail.DailyOutput</td>                                                           
+                                                        </tr>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <tr>
+                                                        <td colspan="17">No output details available.</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                        <!-- Phân trang -->
+                                        @await Html.PartialAsync("_Pagination", (IPagedResult)ViewBag.ErrorDetailsPaged)
+                                    </div>
+                                </div>
+                            </div>                            
+                        </div>
+                    </div>
+                    <!--end::Body-->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

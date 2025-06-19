@@ -1,0 +1,26 @@
+﻿/* Áp dụng cho tất cả input, textarea, select khi disabled hoặc readonly */
+input:disabled,
+textarea:disabled,
+select:disabled,
+input[readonly],
+textarea[readonly] {
+    background-color: #f5f5f5; /* màu nền nhạt */
+    color: #6c757d; /* text màu xám đậm */
+    opacity: 1; /* giữ opacity =1 để không quá mờ */
+    cursor: not-allowed; /* con trỏ not-allowed khi hover */
+}
+
+/* Nếu bạn dùng Bootstrap và muốn override .form-control:disabled */
+.form-control:disabled,
+.form-control[readonly] {
+    background-color: #e9ecef; /* theo Bootstrap custom */
+    color: #495057;
+}
+
+.table-header-blue th {
+    background-color: #007bff !important;
+    color: white !important;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}

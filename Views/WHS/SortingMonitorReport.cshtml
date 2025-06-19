@@ -1,0 +1,213 @@
+﻿@using MESWebDev.Models.WHS.VM
+@using MESWebDev.Services
+@inject ITranslationService T
+@model WHSViewModel
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = T.GetTranslation("SortingMonitorReport", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                @*  <div class="card-header">
+                    <h3 class="card-title">@TranslationService.GetTranslation("ListOfTelStarProduct", languageCode)</h3>
+                </div> *@
+                <div class="card-body">                   
+                    <form asp-action="SortingMonitorReport" method="get" class="mb-3">
+                        <div class="d-flex flex-wrap align-items-end">
+                            <!-- StartDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label>@T.GetTranslation("StartDate", languageCode):</label>
+                                <input type="date" name="startDate" class="form-control"
+                                       value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <!-- EndDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label>@T.GetTranslation("EndDate", languageCode):</label>
+                                <input type="date" name="endDate" class="form-control"
+                                       value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <!-- SearchTerm -->
+                            <div class="form-group mx-2 py-1" style="min-width: 200px;">
+                                <label>@T.GetTranslation("SearchTerm", languageCode):</label>
+                                <input type="text" name="SearchTerm" placeholder="Search text..."
+                                       value="@(Model.SearchTerm ?? "")" class="form-control" />
+                            </div>
+                            <!-- Hidden Fields -->
+                            <input type="hidden" name="page" value="1" />
+                            @if (Model.SortingMonitorList.Items.Count > 0)
+                            {
+                                <input type="hidden" name="pageSize" value="@Model.SortingMonitorList.PageSize" />
+                            }
+                            else
+                            {
+                                    <input type="hidden" name="pageSize" value="10" />
+                            }
+                            <!-- Filter Button -->
+                            <div class="form-group mx-2 py-1">
+                                <button type="submit" class="btn btn-primary">@T.GetTranslation("Filter", languageCode)</button>
+                            </div>
+                            <!-- Download Button -->
+                            @{
+                                var downloadModel = new DownloadButtonModel
+                                {
+                                    Controller = "WHS",
+                                    Action = "ExportToExcelSortingMonitorReport",
+                                    RouteValues = new Dictionary<string, string>
+                                                                {
+                                                                { "startDate", Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "" },
+                                                                { "endDate", Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "" },
+                                                                { "searchText", Model.SearchTerm
+                                                                }
+                                                                },
+                                    ButtonText = T.GetTranslation("ExportToExcel", languageCode)
+                                };
+                            }
+                            @await Html.PartialAsync("_DownloadButton", downloadModel)
+                        </div>
+
+                    </form>
+                    <!-- Phân trang -->
+                    @if (Model.SortingMonitorList != null && Model.SortingMonitorList.TotalPages > 1)
+                    {
+                        @await Html.PartialAsync("_Pagination", Model.SortingMonitorList)
+                    }
+                    
+                    <div style="max-height:600px; overflow-y:auto;">
+                        <table class="table table-bordered table-hover table-sm m-0" style="margin:0;">
+                            <thead style="position: sticky; top:0; z-index:1;">
+                                <tr>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("ReportID", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("LottagId", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("VendorName", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("VendorCode", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("PartName", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("PartCode", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("PO_NO", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("InvoiceNo", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("POQty", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("POCount", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("InspectionDate", languageCode)</th>                                                                        
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Status", languageCode)</th>                                    
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Remark", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CreatedBy", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CreatedDate", languageCode)</th>
+                                    @*<th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("UpdatedBy", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("UpdatedDate", languageCode)</th> *@
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Notes", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("NotesReturn", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("TextRemark", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CombinedErrorDescriptions", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("NG_Rate", languageCode)</th>
+
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("SortingDate", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("SortingBy", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("TotalQtyReport", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("QtyOK", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("QtyNG", languageCode)</th>
+
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("WaitSorting", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("RateSortNG", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("SortingStatus", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("IssueLot", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("IssueQty", languageCode)</th>
+
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("SignQ", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("BalQty", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("TotalManPower", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("TotalHours", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CostPerHour", languageCode)</th>
+
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("TotalAM", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("NameSort", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Stock", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("DateCode", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Packing", languageCode)</th>
+
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Remark2", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("SLottagId", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("NLottagId", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("ReportRemark", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CreatedBy2", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CreatedDate2", languageCode)</th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.SortingMonitorList != null && Model.SortingMonitorList.Items != null)
+                                {
+                                    @foreach (var log in Model.SortingMonitorList.Items)
+                                    {
+                                        <tr>
+                                            <td>@log.ReportID</td>
+                                            <td>@log.LottagId</td>
+                                            <td>@log.VendorName</td>
+                                            <td>@log.VendorCode</td>
+                                            <td>@log.PartName</td>
+                                            <td>@log.PartCode</td>
+                                            <td>@log.PO_NO</td>
+                                            <td>@log.InvoiceNo</td>
+                                            <td>@log.POQty</td>
+                                            <td>@log.POCount</td>
+                                            <td>@log.InspectionDate.Value.ToString("yyyy/MM/dd")</td>
+                                            <td>@log.Status</td>
+                                            <td>@log.Remark</td>
+                                            <td>@log.CreatedBy</td>
+                                            <td>@log.CreatedDate.Value.ToString("yyyy/MM/dd")</td>
+                                            @*<td>@log.UpdatedBy</td>
+                                            <td>@log.UpdatedDate</td> *@
+                                            <td>@log.Notes</td>
+                                            <td>@log.NotesReturn</td>
+                                            <td>@log.TextRemark</td>
+                                            <td>@log.CombinedErrorDescriptions</td>
+                                            <td>@log.NG_Rate</td>
+
+                                            <td>@log.SortingDate.ToString("yyyy/MM/dd")</td>
+                                            <td>@log.SortingBy</td>
+                                            <td>@log.TotalQtyReport</td>
+                                            <td>@log.QtyOK</td>
+                                            <td>@log.QtyNG</td>
+                                            <td>@log.WaitSorting</td>
+                                            <td>@log.RateSortNG</td>
+                                            <td>@log.SortingStatus</td>
+                                            <td>@log.IssueLot</td>
+                                            <td>@log.IssueQty</td>
+                                            <td>@log.SignQ</td>
+                                            <td>@log.BalQty</td>
+                                            <td>@log.TotalManPower</td>
+                                            <td>@log.TotalHours </td>
+                                            <td>@log.CostPerHour</td>
+                                            <td>@log.TotalAM</td>
+                                            <td>@log.NameSort</td>
+                                            <td>@log.Stock</td>
+                                            <td>@log.DateCode</td>
+                                            <td>@log.Packing</td>
+                                            <td>@log.Remark2</td>
+                                            <td>@log.SLottagId</td>
+                                            <td>@log.NLottagId</td>
+                                            <td>@log.ReportRemark</td>
+                                            <td>@log.CreatedBy2</td>
+                                            <td>@log.CreatedDate2.ToString("yyyy/MM/dd")</td>
+
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center">@T.GetTranslation(ViewBag.Message, languageCode)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,25 @@
+﻿@using MESWebDev.Services
+@model MESWebDev.Models.IQC.VM.FillItemsVM
+@inject ITranslationService TranslationService
+@{
+    bool isAlreadySent = false;
+    if (Model.Report.Status != "PENDING" &&
+    Model.Report.Status != "RETURN TO INSPECTOR")
+    {
+        isAlreadySent = true;
+    }
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+}
+<div class="mt-3 border-top pt-3">        
+    <button class="btn btn-success" 
+        onclick="sendForApproval('@Model.ReportId')"
+        @(isAlreadySent? "disabled":"")>
+        @TranslationService.GetTranslation("SendForApproval", languageCode)
+    </button>
+    @if (isAlreadySent)
+    {
+        <p class="text-muted mt-2">
+            @TranslationService.GetTranslation("AlreadySent", languageCode): @Model.Report.Status
+        </p>
+    }
+</div>

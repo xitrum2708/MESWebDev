@@ -1,0 +1,178 @@
+﻿@using MESWebDev.Models.SMT.VM
+@using MESWebDev.Services
+@inject ITranslationService T
+@model SMT_ViewModel
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = T.GetTranslation("AOIMatrixHistory", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";    
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+               @*  <div class="card-header">
+                    <h3 class="card-title">@TranslationService.GetTranslation("ListOfTelStarProduct", languageCode)</h3>
+                </div> *@
+                <div class="card-body">                    
+                     <form asp-action="ImportData" enctype="multipart/form-data" method="post">
+                        <input type="file" name="file" />
+                        <button type="submit">Import Excel</button>
+                    </form>
+                    <form asp-action="AOIMatrixHistory" method="get" class="mb-3">
+                        <div class="d-flex flex-wrap align-items-end">                           
+                            @Html.AntiForgeryToken()
+                            <!-- SearchTerm -->
+                            <div class="form-group mx-2 py-1" style="min-width: 200px;">
+                                <label>@T.GetTranslation("SearchTerm", languageCode):</label>
+                                <input type="text" name="SearchTerm" placeholder="@T.GetTranslation("Searchtext",languageCode)"
+                                        value="@(Model.SearchTerm ?? "")" class="form-control" />
+                            </div>
+                            <!-- Hidden Fields -->
+                            <input type="hidden" name="page" value="1" />
+                            @if (Model.matrixMaster.Items.Count > 0)
+                            {
+                                <input type="hidden" name="pageSize" value="@Model.matrixMaster.PageSize" />
+                            }
+                            else
+                            {
+                                <input type="hidden" name="pageSize" value="10" />
+                            }
+                            <!-- Filter Button -->
+                            <div class="form-group mx-2 py-1">
+                                <button type="submit" class="btn btn-primary">@T.GetTranslation("Filter", languageCode)</button>
+                            </div>
+                            <!-- Download Button -->
+                            @{
+                                var downloadModel = new DownloadButtonModel
+                                {
+                                    Controller = "AOIError",
+                                    Action = "ExportAOISearchToExcel",
+                                    RouteValues = new Dictionary<string, string>
+                                                {                                             
+                                                { "searchText", Model.SearchTerm}
+                                                },
+                                    ButtonText = T.GetTranslation("ExportToExcel", languageCode)
+                                };
+                            }
+                            @await Html.PartialAsync("_DownloadButton", downloadModel)
+                        </div>
+                       
+                    </form>
+                    <!-- Phân trang -->
+                    @if (Model.matrixMaster != null && Model.matrixMaster.TotalPages > 1)
+                    {
+                        @await Html.PartialAsync("_Pagination", Model.matrixMaster)
+                    }
+                    <div style="max-height:600px; overflow-y:auto;">
+                        <table class="table table-bordered table-hover table-sm m-0" style="margin:0;">
+                            <thead style="position: sticky; top:0; z-index:1;">
+                                 <tr>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Model", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("PCB_No", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("PCB_SIDE", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("PCB_TYPE", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Board_Pcs_Per_Sheet", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("PCB_Per_Model", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("RoHS", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("RV_TYPE_1", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("LotNo_1", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("RV_TYPE_2", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("LotNo_2", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Load_IC_OR_Jig_Check", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Type", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Program_Name", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("ADD_Info", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Reel_Of_Part_Qty", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Chips_Per_PCS", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Chips_Per_Board", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Chips_Per_Model", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CPH", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("GXH1_SIM_Time_Seconds", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("GXH3_SIM_Time_Seconds", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("TACT_Time_Seconds", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("SIM_OUT_PCS_Per_Hour", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Output_1h", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Output_2h", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Output_Day", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Output_Night", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("X_mm", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Y_mm", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("T_mm", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Mark_LotNo", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Paste_mg", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("DIP_mg", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Finish_Status", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Remark", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Solder_Type", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Key_Work", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CreatedBy", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CreatedDate", languageCode)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.matrixMaster != null && Model.matrixMaster.Items != null)
+                                {
+                                    @foreach (var log in Model.matrixMaster.Items)
+                                    {
+                                         <tr>
+                                            <td>@log.Model</td>
+                                            <td>@log.PCB_No</td>
+                                            <td>@log.PCB_SIDE</td>
+                                            <td>@log.PCB_TYPE</td>
+                                            <td>@log.Board_Pcs_Per_Sheet</td>
+                                            <td>@log.PCB_Per_Model</td>
+                                            <td>@log.RoHS</td>
+                                            <td>@log.RV_TYPE_1</td>
+                                            <td>@log.LotNo_1</td>
+                                            <td>@log.RV_TYPE_2</td>
+                                            <td>@log.LotNo_2</td>
+                                            <td>@log.Load_IC_OR_Jig_Check</td>
+                                            <td>@log.Type</td>
+                                            <td>@log.Program_Name</td>
+                                            <td>@log.ADD_Info</td>
+                                            <td>@log.Reel_Of_Part_Qty</td>
+                                            <td>@log.Chips_Per_PCS</td>
+                                            <td>@log.Chips_Per_Board</td>
+                                            <td>@log.Chips_Per_Model</td>
+                                            <td>@log.CPH</td>
+                                            <td>@log.GXH1_SIM_Time_Seconds</td>
+                                            <td>@log.GXH3_SIM_Time_Seconds</td>
+                                            <td>@log.TACT_Time_Seconds</td>
+                                            <td>@log.SIM_OUT_PCS_Per_Hour</td>
+                                            <td>@log.Output_1h</td>
+                                            <td>@log.Output_2h</td>
+                                            <td>@log.Output_Day</td>
+                                            <td>@log.Output_Night</td>
+                                            <td>@log.X_mm</td>
+                                            <td>@log.Y_mm</td>
+                                            <td>@log.T_mm</td>
+                                            <td>@log.Mark_LotNo</td>
+                                            <td>@log.Paste_mg</td>
+                                            <td>@log.DIP_mg</td>
+                                            <td>@log.Finish_Status</td>
+                                            <td>@log.Remark</td>
+                                            <td>@log.Solder_Type</td>
+                                            <td>@log.Key_Work</td>
+                                            <td>@log.CreatedBy</td>
+                                            <td>@log.CreatedDate.ToString("yyyy/MM/dd")</td>                                        
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center">@T.GetTranslation(ViewBag.Message, languageCode)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

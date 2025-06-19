@@ -1,0 +1,66 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model PagedResult<MenuTranslationViewModel>
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuTranslationManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("ListOfMenuTranslation", languageCode)</h3>
+                        <div class="card-tools">
+                            <a href="@Url.Action("Create", "MenuTranslation")" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg"></i> @TranslationService.GetTranslation("AddNewMenuTranslation", languageCode)
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Phân trang -->
+                        @await Html.PartialAsync("_SearchForm", Model)
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>@TranslationService.GetTranslation("Menu", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Language", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Title", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Description", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Action", languageCode)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var menuTranslation in Model.Items)
+                                    {
+                                        <tr>
+                                            <td>@menuTranslation.MenuTitle</td>
+                                            <td>@menuTranslation.LanguageName</td>
+                                            <td>@menuTranslation.Title</td>
+                                            <td>@menuTranslation.Description</td>
+                                            <td>
+                                                <a asp-action="Edit" asp-route-menuId="@menuTranslation.MenuId" asp-route-languageId="@menuTranslation.LanguageId" class="btn btn-sm btn-warning">@TranslationService.GetTranslation("Edit", languageCode)</a>
+                                                <a asp-action="Delete" asp-route-menuId="@menuTranslation.MenuId" asp-route-languageId="@menuTranslation.LanguageId" class="btn btn-sm btn-danger">@TranslationService.GetTranslation("Delete", languageCode)</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Phân trang -->
+                        @await Html.PartialAsync("_Pagination", Model)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,18 @@
+﻿@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Services
+@model FillItemsVM
+@inject ITranslationService TranslationService
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    
+}
+<div class="mb-3">
+    <label for="judgment" class="form-label">@TranslationService.GetTranslation("DeliveryStatus", languageCode):</label>
+    <select id="judgment" name="ReportItem.Judgment" class="form-select">
+        <option value="">@TranslationService.GetTranslation("Select", languageCode)</option>
+        <option value="OK">OK</option>
+        <option value="NG">NG</option>
+    </select>
+</div>
+<br>
+

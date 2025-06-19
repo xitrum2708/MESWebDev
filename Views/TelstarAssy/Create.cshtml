@@ -1,0 +1,348 @@
+﻿@using MESWebDev.Models.TELSTAR.VM
+@model TELSTAR_ASSY_VM
+@inject MESWebDev.Services.ITranslationService T
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = T.GetTranslation("CreateTELSTARASSYEntry", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+
+<style>
+    .scrollable-table {
+        max-height: 300px;
+        overflow-y: auto;
+        display: block;
+    }
+
+        .scrollable-table thead, .scrollable-table tbody {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .scrollable-table tbody {
+            display: block;
+            overflow-y: auto;
+        }
+
+        .scrollable-table tr {
+            width: 100%;
+            display: table;
+        }
+
+        .scrollable-table th, .scrollable-table td {
+            word-wrap: break-word;
+        
+        }
+    .scrollable-table th:nth-child(1), .scrollable-table td:nth-child(1) { width: 15%; } /* LotNo */
+    .scrollable-table th:nth-child(2), .scrollable-table td:nth-child(2) { width: 15%; } /* Model */
+    .scrollable-table th:nth-child(3), .scrollable-table td:nth-child(3) { width: 10%; } /* Line */
+    .scrollable-table th:nth-child(4), .scrollable-table td:nth-child(4) { width: 30%; } /* QRCode */
+    .scrollable-table th:nth-child(5), .scrollable-table td:nth-child(5) { width: 30%; } /* CreatedDate */
+
+</style>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left: Input Form -->
+            <div class="col-md-2">
+                <h4>@T.GetTranslation("ExportTELSTARASSY",languageCode)</h4>
+                <form id="telstarForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="form-group">
+                        <label asp-for="SelectedLotNo">@T.GetTranslation("SelectLotNo", languageCode)</label>
+                        <select name="SelectedLotNo" class="form-select" id="lotNoSelect">
+                            <option value="">@T.GetTranslation("SelectLotNo",languageCode)</option>
+                            @foreach (var item in Model.LotNoList)
+                            {
+                                <option value="@item.Value">@item.Text</option>
+                            }
+                        </select>
+                        <input type="hidden" name="SelectedLotNo" id="hiddenLotNo" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Model">Model</label>
+                        <input name="Model" class="form-control" id="modelInput" readonly />
+                        <input type="hidden" name="Model" id="hiddenModel" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SelectedLine">@T.GetTranslation("SelectedLine", languageCode)</label>
+                        <select name="SelectedLine" class="form-select" id="SelectedLine">
+                            <option value="">@T.GetTranslation("SelectedLine",languageCode)</option>
+                            @foreach (var item in Model.LineList)
+                            {
+                                <option value="@item.Value">@item.Text</option>
+                            }
+                        </select>
+                        <input type="hidden" name="SelectedLine" id="hiddenLine" />
+                    </div>
+                    <div class="form-group">
+                        <label for="QRCode">QRCode</label>
+                        <input name="QRCode" class="form-control" id="qrCodeInput" autofocus />
+                    </div>
+                    <div class="form-group">
+                        <button type="button" id="clearButton" class="btn btn-secondary">Clear</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right: Display Input List -->
+            <div class="col-md-10">
+                <h4>Scanned QR Codes</h4>
+                <div class="mb-2">
+                    <strong>Date:</strong> <span id="currentDate">@ViewBag.CurrentDate</span><br />
+                    <strong>@T.GetTranslation("NumberofQRCodesTodaybyUser",languageCode)</strong> <span id="qrCodesTodayByUser">@Model.QRCodesTodayByUser.ToString("N0")</span><br />
+                    <strong>@T.GetTranslation("LotSizeforSelectedLot",languageCode)</strong> <span id="lotSize">N/A</span><br />
+                    <strong>@T.GetTranslation("TotalOutputPerLotSize",languageCode)</strong> <span id="totalOutputPerLotSize">0 / N/A</span><br />
+                    <strong>@T.GetTranslation("TotalbyLotToday",languageCode)</strong> <span id="totalByLot">0</span><br />
+                    <strong>@T.GetTranslation("TotalbyUserToday",languageCode)</strong> <span id="totalByUser">0</span>
+                </div>
+                <table class="table table-bordered scrollable-table" id="scannedTable">
+                    <thead>
+                        <tr>
+                            <th>LotNo</th>
+                            <th>Model</th>
+                            <th>Line</th>
+                            <th>QRCode</th>
+                            <th>Created Date</th> <!-- New column -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- JS dynamically fills rows -->
+                        
+                    </tbody>                   
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+        <script>
+            $(document).ready(function () {
+                let scannedData = [];
+                let isFieldsLocked = false;
+                let currentLotSize = 0;
+
+            // Fetch and update the total output for the current LotNo
+            function updateTotalOutputPerLotSize() {
+                const currentLot = $('#lotNoSelect').val();
+                if (!currentLot) {
+                    $('#totalOutputPerLotSize').text('0 / N/A');
+                    return;
+                }
+
+                $.getJSON('@Url.Action("GetTotalQRCodesForLot", "TelstarAssy")', { lotNo: currentLot }, function (total) {
+                    const lotSizeText = currentLotSize > 0 ? currentLotSize : 'N/A';
+                    $('#totalOutputPerLotSize').text(`${total.toLocaleString()} / ${lotSizeText.toLocaleString()}`);
+                    console.log(`Total Output for Lot ${currentLot}: ${total}`);
+                }).fail(function (xhr) {
+                    console.error('Failed to fetch total QR codes for lot:', xhr.status, xhr.responseText);
+                    $('#totalOutputPerLotSize').text('0 / N/A');
+                });
+            }
+
+            $('#lotNoSelect').change(function () {
+                const lot = $(this).val();
+                if (lot) {
+                    $.getJSON('@Url.Action("GetModelByLotNo", "TelstarAssy")', { lotNo: lot }, function (data) {
+                        $('#modelInput').val(data.model);
+                        currentLotSize = data.lotSize || 0;
+                            $('#lotSize').text(currentLotSize > 0 ? currentLotSize.toLocaleString() : 'N/A');
+                        updateTotalOutputPerLotSize();
+                        console.log(`Model populated: ${data.model}, LotSize: ${currentLotSize}`);
+                    }).fail(function (xhr) {
+                        $('#modelInput').val('');
+                        $('#lotSize').text('N/A');
+                        currentLotSize = 0;
+                        updateTotalOutputPerLotSize();
+                        console.error('Failed to fetch model and lot size:', xhr.status, xhr.responseText);
+                        toastr.error('@T.GetTranslation("FailedtofetchmodelfortheselectedLotNo", languageCode)','',{
+                            closeButton: true,
+                             progressBar: true,
+                             timeOut: 5000 });
+                        //alert('Failed to fetch model for the selected LotNo.');
+                    });
+                } else {
+                    $('#modelInput').val('');
+                    $('#lotSize').text('N/A');
+                    currentLotSize = 0;
+                    updateTotalOutputPerLotSize();
+                    console.log('LotNo cleared, Model and LotSize reset');
+                }
+            });
+
+            function lockFields() {
+                $('#hiddenLotNo').val($('#lotNoSelect').val());
+                $('#hiddenModel').val($('#modelInput').val());
+                $('#hiddenLine').val($('#SelectedLine').val());
+
+                $('#lotNoSelect').prop('disabled', true);
+                $('#modelInput').prop('disabled', true);
+                $('#SelectedLine').prop('disabled', true);
+                isFieldsLocked = true;
+                console.log('Fields locked');
+            }
+
+            function unlockFields() {
+                $('#lotNoSelect').prop('disabled', false);
+                $('#modelInput').prop('disabled', false);
+                $('#SelectedLine').prop('disabled', false);
+                $('#hiddenLotNo').val('');
+                $('#hiddenModel').val('');
+                $('#hiddenLine').val('');
+                isFieldsLocked = false;
+                console.log('Fields unlocked');
+            }
+
+            $('#qrCodeInput').keypress(function (e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+
+                    const qr = $(this).val().trim();
+                    const lot = $('#lotNoSelect').val();
+                    const model = $('#modelInput').val();
+                    const line = $('#SelectedLine').val();
+
+                    console.log('Submitting:', { qr, lot, model, line });
+
+                    if (!lot) {
+                        console.log('Validation failed: LotNo missing');
+                         toastr.error('@T.GetTranslation("SelectLotNo", languageCode)','',{
+                                    closeButton: true,
+                                     progressBar: true,
+                                     timeOut: 5000
+                                    });
+                        //alert('Please select a LotNo.');
+                        return;
+                    }
+                    if (!model) {
+                        console.log('Validation failed: Model missing');
+                     toastr.error('@T.GetTranslation("ModelShow", languageCode)','',{
+                                    closeButton: true,
+                                     progressBar: true,
+                                     timeOut: 5000
+                                    });
+                        //alert('Please ensure a valid Model is populated.');
+                        return;
+                    }
+                    if (!line) {
+                        console.log('Validation failed: Line missing');
+                     toastr.error('@T.GetTranslation("SelectedLine", languageCode)','',{
+                                    closeButton: true,
+                                     progressBar: true,
+                                     timeOut: 5000
+                                    });
+                        //alert('Please select a Line.');
+                        return;
+                    }
+                    if (!qr) {
+                        console.log('Validation failed: QRCode missing');
+                         toastr.error('@T.GetTranslation("InputQRCode", languageCode)','',{
+                                    closeButton: true,
+                                     progressBar: true,
+                                     timeOut: 5000
+                                    });
+                        //alert('Please enter a QRCode.');
+                        return;
+                    }
+
+                    const formData = new FormData(document.getElementById("telstarForm"));
+                    console.log("Form Data: ", $('#telstarForm').serialize());
+
+                    $.ajax({
+                        url: '/TelstarAssy/Create',
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (response) {
+                            console.log('AJAX Success:', response);
+                            if (response.success) {
+                                toastr.success(response.message,'',{
+                                    closeButton: true,
+                                    progressBar: true,
+                                    timeOut: 1000
+                                });
+                                scannedData.push({ lot, model, line, qr });
+
+                                $('#scannedTable tbody').prepend(
+                                        `<tr><td>${lot}</td><td>${model}</td><td>${line}</td><td>${qr}</td><td>${response.createdDate}</td></tr>`
+                                );
+
+                                $('#scannedTable tbody').scrollTop(0);
+
+                                    $('#totalByLot').text(scannedData.filter(d => d.lot === lot).length.toLocaleString());
+                                    $('#totalByUser').text(scannedData.length.toLocaleString());
+
+                                // Update total output per lot size using the value from the server
+                                const totalQRCodesForLot = response.totalQRCodesForLot || 0;
+                                const lotSizeText = currentLotSize > 0 ? currentLotSize : 'N/A';
+                                    $('#totalOutputPerLotSize').text(`${totalQRCodesForLot.toLocaleString()} / ${lotSizeText.toLocaleString()}`);
+
+                                const currentQRCodesToday = parseInt($('#qrCodesTodayByUser').text());
+                                $('#qrCodesTodayByUser').text(currentQRCodesToday.toLocaleString() + 1);
+
+                                if (!isFieldsLocked) {
+                                    lockFields();
+                                }
+
+                                $('#qrCodeInput').val('');
+                                $('#qrCodeInput').select();
+                                $('#qrCodeInput').focus();
+                            } else {
+                                    $('#qrCodeInput').val('');
+                                    $('#qrCodeInput').select();
+                                    $('#qrCodeInput').focus();
+                                console.log('Server validation errors:', response.errors);
+                                toastr.error('Error: ' + response.errors.join(', '),'',{
+                                    closeButton: true,
+                                     progressBar: true,
+                                     timeOut: 5000
+                                    });
+                               // alert('Error: ' + response.errors.join(', '));
+                            }
+                        },
+                        error: function (xhr) {
+                            console.error('AJAX Error:', xhr.status, xhr.responseText);
+                            toastr.error('Failed to submit QRCode: ' + (xhr.responseText || 'Unknown error'),'',{
+                                closeButton: true,
+                             progressBar: true,
+                             timeOut: 5000
+                            });
+                            // alert('Failed to submit QRCode: ' + (xhr.responseText || 'Unknown error'));
+                        }
+                    });
+                }
+            });
+
+            $('#clearButton').click(function () {
+                unlockFields();
+
+                $('#lotNoSelect').val('');
+                $('#modelInput').val('');
+                $('#SelectedLine').val('');
+                $('#qrCodeInput').val('');
+
+                scannedData = [];
+                $('#scannedTable tbody').empty();
+                $('#totalByLot').text('0');
+                $('#totalByUser').text('0');
+                $('#lotSize').text('N/A');
+                $('#totalOutputPerLotSize').text('0 / N/A');
+                currentLotSize = 0;
+
+                $('#lotNoSelect').focus();
+                console.log('Form cleared and fields unlocked');
+            });
+        });
+    </script>
+
+
+}

@@ -1,0 +1,861 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Services
+@model FillItemsVM
+@inject ITranslationService TranslationService
+
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("IQCReceiveLottagFromWHS", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<style>
+    /* Giới hạn chiều cao, cho phép cả hai hướng cuộn */
+    #itemDataContainer {
+        max-height: 400px; /* tuỳ chỉnh chiều cao tối đa */
+        overflow: auto; /* cuộn ngang & dọc khi nội dung quá lớn */
+    }
+
+        /* Cho bảng tự co dãn chiều rộng */
+        #itemDataContainer table {
+            width: 100%; /* chiếm hết chiều rộng vùng chứa */
+            width: max-content; /* rộng vừa đủ nội dung */
+           
+        }
+</style>
+<div class="app-content">
+    <div class="container-fluid">
+        <!-- Success Toast -->
+        <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 9999">
+            <div id="successToast" class="toast text-white bg-success border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body" id="successToastMessage">
+                        Thành công!
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        <!-- Toast Container -->
+        <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 9999">
+            <div id="errorToast" class="toast text-white bg-danger border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body" id="toastMessage">
+                        Lỗi sẽ hiện tại đây...
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="row gx-3 gy-2">
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <strong>@TranslationService.GetTranslation("ReportID", languageCode):</strong>
+                    <span>@Model.Report.ReportID</span>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <strong>@TranslationService.GetTranslation("PartCode", languageCode):</strong>
+                    <span>@Model.Report.PartCode</span>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <strong>@TranslationService.GetTranslation("VendorCode", languageCode):</strong>
+                    <span>@Model.Report.VendorCode</span>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <strong>@TranslationService.GetTranslation("VendorName", languageCode):</strong>
+                    <span>@Model.Report.VendorName</span>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <strong>@TranslationService.GetTranslation("Qty", languageCode):</strong>
+                    <span>@Model.Report.POQty</span>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-2">
+                    <strong>@TranslationService.GetTranslation("POCount", languageCode):</strong>
+                    <span>@Model.Report.POCount</span>
+                </div>
+            </div>
+            <div class="col-12 mb-3">
+                <label>@TranslationService.GetTranslation("SelectItem", languageCode):</label>
+                <select id="itemSelector" class="form-select">
+                    <option value="">@TranslationService.GetTranslation("SelectItemPrompt", languageCode)</option>
+                    @foreach (var it in Model.Items)
+                    {
+                        <option value="@it.ItemID">@it.ItemName</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <!-- Hàng 2: 2 cột -->
+        <div class="row">
+            <!-- Cột trái: Form nhập liệu -->
+            <div class="col-md-6">
+                <div id="itemFormContainer" class="border p-3 bg-light">
+                    <p class="text-muted">@TranslationService.GetTranslation("SelectItemToStart", languageCode)</p>
+                </div>
+            </div>
+
+            <!-- Cột phải: Danh sách các bản ghi đã nhập -->
+            <div class="col-md-6">
+                <div id="itemDataContainer" class="border p-3 bg-light">
+                    <p class="text-muted">@TranslationService.GetTranslation("DataWillAppearHere", languageCode)</p>
+                </div>
+            </div>
+        </div>
+    </div>    
+</div>
+
+@section Scripts {
+    <script>
+        // =========================
+        // 1) INIT FUNCTIONS CHUNG
+        //    - mọi init_<PartialName>() được load 1 lần cùng page
+        // =========================
+
+        // _DeliveryForm
+        window.init_DeliveryForm = function() {
+          const btn = document.getElementById("btnSaveItem");
+          const sel = document.getElementById("judgment");
+          if (!btn || !sel) return;
+          btn.disabled = true;
+          sel.addEventListener("change", () => {
+            btn.disabled = !(sel.value === "OK" || sel.value === "NG");
+          });
+        };
+        // _FinalForm
+        window.init_FinalForm = function() {
+          const btn = document.getElementById("btnSaveItem");
+          const sel = document.getElementById("finalAdjustment");
+          if (!btn || !sel) return;
+          btn.disabled = true;
+          sel.addEventListener("change", () => {
+            btn.disabled = !(sel.value === "ACCEPT" || sel.value === "REJECT");
+          });
+        };
+
+        // _AppearanceForm
+        window.init_AppearanceForm = function() {
+          const btn        = document.getElementById("btnSaveItem");
+          const samp       = document.getElementById("samplingSize");
+          const r100       = document.getElementById("aql100");
+          const rgrp       = document.getElementById("aqlGroup");
+          const grpDiv     = document.getElementById("groupSelections");
+          const g1Els      = document.querySelectorAll('input[name="group1"]');
+          const g2Els      = document.querySelectorAll('input[name="group2"]');
+          const search     = document.getElementById("errorSearch");
+          const errorList  = document.getElementById("errorList");
+          const hiddenErr  = document.getElementById("ReportItem_ErrorCodeID");
+          const stdField   = document.getElementById("standardField");
+          const typeEls    = document.querySelectorAll('input[name="ReportItem.SelectedErrorType"]');
+          const typeDiv    = document.getElementById("errorTypeContainer");
+          const qtyContainer = document.getElementById("errorQtyContainer");
+          const qtyCri     = document.getElementById("qty_cri");
+          const qtyMaj     = document.getElementById("qty_maj");
+          const qtyMin     = document.getElementById("qty_min");
+          
+          const spanCri = document.querySelector('span[data-valmsg-for="ReportItem.CRI"]');
+          const spanMaj = document.querySelector('span[data-valmsg-for="ReportItem.MAJ"]');
+          const spanMin = document.querySelector('span[data-valmsg-for="ReportItem.MIN"]');
+        
+          console.log("SpanCRI", spanCri);
+          console.log("spanMaj", spanMaj);
+          console.log("spanMin", spanMin);
+
+          // Xử lý datalist -> gán hiddenErr + gọi lại toggleAll
+          search.addEventListener('input', () => {
+            const val = search.value;
+            let found = false;
+            errorList.querySelectorAll('option').forEach(o => {
+              if (o.value === val) {
+                hiddenErr.value = o.dataset.id;
+                found = true;
+              }
+            });
+            if (!found) hiddenErr.value = "";
+            toggleAll();
+          });        
+         
+          // Hàm chính show/hide & enable/disable nút Save
+          function toggleAll() {
+
+            // AQL Group
+            grpDiv.style.display = rgrp.checked ? "block" : "none";
+
+            // ErrorType & Qty
+            // const hasErr = hiddenErr.value !== "";
+            const hasErr = hiddenErr.value !== "" && hiddenErr.value !== "0";
+                    let selType = null;
+        if (hasErr) {
+          selType = Array.from(typeEls).find(r=>r.checked)?.value;
+        } else {
+          // nếu chưa có lỗi, dọn luôn radio để không ai còn checked
+          typeEls.forEach(r=> r.checked = false);
+        }
+
+            typeDiv.style.display      = hasErr ? "block" : "none";
+            qtyContainer.style.display = hasErr ? "block" : "none";
+
+            // Chỉ show đúng ô Qty tương ứng
+            // [qtyCri, qtyMaj, qtyMin].forEach(el => el.style.display = "none");
+            // const selType = Array.from(typeEls).find(r=>r.checked)?.value;
+                    // 2) mới detect selType
+        if (hasErr) {
+          // giữ radio đã check nếu có
+          // (nếu user lần đầu chọn MAJ rồi form load lại do validation error, hiddenErr vẫn có,
+          //  nên MAJ sẽ vẫn checked)
+          selType = Array.from(typeEls).find(r=>r.checked)?.value;
+        } else {
+          // dọn sạch radio
+          typeEls.forEach(r=> r.checked = false);
+          selType = null;
+        }
+
+            console.log("SelType: ",selType);
+                  // CRI
+                if (selType === "CRI") {
+                  qtyCri.style.display = "block";
+                  qtyCri.disabled = false;
+                  spanCri.style.display = "block";
+                } else {
+                  qtyCri.style.display = "none";
+                  qtyCri.disabled = true;
+                  qtyCri.value = "";      // hoặc clamp về blank
+
+                      spanCri.style.display = "none";
+        spanCri.textContent = "";
+                }
+
+                // MAJ
+                if (selType === "MAJ") {
+                  qtyMaj.style.display = "block";
+                  qtyMaj.disabled = false;
+                  spanMaj.style.display = "block";
+                } else {
+                  qtyMaj.style.display = "none";
+                  qtyMaj.disabled = true;
+                  qtyMaj.value = "";
+
+                       spanMaj.style.display = "none";
+        spanMaj.textContent = "";
+                }
+
+                // MIN
+                if (selType === "MIN") {
+                  qtyMin.style.display = "block";
+                  qtyMin.disabled = false;
+                  spanMin.style.display = "block";
+                } else {
+                  qtyMin.style.display = "none";
+                  qtyMin.disabled = true;
+                  qtyMin.value = "";
+
+                  spanMin.style.display = "none";
+                  spanMin.textContent = "";
+                }
+
+
+            // Tính Standard và gán
+            let stdVal = "";
+            if (r100.checked) stdVal = "100";
+            else if (rgrp.checked) {
+              const g1 = Array.from(g1Els).find(r=>r.checked)?.value;
+              const g2 = Array.from(g2Els).find(r=>r.checked)?.value;
+              if (g1 && g2) stdVal = `${g1}-${g2}`;
+            }
+            stdField.value = stdVal;
+
+            // Điều kiện enable nút Save
+            const okS = samp.value > 0;
+            const okA = r100.checked
+                     || (rgrp.checked
+                       && Array.from(g1Els).some(r=>r.checked)
+                       && Array.from(g2Els).some(r=>r.checked));
+            const okE = !hasErr
+                     || (selType && (
+                          (selType==="CRI"&& +qtyCri.value>0)
+                       || (selType==="MAJ"&& +qtyMaj.value>0)
+                       || (selType==="MIN"&& +qtyMin.value>0)
+                     ));
+            btn.disabled = !(okS && okA/* && okE*/);
+          }
+
+          // Gắn listener mọi thứ
+          samp.addEventListener("input",    toggleAll);
+          [r100, rgrp].forEach(r=> r.addEventListener("change", toggleAll));
+          g1Els.forEach(r=> r.addEventListener("change", toggleAll));
+          g2Els.forEach(r=> r.addEventListener("change", toggleAll));
+          typeEls.forEach(r=> r.addEventListener("change", toggleAll));
+          [qtyCri, qtyMaj, qtyMin].forEach(q=> q.addEventListener("input", toggleAll));
+
+          // Xử lý fixed-state (prevStd từ server)
+          const isFixed = stdField.value !== "";
+          if (isFixed) {
+            // disable AQL & group khi đã cố định
+            [r100, rgrp].forEach(r => r && (r.disabled = true));
+            g1Els.forEach(r=> r.disabled = true);
+            g2Els.forEach(r=> r.disabled = true);
+            // optional: khoá sampling luôn: samp.readOnly = true;
+
+            // nếu prevStd là group, hiển thị luôn phần group
+            if (stdField.value !== "100") {
+              grpDiv.style.display = "block";
+            }
+          }
+
+          // ban đầu disable nút, focus sampling nếu cần
+          btn.disabled = true;
+          if (!samp.value) samp.focus();
+
+          // Chạy lần đầu để set đúng UI
+          toggleAll();
+        };
+
+        // _CommonForm
+        window.init_CommonForm = function() {
+          const btn        = document.getElementById("btnSaveItem");
+          const samp       = document.getElementById("samplingSize");
+         
+          const search     = document.getElementById("errorSearch");
+          const errorList  = document.getElementById("errorList");
+          const hiddenErr  = document.getElementById("ReportItem_ErrorCodeID");
+          const stdField   = document.getElementById("standardField");
+          const typeEls    = document.querySelectorAll('input[name="ReportItem.SelectedErrorType"]');
+          const typeDiv    = document.getElementById("errorTypeContainer");
+          const qtyContainer = document.getElementById("errorQtyContainer");
+          const qtyCri     = document.getElementById("qty_cri");
+          const qtyMaj     = document.getElementById("qty_maj");
+          const qtyMin     = document.getElementById("qty_min");
+
+          const spanCri = document.querySelector('span[data-valmsg-for="ReportItem.CRI"]');
+          const spanMaj = document.querySelector('span[data-valmsg-for="ReportItem.MAJ"]');
+          const spanMin = document.querySelector('span[data-valmsg-for="ReportItem.MIN"]');
+
+          console.log("SpanCri", spanCri);
+          console.log("spanMaj", spanMaj);
+          console.log("spanMin", spanMin);
+
+          // Xử lý datalist -> gán hiddenErr + gọi lại toggleAll
+          search.addEventListener('input', () => {
+            const val = search.value;
+            let found = false;
+            errorList.querySelectorAll('option').forEach(o => {
+              if (o.value === val) {
+                hiddenErr.value = o.dataset.id;
+                found = true;
+              }
+            });
+            if (!found) hiddenErr.value = "";
+            toggleAll();
+          });
+
+          // Hàm chính show/hide & enable/disable nút Save
+          function toggleAll() {          
+
+            // ErrorType & Qty
+            // const hasErr = hiddenErr.value !== "";
+            const hasErr = hiddenErr.value !== "" && hiddenErr.value !== "0";
+            let selType = null;
+             if (hasErr) {
+                selType = Array.from(typeEls).find(r=>r.checked)?.value;
+            } else {
+                // dọn sạch radio
+                typeEls.forEach(r=> r.checked = false);
+                selType = null;
+            }
+
+            typeDiv.style.display      = hasErr ? "block" : "none";
+            qtyContainer.style.display = hasErr ? "block" : "none";
+            // Chỉ show đúng ô Qty tương ứng 
+            console.log("SelType: ",selType);
+                  // CRI
+                if (selType === "CRI") {
+                  qtyCri.style.display = "block";
+                  qtyCri.disabled = false;
+                  spanCri.style.display = "block";
+                } else {
+                  qtyCri.style.display = "none";
+                  qtyCri.disabled = true;
+                  qtyCri.value = "";      // hoặc clamp về blank
+
+                  spanCri.style.display = "none";
+                  spanCri.textContent = "";
+                }
+
+                // MAJ
+                if (selType === "MAJ") {
+                  qtyMaj.style.display = "block";
+                  qtyMaj.disabled = false;
+                  spanMaj.style.display = "block";
+                } else {
+                  qtyMaj.style.display = "none";
+                  qtyMaj.disabled = true;
+                  qtyMaj.value = "";
+                  
+                  spanMaj.style.display = "none";
+                  spanMaj.textContent = "";
+                }
+
+                // MIN
+                if (selType === "MIN") {
+                  qtyMin.style.display = "block";
+                  qtyMin.disabled = false;
+                  spanMin.style.display = "block";
+                } else {
+                  qtyMin.style.display = "none";
+                  qtyMin.disabled = true;
+                  qtyMin.value = "";
+
+                  spanMin.style.display = "none";
+                  spanMin.textContent = "";
+                }
+
+            // Điều kiện enable nút Save
+            const okS = samp.value > 0;          
+            const okE = !hasErr
+                     || (selType && (
+                          (selType==="CRI"&& +qtyCri.value>0)
+                       || (selType==="MAJ"&& +qtyMaj.value>0)
+                       || (selType==="MIN"&& +qtyMin.value>0)
+                     ));
+            btn.disabled = !(okS);
+          }
+
+          // Gắn listener mọi thứ
+          samp.addEventListener("input",    toggleAll);         
+          typeEls.forEach(r=> r.addEventListener("change", toggleAll));
+          [qtyCri, qtyMaj, qtyMin].forEach(q=> q.addEventListener("input", toggleAll));          
+
+          // ban đầu disable nút, focus sampling nếu cần
+          btn.disabled = true;
+          if (!samp.value) samp.focus();
+
+          // Chạy lần đầu để set đúng UI
+          toggleAll();
+        };
+
+        // _DimensionalForm
+        window.init_DimensionalForm = function() {
+          const btn        = document.getElementById("btnSaveItem");
+          const samp       = document.getElementById("samplingSize");
+
+          const search     = document.getElementById("errorSearch");
+          const errorList  = document.getElementById("errorList");
+          const hiddenErr  = document.getElementById("ReportItem_ErrorCodeID");
+          const stdField   = document.getElementById("standardField");
+          const typeEls    = document.querySelectorAll('input[name="ReportItem.SelectedErrorType"]');
+          const typeDiv    = document.getElementById("errorTypeContainer");
+          const qtyContainer = document.getElementById("errorQtyContainer");
+          const qtyCri     = document.getElementById("qty_cri");
+          const qtyMaj     = document.getElementById("qty_maj");
+          const qtyMin     = document.getElementById("qty_min");
+
+          const spanCri = document.querySelector('span[data-valmsg-for="ReportItem.CRI"]');
+          const spanMaj = document.querySelector('span[data-valmsg-for="ReportItem.MAJ"]');
+          const spanMin = document.querySelector('span[data-valmsg-for="ReportItem.MIN"]');
+          
+          const count = 5;
+          const specInputs   = Array.from(document.querySelectorAll(".spec-input"));
+          const detailInputs = Array.from(document.querySelectorAll(".detail-input"));
+
+          console.log("SpanCri", spanCri);
+          console.log("spanMaj", spanMaj);
+          console.log("spanMin", spanMin);
+
+          const numRegex = /^\d+(?:\.\d+)?(?:[+\-]\d+(?:\.\d+)?)?$/;
+          
+          function sanitizeNumber(str) {
+              return str.replace(/[^\d\+\-\.]/g, "");
+          }
+
+          function isValidNumber(str) {
+              return numRegex.test(str);
+          }
+          // 2) Dimension state
+          // bật detail[i] khi spec[i] có value, kiểm số, kiểm detail
+        function updateDimension() {
+          let ok = true;
+          let anySpec = false;
+              specInputs.forEach((spec, idx) => {
+                  const val=spec.value.trim();
+                  const det = detailInputs[idx];
+                  const specErr = document.querySelector(`.spec-error[data-index="${idx}"]`);
+                  const detErr  = document.querySelector(`.detail-error[data-index="${idx}"]`);
+                    if (val !== "") {
+                // bật detail
+                anySpec=true;
+                det.disabled = false;
+                console.log("Val: ",val);
+           
+                // validate spec
+                if (!isValidNumber(val)) {
+                  specErr.style.display = "block";
+                  console.log("det_1: ",det);
+                  ok = false;
+                } else {
+                  specErr.style.display = "none";
+                }
+
+                // validate detail
+                 console.log("det v: ",det.value.trim());
+                if (det.value.trim() === "") {
+                   console.log("det_2: ",det);
+                  detErr.textContent = "Vui lòng nhập DIMENSION";
+                  detErr.style.display = "block";
+                  ok = false;
+                }
+                else if (!isValidNumber(det.value.trim())) {
+                  console.log("det_3: ",det);
+                  detErr.textContent = "Giá trị không hợp lệ";
+                  detErr.style.display = "block";
+                  ok = false;
+                }
+                else {
+                  detErr.style.display = "none";
+                }
+              } else {
+                // nếu spec rỗng, tắt detail, xóa giá trị + ẩn lỗi
+                console.log("det_4: ",det);
+                det.disabled = true;
+                det.value    = "";
+                specErr.style.display = "none";
+                detErr.style.display  = "none";           
+              }
+            });
+          return ok && anySpec;
+        }
+        
+        // 3) Error state
+        function updateError() {
+            const hasErr = hiddenErr.value !== "" && hiddenErr.value !== "0";
+            let selType = null;
+            if (hasErr) {
+                selType = Array.from(typeEls).find(r=>r.checked)?.value;
+            } else {
+                // dọn sạch radio
+                typeEls.forEach(r=> r.checked = false);
+                selType = null;
+            }
+
+            typeDiv.style.display      = hasErr ? "block" : "none";            
+            qtyContainer.style.display = hasErr ? "block" : "none";
+
+             // Chỉ show đúng ô Qty tương ứng
+            console.log("SelType: ",selType);
+              // CRI
+            if (selType === "CRI") {
+              qtyCri.style.display = "block";
+              qtyCri.disabled = false;
+              spanCri.style.display = "block";
+            } else {
+              qtyCri.style.display = "none";
+              qtyCri.disabled = true;
+              qtyCri.value = "";      // hoặc clamp về blank
+
+              spanCri.style.display = "none";
+              spanCri.textContent = "";
+            }
+
+            // MAJ
+            if (selType === "MAJ") {
+              qtyMaj.style.display = "block";
+              qtyMaj.disabled = false;
+              spanMaj.style.display = "block";
+            } else {
+              qtyMaj.style.display = "none";
+              qtyMaj.disabled = true;
+              qtyMaj.value = "";
+
+              spanMaj.style.display = "none";
+              spanMaj.textContent = "";
+            }
+
+            // MIN
+            if (selType === "MIN") {
+              qtyMin.style.display = "block";
+              qtyMin.disabled = false;
+              spanMin.style.display = "block";
+            } else {
+              qtyMin.style.display = "none";
+              qtyMin.disabled = true;
+              qtyMin.value = "";
+
+              spanMin.style.display = "none";
+              spanMin.textContent = "";
+            }
+
+          return ok=true;
+        }
+        
+        // 4) Main validateAll
+        function validateAll() {          
+          const dimOk = updateDimension();
+          console.log("check: ",dimOk)
+          const errOk = updateError();
+          const sampOk = samp.value > 0;
+          btn.disabled = !(sampOk && dimOk);
+        }
+         
+         
+          
+
+          // Gắn listener mọi thứ
+          samp.addEventListener("input",    validateAll);        
+          specInputs.forEach(i=> i.addEventListener("input", validateAll));
+          detailInputs.forEach(i=> i.addEventListener("input", validateAll));
+
+           // Xử lý datalist -> gán hiddenErr + gọi lại toggleAll
+          search.addEventListener('input', () => {
+            const val = search.value;
+            let found = false;
+            errorList.querySelectorAll('option').forEach(o => {
+              if (o.value === val) {
+                hiddenErr.value = o.dataset.id;
+                found = true;
+              }
+            });
+            if (!found) hiddenErr.value = "";
+            validateAll();
+          });
+          
+          typeEls.forEach(r=> r.addEventListener("change", validateAll));
+          [qtyCri, qtyMaj, qtyMin].forEach(q=> q.addEventListener("input", validateAll));
+          // ban đầu disable nút, focus sampling nếu cần
+          btn.disabled = true;
+          if (!samp.value) samp.focus();
+
+          // Chạy lần đầu để set đúng UI
+          validateAll();
+
+                // 7) Focus hợp lý: nếu đã có SPEC (cũ) ⇒ focus vào Detail đầu tiên,
+        //    ngược lại ⇒ focus vào SamplingSize
+            const hasExistingSpec = specInputs.some(inp => inp.value.trim() !== "");
+            if (hasExistingSpec) {
+              // tìm detail đầu tiên đang enabled
+              const firstDetail = detailInputs.find(d => !d.disabled);
+              if (firstDetail) {
+                firstDetail.focus();
+                if (firstDetail.select) firstDetail.select();
+              }
+            } else {
+              samp.focus();
+              if (samp.select) samp.select();
+            }
+        };
+
+
+
+
+
+        // 1. Hàm load form + list
+        async function loadFormAndList(itemId) {
+          const reportId = "@Model.Report.ReportID";
+          const fc = document.getElementById("itemFormContainer");
+          const lc = document.getElementById("itemDataContainer");
+          console.log("ItemID: ",itemId);
+          console.log("ReportID: ",reportId);
+          if (!itemId) {
+            toastr.warning('@TranslationService.GetTranslation("SelectItemFirst", languageCode)','',{
+                  closeButton: true,
+                 progressBar: true,
+                 timeOut: 3000
+            });
+            return;
+          }
+          if (!reportId) {
+            toastr.error('@TranslationService.GetTranslation("ReportIdMissing", languageCode)','',{
+                  closeButton: true,
+                 progressBar: true,
+                 timeOut: 3000
+            });
+            return;
+          }
+
+          // Hiển thị loading
+          fc.innerHTML = `<p class="text-muted">@TranslationService.GetTranslation("Loading", languageCode)...</p>`;
+          lc.innerHTML = `<p class="text-muted">@TranslationService.GetTranslation("Loading", languageCode)...</p>`;
+
+          try {
+            // Fetch form và list song song
+            const [fRes, lRes] = await Promise.all([
+              fetch(`/IQCCreateReport/LoadForm?itemId=${encodeURIComponent(itemId)}&reportId=${encodeURIComponent(reportId)}`),
+              fetch(`/IQCCreateReport/LoadList?itemId=${encodeURIComponent(itemId)}&reportId=${encodeURIComponent(reportId)}`)
+            ]);
+            if (!fRes.ok || !lRes.ok) throw new Error("Fetch error");
+
+            // Đổ HTML vào
+            fc.innerHTML = await fRes.text();
+            lc.innerHTML = await lRes.text();
+
+            // 2. Gọi init function tùy partial
+            //    partialName ví dụ "_DeliveryForm" hoặc "_AppearanceForm"
+            //const partialName = "@Model.FormPartial";
+            const partialName = document.getElementById("formPartialName").value;
+            
+
+            console.log("PartialName: ", partialName);
+            //    xây hàm name: init + partialName bỏ dấu gạch dưới
+            const fnName = "init" + partialName;
+
+            console.log("PartialName: ", fnName);
+
+            if (typeof window[fnName] === "function") {
+              window[fnName]();
+            }
+            // 3. Bắt form submit thành AJAX
+            bindFormSubmit();
+          }
+          catch (err) {
+            console.error(err);
+            fc.innerHTML = `<p class="text-danger">@TranslationService.GetTranslation("LoadError", languageCode)</p>`;
+            lc.innerHTML = `<p class="text-danger">@TranslationService.GetTranslation("LoadError", languageCode)</p>`;
+            toastr.error('@TranslationService.GetTranslation("LoadError", languageCode)','',{
+                  closeButton: true,
+                 progressBar: true,
+                 timeOut: 3000
+            });
+          }
+        }
+
+        // 4. Bind sự kiện khi user chọn item
+        document.getElementById("itemSelector")
+          .addEventListener("change", e => loadFormAndList(e.target.value));
+
+        // 5. Hàm chung để intercept form và gửi AJAX
+        function bindFormSubmit() {
+          const form = document.getElementById("itemFormActual");
+          if (!form) return;
+
+          form.onsubmit = async e => {
+            e.preventDefault();
+
+            // Với AppearanceForm có hidden Standard, init_<Partial> đã gán giá trị
+            // Với DeliveryForm, partial init đã xử lý nút Save và các field khác
+
+            const data = new FormData(form);
+            const res  = await fetch(form.action, {
+              method: form.method,
+              body: data
+            });
+            if (res.ok) {
+              // reload lại form & list sau khi save
+              const itemId = data.get("ReportItem.ItemID") || data.get("ItemID");
+              await loadFormAndList(itemId);
+              toastr.success('@TranslationService.GetTranslation("SaveSuccess", languageCode)','',{
+                    closeButton: true,
+                 progressBar: true,
+                 timeOut: 3000
+
+              });
+            } else {
+
+                      // có lỗi validation: lấy HTML partial về và inject
+                const html = await res.text();
+                const formContainer = document.getElementById("itemFormContainer");
+                formContainer.innerHTML = html;
+                //document.getElementById("itemFormContainer").innerHTML = html;
+
+                // Khởi tạo lại script và form binding cho partial vừa load
+                const partialName = document.getElementById("formPartialName").value;
+                const fnName = "init" + partialName;
+                if (typeof window[fnName] === "function") window[fnName]();
+                bindFormSubmit();
+
+                const invalidSpan = formContainer.querySelector("span.field-validation-error");
+                console.log("invalidSpan: ", invalidSpan)
+                if(invalidSpan)
+                {
+                    invalidSpan.value="";
+                    // lấy tên field từ data-valmsg-for
+                const fieldName = invalidSpan.getAttribute("data-valmsg-for");
+                // tìm input có name tương ứng trong form
+                const badInput = formContainer.querySelector(`[name="${fieldName}"]`);
+                 console.log("fieldName: ", fieldName)
+                 console.log("badInput: ", badInput)
+                 if(badInput)
+                 {
+                     badInput.focus();
+                     if(badInput.select) badInput.select();
+                 }
+                }        
+                  toastr.error('@TranslationService.GetTranslation("SaveError", languageCode)','',{
+                        closeButton: true,
+                     progressBar: true,
+                     timeOut: 3000
+                  });
+            }
+          };
+        }
+
+        // 6. Hàm xóa record (dùng chung)
+        async function deleteRecord(reportItemId) {
+          const itemId = document.getElementById("itemSelector").value;
+          if (!itemId) {
+            toastr.error('@TranslationService.GetTranslation("SelectItemFirst", languageCode)','',{
+                  closeButton: true,
+                 progressBar: true,
+                 timeOut: 3000
+            });
+            return;
+          }
+                const msg = `@Html.Raw(TranslationService.GetTranslation("ConfirmDelete", languageCode))`;
+        if (!confirm(msg)) return;
+
+          const res = await fetch(`/IQCCreateReport/DeleteItem?reportItemId=${encodeURIComponent(reportItemId)}`, {
+            method: 'POST'
+          });
+          if (res.ok) {
+            await loadFormAndList(itemId);
+            toastr.success('@TranslationService.GetTranslation("DeleteSuccess", languageCode)','',{
+                  closeButton: true,
+                 progressBar: true,
+                 timeOut: 3000
+            });
+          } else {
+            toastr.error('@TranslationService.GetTranslation("DeleteError", languageCode)','',{
+                 closeButton: true,
+                 progressBar: true,
+                 timeOut: 3000
+            });
+          }
+        }
+        async function sendForApproval(reportId) {
+            if (!confirm("Are you sure you want to send this report for approval?")) return;
+            const res = await fetch('/IQCCreateReport/SendForApproval', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(reportId)
+            });
+
+            if (res.ok) {
+                const result = await res.json();
+                if(result.status==="error")
+                {
+                    toastr.error("Error: " + result.message);                    
+                    return;
+                }else
+                {
+                    toastr.success('Report sent for approval."','',{
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 3000});
+                    setTimeout(() => location.reload(), 1500);                    
+                }                
+                
+            } else {
+                const msg = await res.text();
+                toastr.error("Error: " + msg);
+            }
+        }
+        
+        document.getElementById("itemFormActual")?.addEventListener("submit", function(e) {
+            const partial = document.getElementById("formPartialName")?.value;
+            if (partial === "_SaveSendForm") {
+                e.preventDefault(); // ✅ Block actual submit
+                console.log("Blocked form submission for SaveSendForm");
+            }
+        });
+    </script>
+}

@@ -1,0 +1,150 @@
+﻿@using MESWebDev.Models.REPAIR
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model RepairVM
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("ExecutionLogManagement", languageCode);
+    //int pageSize = Model.RepairResult.PageSize;
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card-header">
+                    <h3 class="card-title">@TranslationService.GetTranslation("ListOfDDRError", languageCode)</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Index" method="get" class="mb-3" onsubmit="showLoadingOverlay()">
+                        <div class="d-flex flex-wrap align-items-end">
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label asp-for="UserDept">@TranslationService.GetTranslation("UserDept",languageCode)</label>
+                                <select asp-for="UserDept"
+                                        asp-items="@(new SelectList(Model.UserDeptList, Model.UserDept))"
+                                        class="form-select">
+                                    <option disabled value="">All</option>
+                                </select>
+                            </div>
+                            <!-- StartDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label>@TranslationService.GetTranslation("StartDate", languageCode):</label>
+                                <input type="date" name="startDate" class="form-control"
+                                       value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <!-- EndDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label>@TranslationService.GetTranslation("EndDate", languageCode):</label>
+                                <input type="date" name="endDate" class="form-control"
+                                       value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <!-- SearchTerm -->
+                            <div class="form-group mx-2 py-1" style="min-width: 200px;">
+                                <label>@TranslationService.GetTranslation("SearchTerm", languageCode):</label>
+                                <input type="text" name="SearchTerm" placeholder="Search text..."
+                                       value="@(Model.SearchTerm ?? "")" class="form-control" />
+                            </div>
+                            <!-- Hidden Fields -->
+                            <input type="hidden" name="page" value="1" />
+                            @if (Model.RepairResult.Items.Count>0)
+                            {
+                                <input type="hidden" name="pageSize" value="@Model.RepairResult.PageSize" />
+                            }
+                            else
+                            {
+                                <input type="hidden" name="pageSize" value="10" />
+                            }
+                            <!-- Filter Button -->
+                            <div class="form-group mx-2 py-1">
+                                <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Filter", languageCode)</button>
+                            </div>                           
+                            <!-- Download Button -->
+                            
+                            @{
+                                var downloadModel = new DownloadButtonModel
+                                {
+                                    Controller = "RepairReport",
+                                    Action = "ExportToExcel",
+                                    RouteValues = new Dictionary<string, string>
+                                                {
+                                                { "fromDate", Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "" },
+                                                { "toDate", Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "" },
+                                                { "searchText", Model.SearchTerm },
+                                                { "UserDept", Model.UserDept },
+                                                },
+                                    ButtonText = TranslationService.GetTranslation("ExportToExcel", languageCode)
+                                };
+                            }
+                            
+                            @await Html.PartialAsync("_DownloadButton", downloadModel)
+                        </div>
+                    </form>
+
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>@TranslationService.GetTranslation("QrCode", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("Model", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("LotNo", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("DailyOutput", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("Pcbtype", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("Errorposition", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("Partcode", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("DateCode", languageCode)</th>                                
+                                <th>@TranslationService.GetTranslation("Errortype", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("Causetype", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("DeptError", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("Repairmethod", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("Statusresult", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("Qty", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("CreatedDate", languageCode)</th>
+                                <th>@TranslationService.GetTranslation("CreatedBy", languageCode)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RepairResult != null && Model.RepairResult.Items != null)
+                            {
+                                @foreach (var log in Model.RepairResult.Items)
+                                {
+                                    <tr>
+                                        <td>@log.Qrcode</td>
+                                        <td>@log.Model</td>
+                                        <td>@log.Lot</td>
+                                        <td>@log.DailyOutput</td>
+                                        <td>@log.Pcbtype</td>
+                                        <td>@log.Errorposition</td>
+                                        <td>@log.Partcode</td>
+                                        <td>@log.DateCode</td>
+                                        <td>@log.Errortype</td>
+                                        <td>@log.Causetype</td>
+                                        <td>@log.DeptError</td>
+                                        <td>@log.Repairmethod</td>
+                                        <td>@log.Statusresult</td>
+                                        <td>@log.Qty</td>
+                                        <td>@log.CreatedDate.Value.ToString("yyyy/MM/dd")</td>
+                                        <td>@log.CreatedBy</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center">@TranslationService.GetTranslation(ViewBag.Message, languageCode)</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <!-- Phân trang -->
+                        @if (Model.RepairResult != null && Model.RepairResult.TotalPages > 1)
+                        {
+                            @await Html.PartialAsync("_Pagination", Model.RepairResult)
+                        }                       
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

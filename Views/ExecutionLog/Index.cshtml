@@ -1,0 +1,107 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model ExecutionLogViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("ExecutionLogManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+@* <div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">          
+            <div class="col-12">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("ExecutionLogManagement", languageCode)</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div> *@
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("ListOfExecutionLog", languageCode)</h3>                       
+                    </div>
+                    <div class="card-body">
+                        <!-- Tìm kiếm -->
+                       <form asp-action="Index" method="get">                          
+                            <div class="form-group">
+                                <label asp-for="ActionType"></label>
+                                <select asp-for="ActionType" asp-items="@(new SelectList(Model.ActionTypes, Model.ActionType ?? ""))" class="form-control">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>@TranslationService.GetTranslation("StartDate", languageCode):</label>
+                                <input type="date" name="startDate" class="form-control" value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <div class="form-group">
+                                <label>@TranslationService.GetTranslation("EndDate", languageCode):</label>
+                                <input type="date" name="endDate" class="form-control" value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <input type="hidden" name="page" value="1" /> <!-- Reset to page 1 when applying new filters -->
+                            <input type="hidden" name="pageSize" value="@Model.PagedLogs.PageSize" />
+                            <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Filter", languageCode)</button>
+                            <a asp-action="Index" class="btn btn-secondary">Reset</a>
+                            @* <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Filter", languageCode)</button> *@
+                        </form>
+
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>@TranslationService.GetTranslation("TaskName", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("StartTime", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("EndTime", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("Duration(ms)", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("Status", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("ErrorMessage", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("CreatedBy", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("CreatedAt", languageCode)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in Model.PagedLogs.Items)
+                                {
+                                    <tr>
+                                        <td>@log.TaskName</td>
+                                        <td>@log.StartTime</td>
+                                        <td>@log.EndTime</td>
+                                        <td>@log.DurationMs</td>
+                                        <td>@log.Status</td>
+                                        <td>@log.ErrorMessage</td>
+                                        <td>@log.CreatedBy</td>
+                                        <td>@log.CreatedAt</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <!-- Phân trang -->
+                         @await Html.PartialAsync("_Pagination", Model.PagedLogs) 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+         document.querySelector('form').addEventListener('submit', function(e) {
+        const startDate = document.querySelector('input[name="startDate"]').value;
+        const endDate = document.querySelector('input[name="endDate"]').value;
+
+        if (startDate && endDate && new Date(startDate) > new Date(endDate))
+        {
+            e.preventDefault();
+            alert('Start Date cannot be later than End Date.');
+        }
+    });
+</script>

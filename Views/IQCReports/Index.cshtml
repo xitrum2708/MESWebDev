@@ -1,0 +1,149 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model ReportIQCViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)   
+}
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("ListOfIQCReport", languageCode)</h3>
+                        <div class="card-tools">                          
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Phân trang -->
+                        <form method="get" asp-action="Index">
+                            <div class="row">
+                                <!-- VendorCode & PartCode trên cùng một hàng -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="VendorCode">@TranslationService.GetTranslation("VenderCode", languageCode)</label>
+                                        <input type="text"
+                                               id="VendorCode"
+                                               name="VendorCode"
+                                               class="form-control"
+                                               placeholder="@TranslationService.GetTranslation("VenderCode", languageCode)"
+                                               value="@Context.Request.Query["VenderCode"]" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="PartCode">@TranslationService.GetTranslation("Partcode", languageCode)</label>
+                                        <input type="text"
+                                               id="PartCode"
+                                               name="PartCode"
+                                               class="form-control"
+                                               placeholder="@TranslationService.GetTranslation("Partcode", languageCode)"
+                                               value="@Context.Request.Query["PartCode"]" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <!-- StartDate & EndDate trên cùng một hàng -->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="startDate">@TranslationService.GetTranslation("StartDate", languageCode)</label>
+                                        <input type="date"
+                                               id="startDate"
+                                               name="startDate"
+                                               class="form-control"
+                                               value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="endDate">@TranslationService.GetTranslation("EndDate", languageCode)</label>
+                                        <input type="date"
+                                               id="endDate"
+                                               name="endDate"
+                                               class="form-control"
+                                               value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Nếu bạn dùng phân trang, truyền pageSize, page = 1 khi click Filter -->
+                            <input type="hidden" name="page" value="1" />
+                            <input type="hidden" name="pageSize" value="@Model.ReportIQC.PageSize" />
+
+                            <div class="row mt-3">
+                                <div class="col-12 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary me-2">
+                                        @TranslationService.GetTranslation("Search", languageCode)
+                                    </button>
+                                    <a asp-action="Index" class="btn btn-secondary">
+                                        @TranslationService.GetTranslation("Reset", languageCode)
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>@TranslationService.GetTranslation("ReportID", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("LottagId", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("VendorCode", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("PartCode", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("POQty", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("POCount", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("GroupName", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("Status", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("CheckerStatus", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("CreatedDate", languageCode)</th>
+                                    <th>@TranslationService.GetTranslation("Action", languageCode)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var report in Model.ReportIQC.Items)
+                                {
+                                    <tr>
+                                        <td>@report.ReportID</td>
+                                        <td>@report.LottagId</td>
+                                        <td>@report.VendorCode</td>
+                                        <td>@report.PartCode</td>
+                                        <td>@string.Format("{0:#,###}",report.POQty)</td>
+                                        <td>@string.Format("{0:#,###}",report.POCount)</td>
+                                        <td>@report.GroupName</td>
+                                        <td>@report.Status</td>
+                                        <td>@report.CheckerStatus</td>
+                                        <td>@report.CreatedDate.ToString("yyyy/MM/dd")</td>
+                                        <td>
+                                            <a asp-action="DetailReport" asp-route-id="@report.ReportID" class="btn btn-sm btn-primary">@TranslationService.GetTranslation("Detail", languageCode)</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <!-- Phân trang -->
+                        @await Html.PartialAsync("_Pagination", Model.ReportIQC)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+         document.querySelector('form').addEventListener('submit', function(e) {
+        const startDate = document.querySelector('input[name="startDate"]').value;
+        const endDate = document.querySelector('input[name="endDate"]').value;
+
+        if (startDate && endDate && new Date(startDate) > new Date(endDate))
+        {
+            e.preventDefault();
+            alert('Start Date cannot be later than End Date.');
+        }
+    });
+</script>

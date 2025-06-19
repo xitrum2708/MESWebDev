@@ -1,0 +1,43 @@
+﻿@media (max-width: 768px) {
+    .app-header {
+        left: 0 !important;
+        width: 100% !important;
+    }
+
+    .app-main {
+        margin-left: 0 !important;
+    }
+}
+
+.container-fluid {
+    padding: 3px; /* Add padding for better spacing */
+}
+
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 250px;
+    width: calc(100% - 250px);
+    z-index: 1030; /* Đảm bảo header nằm trên các phần tử khác */
+    transition: left 0.3s, width 0.3s;
+}
+
+.app-main {
+    margin-top: 70px; /* Chiều cao của header */
+    transition: margin-left 0.3s;
+}
+/* Khi sidebar được toggle thu gọn */
+.sidebar-collapsed .app-header {
+    left: 0;
+    width: 100%;
+}
+
+.sidebar-collapsed .app-main {
+    margin-left: 0;
+}
+
+.menu-open > a > p > .bi-chevron-right {
+    transform: rotate(90deg);
+    transition: transform 0.3s;
+}
+

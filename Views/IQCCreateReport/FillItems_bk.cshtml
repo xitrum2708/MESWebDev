@@ -1,0 +1,434 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Services
+@model FillItemsVM
+@inject ITranslationService TranslationService
+
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("IQCReceiveLottagFromWHS", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<style>
+    /* Giới hạn chiều cao, cho phép cả hai hướng cuộn */
+    #itemDataContainer {
+        max-height: 400px; /* tuỳ chỉnh chiều cao tối đa */
+        overflow: auto; /* cuộn ngang & dọc khi nội dung quá lớn */
+    }
+
+        /* Cho bảng tự co dãn chiều rộng */
+        #itemDataContainer table {
+            width: 100%; /* chiếm hết chiều rộng vùng chứa */
+            width: max-content; /* rộng vừa đủ nội dung */
+           
+        }
+</style>
+<div class="app-content">
+    <div class="container-fluid">
+        <!-- Success Toast -->
+        <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 9999">
+            <div id="successToast" class="toast text-white bg-success border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body" id="successToastMessage">
+                        Thành công!
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        <!-- Toast Container -->
+        <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 9999">
+            <div id="errorToast" class="toast text-white bg-danger border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body" id="toastMessage">
+                        Lỗi sẽ hiện tại đây...
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 mb-4">
+                <label><strong>@TranslationService.GetTranslation("GeneralInfo", languageCode)</strong></label>
+                <div>@TranslationService.GetTranslation("PartCode", languageCode): @Model.Report.PartCode</div>
+                <div>@TranslationService.GetTranslation("VendorCode", languageCode): @Model.Report.VendorCode</div>
+                <div>@TranslationService.GetTranslation("VendorName", languageCode): @Model.Report.VendorName</div>
+                <div>@TranslationService.GetTranslation("Qty", languageCode): @Model.Report.POQty</div>
+                <div>@TranslationService.GetTranslation("POCount", languageCode): @Model.Report.POCount</div>
+            </div>
+            <div class="col-12 mb-3">
+                <label>@TranslationService.GetTranslation("SelectItem", languageCode):</label>
+                <select id="itemSelector" class="form-select">
+                    <option value="">@TranslationService.GetTranslation("SelectItemPrompt", languageCode)</option>
+                    @foreach (var it in Model.Items)
+                    {
+                        <option value="@it.ItemID">@it.ItemName</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <!-- Hàng 2: 2 cột -->
+        <div class="row">
+            <!-- Cột trái: Form nhập liệu -->
+            <div class="col-md-6">
+                <div id="itemFormContainer" class="border p-3 bg-light">
+                    <p class="text-muted">@TranslationService.GetTranslation("SelectItemToStart", languageCode)</p>
+                </div>
+            </div>
+
+            <!-- Cột phải: Danh sách các bản ghi đã nhập -->
+            <div class="col-md-6">
+                <div id="itemDataContainer" class="border p-3 bg-light">
+                    <p class="text-muted">@TranslationService.GetTranslation("DataWillAppearHere", languageCode)</p>
+                </div>
+            </div>
+        </div>
+    </div>    
+</div>
+
+@section Scripts {    
+    <script>
+
+         const translations = {
+            "ItemIdMissing": '@TranslationService.GetTranslation("ItemIdMissing", languageCode)',
+            "SaveSuccess": '@TranslationService.GetTranslation("SaveSuccess", languageCode)',
+            "SaveError": '@TranslationService.GetTranslation("SaveError", languageCode)',
+            "SelectItemFirst": '@TranslationService.GetTranslation("SelectItemFirst", languageCode)',
+            "ReportIdMissing": '@TranslationService.GetTranslation("ReportIdMissing", languageCode)',
+            "FormElementsMissing": '@TranslationService.GetTranslation("FormElementsMissing", languageCode)',
+            "LoadError": '@TranslationService.GetTranslation("LoadError", languageCode)',
+            "DeleteSuccess": '@TranslationService.GetTranslation("DeleteSuccess", languageCode)',
+            "DeleteError": '@TranslationService.GetTranslation("DeleteError", languageCode)'
+        };
+        async function loadFormAndList(itemId){
+            if (!itemId) {
+                console.warn("No item ID provided");
+                toastr.warning('@TranslationService.GetTranslation("SelectItemFirst", languageCode)', '', {
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 3000
+                });
+                return;
+            }
+            const reportId = "@Model.Report?.ReportID" || "";
+            if (!reportId) {
+                console.error("Report ID is missing");
+                toastr.error('@TranslationService.GetTranslation("ReportIdMissing", languageCode)', '', {
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 3000
+                });
+                return;
+            }
+            console.log("itemId: ", itemId);
+            console.log("reportID: " , reportId);
+            const formContainer = document.getElementById("itemFormContainer");
+            const listContainer = document.getElementById("itemDataContainer");
+            try {
+                        formContainer.innerHTML = '<p>@TranslationService.GetTranslation("Loading", languageCode)...</p>';
+                        listContainer.innerHTML = '<p>@TranslationService.GetTranslation("Loading", languageCode)...</p>';
+
+                        const formResponse = await fetch(`/IQCCreateReport/LoadForm?itemId=${itemId}&reportId=${reportId}`);
+                        if (!formResponse.ok) throw new Error(`Failed to load form: ${formResponse.statusText}`);
+                        formContainer.innerHTML = await formResponse.text();
+                       
+
+                        attachFormEventListeners();
+
+                         
+                        const listResponse = await fetch(`/IQCCreateReport/LoadList?itemId=${itemId}&reportId=${reportId}`);
+                        if (!listResponse.ok) throw new Error(`Failed to load list: ${listResponse.statusText}`);
+                        listContainer.innerHTML = await listResponse.text();
+                    } catch (error) {
+                        console.error("Error loading form or list:", error);
+                        formContainer.innerHTML = `<p class="text-danger">@TranslationService.GetTranslation("LoadError", languageCode)</p>`;
+                        listContainer.innerHTML = `<p class="text-danger">@TranslationService.GetTranslation("LoadError", languageCode)</p>`;
+                        toastr.error('@TranslationService.GetTranslation("LoadError", languageCode)', '', {
+                            closeButton: true,
+                            progressBar: true,
+                            timeOut: 3000
+                        });
+                    }
+                }
+
+        function attachFormEventListeners() {
+            const form = document.getElementById("itemFormActual");
+            const saveButton = document.getElementById("btnSaveItem");
+
+            if (!form || !saveButton) {
+                console.warn("Form or Save button not found");
+                toastr.warning('@TranslationService.GetTranslation("FormElementsMissing", languageCode)', '', {
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 3000
+                });
+                return;
+            }
+
+            // Enable/disable Save button based on form fields
+            const judgment = document.getElementById("judgment"); // For _DeliveryStatusForm
+            const finalAdjustment = document.getElementById("finalAdjustment"); // For _FinalAdjustmentForm
+            const samplingSize = document.getElementById("samplingSize"); // For _AppearanceForm
+
+            console.log("judgment: " , judgment);
+            console.log("finalAdjustment: " , finalAdjustment);
+
+
+            if (judgment) { // _DeliveryStatusForm
+                judgment.addEventListener("change", function () {
+                    saveButton.disabled = !(this.value === "OK" || this.value === "NG");
+                    console.log("Judgment Changed:", this.value);
+                });
+            } else if (finalAdjustment) { // _FinalForm
+                 finalAdjustment.addEventListener("change", function () {
+                    saveButton.disabled = !(this.value === "ACCEPT" || this.value === "REJECT");
+                    console.log("Final Adjustment Changed:", this.value);
+                });
+            } else if (samplingSize) { // _AppearanceForm
+                const updateButtonState = () => {
+                    const samplingValue = parseInt(samplingSize.value) || 0;
+                    saveButton.disabled = samplingValue <= 0; // Enable if SamplingSize > 0
+                };
+                samplingSize.addEventListener("input", updateButtonState);
+                updateButtonState(); // Initial check
+            }
+
+            form.addEventListener("submit", async function (e) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const itemId = formData.get("ReportItem.ItemID");
+                console.log("test", itemId);
+                if (!itemId) {
+                    console.log("test");
+                    toastr.error('@TranslationService.GetTranslation("ItemIdMissing", languageCode)', '', {
+                        closeButton: true,
+                        progressBar: true,
+                        timeOut: 3000
+                    });
+                    return;
+                }
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: form.method,
+                        body: formData
+                    });
+                    if (!response.ok) throw new Error(`Failed to save: ${response.statusText}`);
+                    await loadFormAndList(itemId);
+
+                    // document.getElementById("successToastMessage").innerText = translations.SaveSuccess || 'Saved successfully';
+                    // const toast = new bootstrap.Toast(document.getElementById("successToast"));
+                    // toast.show();
+                    toastr.success('@TranslationService.GetTranslation("SaveSuccess", languageCode)', '', {
+                       closeButton: true,
+                       progressBar: true,
+                       timeOut: 2000
+                    });
+
+                    saveButton.disabled = true;
+                } catch (error) {
+                    console.error("Error saving form:", error);
+
+                    // document.getElementById("toastMessage").innerText = translations.SaveError || 'Failed to save';
+                    // const errorToast = new bootstrap.Toast(document.getElementById("errorToast"));
+                    // errorToast.show();
+                    toastr.error('@TranslationService.GetTranslation("SaveError", languageCode)', '', {
+                        closeButton: true,
+                        progressBar: true,
+                        timeOut: 3000
+                    });
+                }
+            });
+        }
+        document.getElementById("itemSelector").addEventListener("change", function () {
+            const itemId = this.value;
+            console.log("Selected Item ID:", itemId);
+
+            if (!itemId) {
+                document.getElementById("itemFormContainer").innerHTML = `<p class="text-muted">@TranslationService.GetTranslation("SelectItemToStart", languageCode)</p>`;
+                document.getElementById("itemDataContainer").innerHTML = `<p class="text-muted">@TranslationService.GetTranslation("DataWillAppearHere", languageCode)</p>`;
+                return;
+            }
+
+            loadFormAndList(itemId);
+        });
+
+        async function deleteRecord(recordItemId) {
+            const itemId = document.getElementById("itemSelector").value;
+            if (!itemId) {
+                toastr.error('@TranslationService.GetTranslation("SelectItemFirst", languageCode)', '', {
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 3000
+                });
+                return;
+            }
+
+            if (!confirm('@TranslationService.GetTranslation("ConfirmDelete", languageCode)')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/IQCCreateReport/DeleteItem?reportItemId=${encodeURIComponent(recordItemId)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) throw new Error(`Failed to delete record: ${response.statusText}`);
+                await loadFormAndList(itemId);
+                toastr.success('@TranslationService.GetTranslation("DeleteSuccess", languageCode)', '', {
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 2000
+                });
+            } catch (error) {
+                console.error("Error deleting record:", error);
+                toastr.error('@TranslationService.GetTranslation("DeleteError", languageCode)', '', {
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 3000
+                });
+            }
+        }
+        // Load form and list for the selected item
+        // async function loadFormAndList(itemId) {
+        //     const reportId = "@Model.Report.ReportID";
+
+        //     try {
+        //         // 1. Load Form nhập liệu
+        //         const formResponse = await fetch(`/IQCCreateReport/LoadForm?itemId=${itemId}&reportId=${reportId}`);
+        //         if (!formResponse.ok) throw new Error("Failed to load form");
+        //         document.getElementById("itemFormContainer").innerHTML = await formResponse.text();
+        //         // Attach form event listeners after loading
+        //         attachFormEventListeners();
+        //         // 2. Load Danh sách sau khi nhập
+        //         const listResponse = await fetch(`/IQCCreateReport/LoadList?itemId=${itemId}&reportId=${reportId}`);
+        //         if (!listResponse.ok) throw new Error("Failed to load list");
+        //         document.getElementById("itemDataContainer").innerHTML = await listResponse.text();
+        //     } catch (error) {
+        //         console.error("Error loading form or list:", error);
+        //         alert("An error occurred while loading the content. Please try again.");
+        //     }
+        // }
+
+        //  // Attach event listeners to form elements
+        // function attachFormEventListeners() {
+        //     const form = document.getElementById("itemFormActual");
+        //     const saveButton = document.getElementById("btnSaveItem");
+        //     const deliveryStatus = document.getElementById("deliveryStatus");
+
+        //     console.log("Delivery Status Element:", deliveryStatus); // Debug
+
+        //     if (!form || !saveButton || !deliveryStatus) {
+        //         console.warn("Form, Save button, or Delivery Status not found");
+        //         toastr.warning('@TranslationService.GetTranslation("FormElementsMissing", languageCode)', '', {
+        //             closeButton: true,
+        //             progressBar: true,
+        //             timeOut: 3000
+        //         });
+        //         return;
+        //     }
+
+        //     // Enable/disable Save button based on deliveryStatus
+        //     deliveryStatus.addEventListener("change", function () {
+        //         saveButton.disabled = !(this.value === "OK" || this.value === "NG");
+        //         console.log("Delivery Status Changed:", this.value); // Debug
+        //     });
+
+        //     // Handle form submission
+        //     form.addEventListener("submit", async function (e) {
+        //         e.preventDefault();
+        //         const formData = new FormData(form);
+        //         const itemId = formData.get("ItemId");
+
+        //         if (!itemId) {
+        //             toastr.error('@TranslationService.GetTranslation("ItemIdMissing", languageCode)', '', {
+        //                 closeButton: true,
+        //                 progressBar: true,
+        //                 timeOut: 3000
+        //             });
+        //             return;
+        //         }
+
+        //         try {
+        //             const response = await fetch(form.action, {
+        //                 method: form.method,
+        //                 body: formData
+        //             });
+        //             if (!response.ok) throw new Error(`Failed to save: ${response.statusText}`);
+        //             await loadFormAndList(itemId);
+        //             toastr.success('@TranslationService.GetTranslation("SaveSuccess", languageCode)', '', {
+        //                 closeButton: true,
+        //                 progressBar: true,
+        //                 timeOut: 2000
+        //             });
+        //             saveButton.disabled = true;
+        //         } catch (error) {
+        //             console.error("Error saving form:", error);
+        //             toastr.error('@TranslationService.GetTranslation("SaveError", languageCode)', '', {
+        //                 closeButton: true,
+        //                 progressBar: true,
+        //                 timeOut: 3000
+        //             });
+        //         }
+        //     });
+        // }
+
+
+        // // Handle item selection change
+        // document.getElementById("itemSelector").addEventListener("change", function () {
+        //     const id = this.value;
+        //     console.log("Selected Item ID:", id);
+
+        //     if (!id) {
+        //         // Reset if no item is selected
+        //         document.getElementById("itemFormContainer").innerHTML = `<p class="text-muted">Hãy chọn một item để bắt đầu kiểm tra...</p>`;
+        //         document.getElementById("itemDataContainer").innerHTML = `<p class="text-muted">Dữ liệu sẽ hiển thị ở đây sau khi nhập...</p>`;
+        //         return;
+        //     }
+
+        //     loadFormAndList(id);
+        // });
+
+        
+        // // Handle record deletion                
+        // async function deleteRecord(recordItemId) {
+        //     // Hỏi xác nhận
+        //     const ok = confirm("Bạn có chắc chắn muốn xóa bản ghi này không?");
+        //     if (!ok) {
+        //         // Người dùng chọn No → dừng hàm
+        //         return;
+        //     }
+
+        //     try {
+        //         const response = await fetch(`/IQCCreateReport/DeleteItem?reportItemId=${recordItemId}`, {
+        //             method: 'POST'
+        //         });
+        //         if (!response.ok) throw new Error("Failed to delete record");
+
+        //         // Reload form and list
+        //         await loadFormAndList(itemId);
+        //              // 3) Hiện toast thành công
+        //         toastr.success('Xóa bản ghi thành công!', '', {
+        //           closeButton: true,
+        //           progressBar: true,
+        //           timeOut: 2000
+        //         });
+        //     } catch (error) {
+        //         console.error("Error deleting record:", error);
+        //             toastr.error('Có lỗi khi xóa. Vui lòng thử lại.', '', {
+        //           closeButton: true,
+        //           progressBar: true,
+        //           timeOut: 3000
+        //         });
+        //     }
+        // }
+
+        
+    </script>
+}

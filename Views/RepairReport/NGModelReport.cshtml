@@ -1,0 +1,166 @@
+﻿@using MESWebDev.Services
+@model MESWebDev.Models.UVASSY.VM.ReportVM
+@inject ITranslationService T
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = T.GetTranslation("NGModelReport",languageCode);    
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<div class="app-content">
+    <div class="container-fluid">        
+        <form asp-action="NGModelReport" method="post" onsubmit="showLoadingOverlay()">
+            @Html.AntiForgeryToken()
+            <div class="row">               
+                <div class="col-md-3">
+                    <label for="fromDate">@T.GetTranslation("StartDate", languageCode)</label>
+                    <input asp-for="fromDate" class="form-control" type="date"
+                           value="@(Model.fromDate.HasValue ? Model.fromDate.Value.ToString("yyyy-MM-dd") : "")" />
+                </div>
+                <div class="col-md-3">
+                    <label for="toDate">@T.GetTranslation("EndDate", languageCode)</label>
+                    <input asp-for="toDate" class="form-control" type="date"
+                           value="@(Model.toDate.HasValue ? Model.toDate.Value.ToString("yyyy-MM-dd") : "")" />
+                </div>
+                <div class="col-md-3">
+                    <label for="Model">@T.GetTranslation("Model",languageCode)</label>
+                    <input asp-for="Model" class="form-control" />
+                </div>
+                <div class="col-md-3 align-self-end">
+                    <button type="submit" class="btn btn-primary">@T.GetTranslation("Search",languageCode)</button>
+                </div>               
+            </div>
+        </form>
+
+        <hr />
+
+        <div class="row mt-4">
+            <!-- Left: Chart -->
+            <div class="col-md-6">
+                <h4>@T.GetTranslation("ModelChart",languageCode)</h4>
+                <canvas id="modelChart"></canvas>
+            </div>
+
+            <!-- Right: Table -->
+            <div class="col-md-6">
+                <h4 class="mt-4">@T.GetTranslation("ModelDetail",languageCode)</h4>
+                <div style="max-height:380px; overflow-y: auto;">
+                    <table class="table table-bordered table-sm" style="margin:0;">
+                        <thead class="thead-light" style="position: sticky; top:0; z-index:1; background-color:white;">
+                            <tr>
+                                @foreach (System.Data.DataColumn column in Model.ModelDetailTable.Columns)
+                                {
+                                    <th>@column.ColumnName</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (System.Data.DataRow row in Model.ModelDetailTable.Rows)
+                            {
+                                <tr>
+                                    @for (int i = 0; i < row.ItemArray.Length; i++)
+                                    {
+                                        var column = Model.ModelDetailTable.Columns[i];
+                                        var value = row.ItemArray[i];
+                                        if (column.ColumnName == "Year")
+                                        {
+                                            <td>@value</td>
+                                        }
+                                        else if (value is decimal && column.ColumnName == "NGRate")
+                                        {
+                                            <td>@String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.00}", value)</td>
+                                        }
+                                        else if (value is int || value is long || value is decimal)
+                                        {
+                                            <td>@String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:#,#}", value)</td>
+                                        }
+                                        else
+                                        {
+                                            <td>@value</td>
+                                        }
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+@section Scripts {
+    <script src="~/js/chart.js"></script>
+    <script src="~/js/chartjs-plugin-datalabels.js"></script>
+    <script>
+        const modelLabels = @Html.Raw(Json.Serialize(Model.ModelData.Select(x => x.Model)));
+        const modelInput = @Html.Raw(Json.Serialize(Model.ModelData.Select(x => x.InputQty)));
+        const modelNG = @Html.Raw(Json.Serialize(Model.ModelData.Select(x => x.NGQty)));
+        const modelRate = @Html.Raw(Json.Serialize(Model.ModelData.Select(x => x.NGRate)));
+
+                Chart.register(ChartDataLabels); // Required
+
+        new Chart(document.getElementById('modelChart'), {
+            type: 'bar',
+            data: {
+                labels: modelLabels,
+                datasets: [
+                    {
+                        label: 'Input',
+                        data: modelInput,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                    },
+                    {
+                        label: 'NG',
+                        data: modelNG,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)'
+                    },
+                    {
+                        label: 'NG Rate',
+                        type: 'line',
+                        data: modelRate,
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    datalabels: {
+                        display: true,
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: value => value.toLocaleString()
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: context => `${context.dataset.label}: ${context.raw.toLocaleString()}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => value.toLocaleString()
+                        }
+                    },
+                    y1: {
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            callback: value => value.toLocaleString()
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+
+    </script>
+    
+}

@@ -1,0 +1,155 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model PagedResult<LottagVM>
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("IQCReceiveLottagFromWHS", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">    
+                        <!-- Success Toast -->
+                        <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 9999">
+                            <div id="successToast" class="toast text-white bg-success border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+                                <div class="d-flex">
+                                    <div class="toast-body" id="successToastMessage">
+                                        Thành công!
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Toast Container -->
+                        <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 9999">
+                            <div id="errorToast" class="toast text-white bg-danger border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+                                <div class="d-flex">
+                                    <div class="toast-body" id="toastMessage">
+                                        Lỗi sẽ hiện tại đây...
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">@TranslationService.GetTranslation("IQCReceiveLottagFromWHS", languageCode)</h3>
+                        <div class="card-tools">
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Form lọc: chia 2 hàng nếu cần -->
+                        <div class="row">
+                            <div class="mb-3">
+                                <label for="lottagInput">@TranslationService.GetTranslation("ScanLotTag", languageCode)</label>
+                                <input id="lottagInput" type="text" class="form-control" placeholder="@TranslationService.GetTranslation("Scanbarcode", languageCode)" autofocus />
+                            </div>
+                            @await Html.PartialAsync("_SearchForm", Model)
+                            @* <form method="get" asp-action="Index" class="mb-3">
+                                <div class="input-group">
+                                    <input type="text" name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="Tìm kiếm ID..." />
+                                    <button class="btn btn-primary" type="submit">Search</button>
+                                    <a asp-action="DownloadCsv" asp-route-searchTerm="@Model.SearchTerm" class="btn btn-secondary ms-2">Download CSV</a>
+                                </div>
+                            </form> *@
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover" id="resultsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>@TranslationService.GetTranslation("id", languageCode)</th>                                                                                                              
+                                            <th>@TranslationService.GetTranslation("abbre_group", languageCode)</th>
+                                            <th>@TranslationService.GetTranslation("vender_code", languageCode)</th>                                        
+                                            <th>@TranslationService.GetTranslation("partcode", languageCode)</th>   
+                                            <th>@TranslationService.GetTranslation("count_pono", languageCode)</th>
+                                            <th>@TranslationService.GetTranslation("qty", languageCode)</th>
+                                            <th>@TranslationService.GetTranslation("location_rec", languageCode)</th>
+                                            <th>@TranslationService.GetTranslation("Actions", languageCode)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var lottag in Model.Items)
+                                        {
+                                            <tr>
+                                                <td>@lottag.id</td>                                            
+                                                <td>@lottag.abbre_group</td>
+                                                <td>@lottag.vender_code</td>
+                                                <td>@lottag.partcode</td>
+                                                <td>@lottag.count_pono</td>
+                                                <td>@lottag.qty</td>
+                                                <td>@lottag.location_rec</td>
+                                                <td>
+                                                    <a href="@Url.Action("LottagDetail", "IQCReports", new { id = lottag.id })" class="btn btn-warning btn-sm">
+                                                        <i class="bi bi-pencil"></i> @TranslationService.GetTranslation("LottagDetail", languageCode)
+                                                    </a>                                               
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- Phân trang -->
+                            @await Html.PartialAsync("_Pagination", Model)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const lottagDetailText = "@TranslationService.GetTranslation("LottagDetail", languageCode)";
+        const baseUrl = "@Url.Action("LottagDetail", "IQCReports")";
+        const input = document.getElementById("lottagInput");
+        input.addEventListener("keypress", async function(e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            var id = this.value.trim();
+            var resp = await fetch("/IQCReports/ScanLotTag", {
+              method: "POST",
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id })
+            });
+            var result = await resp.json();
+            if (result.status === "error") {
+                document.getElementById("toastMessage").innerText = result.message;
+                const toast = new bootstrap.Toast(document.getElementById("errorToast"));
+                toast.show();        
+                input.focus();
+                input.select();
+
+            } else {
+              var tbl = document.querySelector('#resultsTable tbody');
+              var row = tbl.insertRow(0);
+              var detailUrl = `${baseUrl}?id=${encodeURIComponent(result.data.id)}`;
+              row.innerHTML = `<td>${result.data.id}</td>             
+              <td>${result.data.abbre_group}</td>
+              <td>${result.data.vender_code}</td>
+               <td>${result.data.partcode}</td>
+              <td>${result.data.count_pono}</td>
+              <td>${result.data.qty}</td>
+              <td>${result.data.location_rec}</td>
+              <td>
+                    <a href="${detailUrl}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i> ${lottagDetailText}
+                    </a>
+              </td>`;
+
+              input.value = ""; // clear sau khi thành công
+                      // Hiển thị toast thành công
+                document.getElementById("successToastMessage").innerText = "Đã nhận lottag thành công!";
+                const toastSuccess = new bootstrap.Toast(document.getElementById("successToast"));
+                toastSuccess.show();
+            }
+          }
+        });
+    </script>
+}

@@ -1,0 +1,29 @@
+﻿@model List<MESWebDev.DTO.BreadcrumbItemDto>
+
+<ol class="breadcrumb">
+    @for (int i = 0; i < Model.Count; i++)
+    {
+        var item = Model[i];
+        // Nếu URL là "#" hoặc rỗng, hiển thị mục đó mà không có link.
+        bool isNonNavigable = string.IsNullOrEmpty(item.Url) || item.Url.Trim() == "#";
+
+        if (i < Model.Count - 1)
+        {
+            <li class="breadcrumb-item">
+                @if (isNonNavigable)
+                {
+                    @item.Title
+                }
+                else
+                {
+                    <a href="@item.Url">@item.Title</a>
+                }
+            </li>
+        }
+        else
+        {
+            // Mục cuối cùng hiển thị ở dạng active (không link)
+            <li class="breadcrumb-item active" aria-current="page">@item.Title</li>
+        }
+    }
+</ol>

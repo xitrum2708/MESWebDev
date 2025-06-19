@@ -1,0 +1,220 @@
+﻿@model MESWebDev.Models.IQC.VM.FillItemsVM
+@inject MESWebDev.Services.ITranslationService T
+
+@{
+    var lang = Context.Session.GetString("LanguageCode") ?? "vi";
+    // prevSize có thể null hoặc >0
+    var prevSize = Model.ReportItem.SamplingSize;
+    // nếu null hoặc <=0 thì để blank
+    string valueAttr = (prevSize > 0) ? prevSize.ToString() : "";
+    string readonlyAttr = (prevSize > 0) ? "readonly" : null;
+    string autofocusAttr = (prevSize > 0) ? null : "autofocus";
+    var et = Model.ReportItem.SelectedErrorType;
+    // Tạo text hiển thị từ ID
+    var selErr = Model.ErrorsItemMasterList
+                     .FirstOrDefault(e => e.ErrorCodeID == Model.ReportItem.ErrorCodeID);
+    var errorDisplay = selErr != null
+         ? $"{selErr.ErrorCode} – {selErr.Description} – {selErr.DescriptionVn}"
+         : "";
+    var prevStd = Model.ReportItem.Standard;  // null hoặc "GI-R"/"100"
+    bool isFixed = !string.IsNullOrEmpty(prevStd);
+}
+
+<!-- Sampling Size -->
+<input type="hidden"
+       id="formPartialName"
+       value="@Model.FormPartial" />
+<div class="mb-3">
+    <label for="samplingSize" class="form-label">
+        @T.GetTranslation("SamplingSize", lang)
+    </label>
+    <input asp-for="ReportItem.SamplingSize"
+           id="samplingSize"
+           name="ReportItem.SamplingSize"
+           type="number"
+           class="form-control"
+           min="0"
+           placeholder="@T.GetTranslation("EnterSamplingSize", lang)"
+           value="@valueAttr"
+           readonly="@readonlyAttr"
+           autofocus="@autofocusAttr" />
+    <span asp-validation-for="ReportItem.SamplingSize" class="text-danger"></span>
+</div>
+
+<!-- AQL 100% / Group -->
+<div class="mb-3">
+    <label class="form-label">@T.GetTranslation("AQLLevel", lang)</label>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio"
+            name="mode" id="aql100" value="100"
+            @(prevStd == "100" ? "checked" : "")
+            @(isFixed ? "disabled" : "") />
+        <label class="form-check-label" for="aql100">100%</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio"
+            name="mode" id="aqlGroup" value="group"
+            @(prevStd != "100" && isFixed ? "checked" : "")
+            @(isFixed ? "disabled" : "") />
+        <label class="form-check-label" for="aqlGroup">
+            @T.GetTranslation("AQLGroup", lang)
+        </label>
+    </div>
+</div>
+
+<!-- Nếu chọn Group mới show: GI/GII/S4 và R/N/T -->
+<div id="groupSelections" class="mb-3" style="display:@( (prevStd!="100" && isFixed) || (!isFixed && false) ? "block" : "none" )">
+    <label class="form-label">@T.GetTranslation("SelectGroupLevels", lang)</label>
+    <div class="row">
+        <div class="col-6">
+            <p class="fw-semibold">@T.GetTranslation("LevelGI", lang)</p>
+            @foreach (var v1 in new[] { "GI", "GII", "S4" })
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="radio"
+                        name="group1" id="g1_@v1" value="@v1"
+                        @(prevStd?.StartsWith(v1 + "-") == true ? "checked" : "")
+                        @(isFixed ? "disabled" : "") />
+                    <label class="form-check-label" for="g1_@v1">@v1</label>
+                </div>
+            }
+        </div>
+        <div class="col-6">
+            <p class="fw-semibold">@T.GetTranslation("LevelRNT", lang)</p>
+            @foreach (var v2 in new[] { "R", "N", "T" })
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="radio"
+                        name="group2" id="g2_@v2" value="@v2"
+                        @(prevStd?.EndsWith("-" + v2) == true ? "checked" : "")
+                        @(isFixed ? "disabled" : "") />
+                    <label class="form-check-label" for="g2_@v2">@v2</label>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<!-- Hidden để lưu kết quả cuối -->
+@if (isFixed)
+{
+    <input type="hidden"
+           name="ReportItem.Standard"
+           id="standardField"
+           value="@prevStd" />
+}
+else
+{
+    <input type="hidden"
+           name="ReportItem.Standard"
+           id="standardField"
+           value="" />
+}
+
+<!-- ErrorCode tìm kiếm -->
+<div class="mb-3">
+    <label for="errorSearch" class="form-label">
+        @T.GetTranslation("ErrorCode", lang)
+    </label>
+    <input list="errorList"
+           id="errorSearch"
+           class="form-control"
+           placeholder="@T.GetTranslation("SearchErrorCode", lang)" 
+           value="@errorDisplay" />
+
+    <!-- datalist sẽ hiển thị gợi ý -->
+    <datalist id="errorList">
+        @foreach (var e in Model.ErrorsItemMasterList)
+        {
+            <!--
+              value là phần text hiển thị (mã – mô tả),
+              data-id giữ ErrorCodeID để JS đọc vào hidden ReportItem.ErrorCodeID
+            -->
+            <option data-id="@e.ErrorCodeID"
+                    value="@e.ErrorCode – @e.Description – @e.DescriptionVn"></option>
+        }
+    </datalist>
+
+    <!-- hidden field để lưu ErrorCodeID thực sự -->
+    <input type="hidden" asp-for="ReportItem.ErrorCodeID" />
+    <span asp-validation-for="ReportItem.ErrorCodeID" class="text-danger"></span>
+</div>
+
+<!-- Error Type (CRI/MAJ/MIN) -->
+<!-- <div id="errorTypeContainer" class="mb-3" style="display:none;">-->
+<div id="errorTypeContainer" class="mb-3" style="display:@(et==null?"none":"block");">
+    <label class="form-label">@T.GetTranslation("ErrorType", lang)</label>
+    <div class="form-check form-check-inline">
+        <input asp-for="ReportItem.SelectedErrorType" 
+            class="form-check-input" type="radio"
+            name="ReportItem.SelectedErrorType" 
+            id="etype_cri" 
+            value="CRI"
+            checked="@(et=="CRI")"/>
+        <label class="form-check-label" for="etype_cri">CRI</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input asp-for="ReportItem.SelectedErrorType"
+               class="form-check-input" type="radio"
+               name="ReportItem.SelectedErrorType"
+               id="etype_maj" 
+               value="MAJ" 
+               checked="@(et=="MAJ")"/>
+        <label class="form-check-label" for="etype_maj">MAJ</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input asp-for="ReportItem.SelectedErrorType" 
+            class="form-check-input" type="radio"
+            name="ReportItem.SelectedErrorType" 
+            id="etype_min" 
+            value="MIN"
+            checked="@(et=="MIN")"/>
+        <label class="form-check-label" for="etype_min">MIN</label>
+    </div>
+</div>
+
+<!-- Error Quantity: 3 field, ẩn hết, chỉ show cái vừa chọn -->
+<div id="errorQtyContainer" class="mb-3" style="display:none;">
+    <label for="errorQty" class="form-label">
+        @T.GetTranslation("ErrorQuantity", lang)
+    </label>
+   
+        <input  asp-for="ReportItem.CRI"
+               id="qty_cri" 
+               type="number" 
+               class="form-control" 
+               placeholder="Số lỗi CRI" 
+               min="0" 
+               style="display:none"/>
+               
+        <span  asp-validation-for="ReportItem.CRI" class="text-danger"></span>
+        <input asp-for="ReportItem.MAJ"
+               id="qty_maj" 
+               type="number" 
+               class="form-control" 
+               placeholder="Số lỗi MAJ"
+               min="0" 
+               style="display:none" />
+    
+        <span asp-validation-for="ReportItem.MAJ" class="text-danger"></span>
+        <input asp-for="ReportItem.MIN"
+               id="qty_min" 
+               type="number" 
+               class="form-control" 
+               placeholder="Số lỗi MIN"
+               min="0"
+               style="display:none"/>
+    
+        <span asp-validation-for="ReportItem.MIN" class="text-danger"></span>    
+</div>
+
+<!-- Note/Remark -->
+<div class="mb-3">
+    <label for="remark" class="form-label">
+        @T.GetTranslation("Remark", lang)
+    </label>
+    <textarea asp-for="ReportItem.Remark"
+              id="remark"
+              class="form-control"
+              rows="2"
+              placeholder="@T.GetTranslation("EnterNote", lang)"></textarea>
+</div>

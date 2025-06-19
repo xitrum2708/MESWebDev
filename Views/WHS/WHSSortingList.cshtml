@@ -1,0 +1,476 @@
+﻿@using MESWebDev.Models.WHS.VM
+@using MESWebDev.Services
+@inject ITranslationService T
+@model WHSViewModel
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = T.GetTranslation("WHSSortingList", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                @*  <div class="card-header">
+                    <h3 class="card-title">@TranslationService.GetTranslation("ListOfTelStarProduct", languageCode)</h3>
+                </div> *@
+                <div class="card-body">                   
+                    <form asp-action="WHSSortingList" method="get" class="mb-3">
+                        <div class="d-flex flex-wrap align-items-end">
+                            <!-- StartDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label>@T.GetTranslation("StartDate", languageCode):</label>
+                                <input type="date" name="startDate" class="form-control"
+                                       value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <!-- EndDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label>@T.GetTranslation("EndDate", languageCode):</label>
+                                <input type="date" name="endDate" class="form-control"
+                                       value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <!-- SearchTerm -->
+                            <div class="form-group mx-2 py-1" style="min-width: 200px;">
+                                <label>@T.GetTranslation("SearchTerm", languageCode):</label>
+                                <input type="text" name="SearchTerm" placeholder="Search text..."
+                                       value="@(Model.SearchTerm ?? "")" class="form-control" />
+                            </div>
+                            <!-- Hidden Fields -->
+                            <input type="hidden" name="page" value="1" />
+                            @if (Model.WHSSortingList.Items.Count > 0)
+                            {
+                                <input type="hidden" name="pageSize" value="@Model.WHSSortingList.PageSize" />
+                            }
+                            else
+                            {
+                                <input type="hidden" name="pageSize" value="10" />
+                            }
+                            <!-- Filter Button -->
+                            <div class="form-group mx-2 py-1">
+                                <button type="submit" class="btn btn-primary">@T.GetTranslation("Filter", languageCode)</button>
+                            </div>
+                            <!-- Download Button -->
+                            @{
+                                var downloadModel = new DownloadButtonModel
+                            {
+                                Controller = "WHS",
+                                Action = "ExportToExcelWHSSortingList",
+                                RouteValues = new Dictionary<string, string>
+                                            {
+                                            { "startDate", Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "" },
+                                            { "endDate", Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "" },
+                                            { "searchText", Model.SearchTerm
+                                            }
+                                            },
+                                ButtonText = T.GetTranslation("ExportToExcel", languageCode)
+                            };
+                            }
+                            @await Html.PartialAsync("_DownloadButton", downloadModel)
+                        </div>
+
+                    </form>
+                    <!-- Phân trang -->
+                    @if (Model.WHSSortingList != null && Model.WHSSortingList.TotalPages > 1)
+                    {
+                        @await Html.PartialAsync("_Pagination", Model.WHSSortingList)
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    }
+                    <div style="max-height:600px; overflow-y:auto;">
+                        <table class="table table-bordered table-hover table-sm m-0" style="margin:0;">
+                            <thead style="position: sticky; top:0; z-index:1;">
+                                <tr>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Action", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("History", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("ReportID", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("LottagId", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("VendorName", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("VendorCode", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("PartName", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("PartCode", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("PO_NO", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("InvoiceNo", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("POQty", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("POCount", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("InspectionDate", languageCode)</th>                                                                        
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Status", languageCode)</th>                                    
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Remark", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CreatedBy", languageCode)</th>
+                                    @*<th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CreatedDate", languageCode)</th>
+                                     <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("UpdatedBy", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("UpdatedDate", languageCode)</th> *@
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("Notes", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("NotesReturn", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("TextRemark", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("CombinedErrorDescriptions", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@T.GetTranslation("NG_Rate", languageCode)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.WHSSortingList != null && Model.WHSSortingList.Items != null)
+                                {
+                                    @foreach (var log in Model.WHSSortingList.Items)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary" onclick="openSortingForm('@log.ReportID', '@log.Remark')">Add Sorting</button>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-secondary" onclick="showHistory('@log.ReportID')">History</button>
+                                            </td>
+                                            <td>@log.ReportID</td>
+                                            <td>@log.LottagId</td>
+                                            <td>@log.VendorName</td>
+                                            <td>@log.VendorCode</td>
+                                            <td>@log.PartName</td>
+                                            <td>@log.PartCode</td>
+                                            <td>@log.PO_NO</td>
+                                            <td>@log.InvoiceNo</td>
+                                            <td>@log.POQty</td>
+                                            <td>@log.POCount</td>
+                                            <td>@log.InspectionDate.Value.ToString("yyyy/MM/dd")</td>                                                                                       
+                                            <td>@log.Status</td>                                            
+                                            <td>@log.Remark</td>
+                                            <td>@log.CreatedBy</td>
+                                            @*<td>@log.CreatedDate</td>
+                                             <td>@log.UpdatedBy</td>
+                                            <td>@log.UpdatedDate</td> *@
+                                            <td>@log.Notes</td>
+                                            <td>@log.NotesReturn</td>
+                                            <td>@log.TextRemark</td>
+                                            <td>@log.CombinedErrorDescriptions</td>
+                                            <td>@log.NG_Rate</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center">@T.GetTranslation(ViewBag.Message, languageCode)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Sorting Modal -->
+<div class="modal fade" id="sortingModal" tabindex="-1" aria-labelledby="sortingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form asp-action="SaveSortingData" asp-controller="WHS"  method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sortingModalLabel">Add Sorting Info</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body row g-3">
+                    <input type="hidden" asp-for="UV_IQC_WHS_SORTING.ReportID" />
+                    <input type="hidden" asp-for="UV_IQC_WHS_SORTING.Remark" />
+                    <input type="hidden" asp-for="UV_IQC_WHS_SORTING.SLottagId" id="SLottagId" />
+
+                    <div class="col-md-4">                       
+                        <label for="RemarkOptions" class="form-label">Select Lottag Option</label>
+                        <input type="text" id="RemarkDisplay" class="form-control" readonly style="display:none;" />
+                        <select class="form-select" id="RemarkOptions" onchange="updateRemark()">
+                            <option value="">-- Select Remark --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="LottagQty" class="form-label">Lottag Qty</label>
+                        <input type="text" id="LottagQtyDisplay" class="form-control" readonly style="display:none;" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="UV_IQC_WHS_SORTING.SortingDate" class="form-label">SortingDate  <span class="text-danger">*</span></label>
+                        <input asp-for="UV_IQC_WHS_SORTING.SortingDate" type="date" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")"  type="date"/>
+                        <span asp-validation-for="UV_IQC_WHS_SORTING.SortingDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="UV_IQC_WHS_SORTING.SortingBy" class="form-label">
+                            Sorting By <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="UV_IQC_WHS_SORTING.SortingBy" class="form-control"  type="text"/>
+                        <span asp-validation-for="UV_IQC_WHS_SORTING.SortingBy" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="UV_IQC_WHS_SORTING.QtyOK" class="form-label">QtyOK  <span class="text-danger">*</span></label>
+                        <input asp-for="UV_IQC_WHS_SORTING.QtyOK" class="form-control" type="number" value="0"/>
+                        <span asp-validation-for="UV_IQC_WHS_SORTING.QtyOK" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="UV_IQC_WHS_SORTING.QtyNG" class="form-label">QtyNG  <span class="text-danger">*</span></label>
+                        <input asp-for="UV_IQC_WHS_SORTING.QtyNG" class="form-control" type="number" value="0" />
+                        <span asp-validation-for="UV_IQC_WHS_SORTING.QtyNG" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="UV_IQC_WHS_SORTING.SortingStatus" class="form-label">SortingStatus  <span class="text-danger">*</span></label>
+                        <input asp-for="UV_IQC_WHS_SORTING.SortingStatus" class="form-control" />
+                        <span asp-validation-for="UV_IQC_WHS_SORTING.SortingStatus" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="UV_IQC_WHS_SORTING.IssueLot" class="form-label">IssueLot</label>
+                        <input asp-for="UV_IQC_WHS_SORTING.IssueLot" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="UV_IQC_WHS_SORTING.IssueQty" class="form-label">IssueQty</label>
+                        <input asp-for="UV_IQC_WHS_SORTING.IssueQty" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="UV_IQC_WHS_SORTING.SignQ" class="form-label">SignQ</label>
+                        <input asp-for="UV_IQC_WHS_SORTING.SignQ" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="UV_IQC_WHS_SORTING.TotalManPower" class="form-label">TotalManPower  <span class="text-danger">*</span></label>
+                        <input asp-for="UV_IQC_WHS_SORTING.TotalManPower" class="form-control" />
+                        <span asp-validation-for="UV_IQC_WHS_SORTING.TotalManPower" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="UV_IQC_WHS_SORTING.TotalHours" class="form-label">TotalHours  <span class="text-danger">*</span></label>
+                        <input asp-for="UV_IQC_WHS_SORTING.TotalHours" class="form-control" />
+                        <span asp-validation-for="UV_IQC_WHS_SORTING.TotalHours" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="UV_IQC_WHS_SORTING.CostPerHour" class="form-label">CostPerHour  <span class="text-danger">*</span></label>
+                        <input asp-for="UV_IQC_WHS_SORTING.CostPerHour" class="form-control" />
+                        <span asp-validation-for="UV_IQC_WHS_SORTING.CostPerHour" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="UV_IQC_WHS_SORTING.NameSort" class="form-label">NameSort  <span class="text-danger">*</span></label>
+                        <input asp-for="UV_IQC_WHS_SORTING.NameSort" class="form-control" />
+                        <span asp-validation-for="UV_IQC_WHS_SORTING.NameSort" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="UV_IQC_WHS_SORTING.Stock" class="form-label">Stock  <span class="text-danger">*</span></label>
+                        <input asp-for="UV_IQC_WHS_SORTING.Stock" class="form-control" />
+                        <span asp-validation-for="UV_IQC_WHS_SORTING.Stock" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="UV_IQC_WHS_SORTING.DateCode" class="form-label">DateCode  <span class="text-danger">*</span></label>
+                        <input asp-for="UV_IQC_WHS_SORTING.DateCode" class="form-control" />
+                        <span asp-validation-for="UV_IQC_WHS_SORTING.DateCode" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="UV_IQC_WHS_SORTING.Packing" class="form-label">Packing</label>
+                        <input asp-for="UV_IQC_WHS_SORTING.Packing" class="form-control" />
+                    </div>
+
+                    <div class="col-md-12">
+                        <label asp-for="UV_IQC_WHS_SORTING.Remark" class="form-label">Remark</label>
+                        <textarea asp-for="UV_IQC_WHS_SORTING.Remark" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Sorting</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                   
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="historyModalLabel">Sorting History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered table-sm" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Sorting By</th>
+                            <th>Qty OK</th>
+                            <th>Qty NG</th>
+                            <th>Status</th>
+                            <th>Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be inserted by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@section Scripts {
+    <script>
+        function openSortingForm(reportId, remarkText) {
+            const form = document.querySelector('#sortingModal form');
+            if (form) form.reset();
+
+            document.querySelectorAll('#sortingModal span[data-valmsg-for]').forEach(span => span.textContent = '');
+
+            // Set report ID
+            document.getElementById("UV_IQC_WHS_SORTING_ReportID").value = reportId;
+
+            const select = document.getElementById("RemarkOptions");
+            const remarkField = document.getElementById("UV_IQC_WHS_SORTING_Remark");
+            select.innerHTML = "";
+
+            // Parse remarks
+            const remarks = remarkText.split(';').map(x => x.trim()).filter(x => x !== "");
+
+            if (remarks.length === 1) {
+                // One remark → auto set and hide select
+                select.style.display = "none";
+                const readonlyDisplay = document.getElementById("RemarkDisplay");
+                const readonlyLottagQtyDisplay=document.getElementById("LottagQtyDisplay");
+                readonlyDisplay.style.display = "block";
+                readonlyLottagQtyDisplay.style.display= "block";
+                readonlyDisplay.value = remarks[0];
+                document.getElementById("SLottagId").value =  remarks[0]; // map to hidden input
+                // Fetch DateCode
+                fetch(`/WHS/GetDateCodeByRemark?remark=${encodeURIComponent(remarks[0])}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById("UV_IQC_WHS_SORTING_DateCode").value = data.dateCode || '1900/01/01';
+                        document.getElementById("UV_IQC_WHS_SORTING_Packing").value = data.packing || '';
+                        readonlyLottagQtyDisplay.value=data.qty;
+                    });
+                     // Focus input
+                setTimeout(() => {
+                    document.getElementById("UV_IQC_WHS_SORTING_SortingBy").focus();
+                }, 500);
+
+            } else if (remarks.length > 1) {
+                // Show dropdown for user selection
+                select.style.display = "block";
+                select.innerHTML = '<option value="">-- Select Remark --</option>';
+                remarks.forEach(r => {
+                    const option = document.createElement("option");
+                    option.value = r;
+                    option.text = r;
+                    select.appendChild(option);
+                });
+                 // Focus input
+                setTimeout(() => {
+                    document.getElementById("RemarkOptions").focus();
+                }, 500);
+                // Reset hidden remark
+                remarkField.value = "";
+            } else {
+                // No remark
+                select.style.display = "none";
+                remarkField.value = "";
+            }
+            // Show modal
+            $('#sortingModal').modal('show');           
+        }
+
+        // Update hidden remark and lookup DateCode when user selects an option
+        function updateRemark() {
+            const readonlyDisplay = document.getElementById("RemarkDisplay");
+                readonlyDisplay.style.display = "none";
+            const selected = document.getElementById("RemarkOptions").value;
+            //console.log("Selected: ",selected);
+            const remarkField = document.getElementById("UV_IQC_WHS_SORTING_Remark");
+
+             const readonlyLottagQtyDisplay=document.getElementById("LottagQtyDisplay");                
+                readonlyLottagQtyDisplay.style.display= "block";
+            //console.log("Remark value: ",remarkField);
+            remarkField.value = selected;
+            document.getElementById("SLottagId").value = selected; // map to hidden input
+            if (selected) {
+                fetch(`/WHS/GetDateCodeByRemark?remark=${encodeURIComponent(selected)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById("UV_IQC_WHS_SORTING_DateCode").value = data.dateCode || '1900/01/01';
+                        document.getElementById("UV_IQC_WHS_SORTING_Packing").value = data.packing || '';
+                        readonlyLottagQtyDisplay.value = data.qty;
+                    });
+            } else {
+                document.getElementById("UV_IQC_WHS_SORTING_DateCode").value = "";
+            }
+        }
+        
+        
+        function showHistory(reportId) {
+            fetch(`/WHS/GetSortingHistory?reportId=${reportId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.querySelector('#historyTable tbody');
+                    tbody.innerHTML = '';
+                    if (data && data.length > 0) {
+                        data.forEach(item => {
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td>${item.sortingDate}</td>
+                                    <td>${item.sortingBy}</td>
+                                    <td>${item.qtyOK}</td>
+                                    <td>${item.qtyNG}</td>
+                                    <td>${item.sortingStatus}</td>
+                                    <td>${item.remark ?? ''}</td>
+                                </tr>`;
+                        });
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="6" class="text-center">No history found.</td></tr>`;
+                    }
+                    const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    alert('Failed to load history');
+                    console.error(error);
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const inputs = document.querySelectorAll("input[type='text'], textarea");
+
+            inputs.forEach(function (input) {
+                input.addEventListener("input", function () {
+                    this.value = this.value.toUpperCase();
+                });
+            });
+        });
+
+        setTimeout(function () {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => alert.style.display = 'none');
+        }, 5000); // 3000 milliseconds = 3 seconds
+    </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

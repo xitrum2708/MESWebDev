@@ -1,0 +1,34 @@
+﻿@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Services
+@model FillItemsVM
+@inject ITranslationService TranslationService
+@{
+    string id = Model.ReportItem.ReportID;
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    var isFinished = Model.FinishedStatus;
+
+}
+<form asp-action="SaveItem" method="post" id="itemFormActual">
+    <input type="hidden" asp-for="ReportId" />    
+    <input type="hidden" name="ReportItem.ItemID" value="@Model.ItemName.ItemID" /> <!-- Fix name -->
+    <input type="hidden" name="ReportItem.ItemName" value="@Model.ItemName.ItemName" /> <!-- Add ItemName -->
+    <input type="hidden" name="ReportItem.ReportID" value="@Model.ReportId" /> <!-- Add ReportID -->
+    <input type="hidden" name="FormPartial" value="@Model.FormPartial" /> <!-- Add ReportID -->
+
+    <!-- VD: nếu là input số -->
+    @if (Model.FormPartial != "_SaveSendForm")
+    {
+        @await Html.PartialAsync(Model.FormPartial, Model)
+        <button id="btnSaveItem" type="submit"
+                class="btn btn-primary" disabled>
+            @TranslationService.GetTranslation("Save", languageCode)
+        </button>
+    }   
+    <input type="hidden" id="formPartialName" value="@Model.FormPartial" />
+</form>
+@if (Model.FormPartial == "_SaveSendForm")
+{
+    <div class="mt-3">
+        @await Html.PartialAsync("_SaveSendForm", Model)
+    </div>
+}

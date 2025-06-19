@@ -1,0 +1,71 @@
+﻿@using MESWebDev.Models.VM
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model PermissionViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("DeletePermission", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+@* <div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">         
+            <div class="col-sm-12">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Permission")">@TranslationService.GetTranslation("PermissionManagement", languageCode)</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("DeletePermission", languageCode) </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div> *@
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("ConfirmDelete", languageCode) </h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("PermissionKey", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.PermissionKey
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("PermissionDescription", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.Description
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("CreatedAt", languageCode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Model.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                            </dd>
+                        </dl>
+                        <form asp-action="Delete">
+                            <input type="hidden" asp-for="PermissionId" />
+                            <button type="submit" class="btn btn-danger">@TranslationService.GetTranslation("Delete", languageCode)</button>
+                            <a asp-action="Index" class="btn btn-secondary">@TranslationService.GetTranslation("BackToList", languageCode)</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}
