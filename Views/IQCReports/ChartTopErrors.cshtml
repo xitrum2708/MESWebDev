@@ -1,7 +1,7 @@
 ﻿@using MESWebDev.Models.IQC.VM
 @using MESWebDev.Services
 @inject ITranslationService TranslationService
-@model ChartTopErrorViewModel
+@model PartCodePoChartViewModel
 
 @{
     var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
@@ -12,16 +12,16 @@
     @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
 }
 <div class="app-content">
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">@TranslationService.GetTranslation("TopErrorReport", languageCode)</h3>
-                    <div class="card-tools">
-                    </div>
-                </div>
-                <div class="card-body">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    @* <div class="card-header">
+                        <h3 class="card-title">@TranslationService.GetTranslation("TopErrorReport", languageCode)</h3>
+                        <div class="card-tools">
+                        </div>
+                    </div> *@
+                    <div class="card-body">
                         <!-- Form lọc: chia 2 hàng nếu cần -->
                         <div class="row">
                             <form method="get" asp-action="ChartTopErrors" class="mb-12">
@@ -33,7 +33,7 @@
                                                 @TranslationService.GetTranslation("StartDate", languageCode)
                                             </label>
                                             <input type="date" id="startDate" name="startDate" class="form-control"
-                                                   value="@Context.Request.Query["startDate"]" />
+                                                    value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -42,11 +42,29 @@
                                                 @TranslationService.GetTranslation("EndDate", languageCode)
                                             </label>
                                             <input type="date" id="endDate" name="endDate" class="form-control"
-                                                   value="@Context.Request.Query["endDate"]" />
+                                                    value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
                                         </div>
                                     </div>
-                                    <div class="col-md-4 d-flex align-items-end">
-                                        <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Filter", languageCode)</button>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary w-100">@TranslationService.GetTranslation("Filter", languageCode)</button>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        @{
+                                            var downloadModel = new DownloadButtonModel
+                                            {
+                                                Controller = "IQCReports",
+                                                Action = "ExportToExcelPartcodeRateReport",
+                                                RouteValues = new Dictionary<string, string>
+                                                                        {
+                                                                        { "startDate", Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "" },
+                                                                        { "endDate", Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "" },
+                                                                        },
+                                                ButtonText = TranslationService.GetTranslation("ExportToExcel", languageCode)
+                                            };
+                                        }
+                                        <div class="w-100">
+                                            @await Html.PartialAsync("_DownloadButton", downloadModel)
+                                        </div>
                                     </div>
                                 </div>                           
                             </form>
@@ -56,13 +74,13 @@
                             <div class="chart-container" style="position: relative; height:600px; width:100%;">
                                 <canvas id="topErrorsChart"></canvas>
                             </div>
-                        </div>
-                    </div>
+                        </div>                   
+                     </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
-</div>
+ </div>
 
 @section Scripts {
     <script src="~/js/chart.js"></script>
@@ -79,9 +97,9 @@
             }
         });
         const labels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Labels));
-        const data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Data));
-        const poQtyData=@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.POQty));
-        var errorRateData = @Html.Raw(Json.Serialize(Model.ErrorRateData));
+        const data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.POAccept));
+        const poQtyData=@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.POReject));
+        var errorRateData = @Html.Raw(Json.Serialize(Model.AcceptRate));
 
 
         const ctx = document.getElementById('topErrorsChart').getContext('2d');
@@ -90,10 +108,11 @@
                 labels: labels,
                 datasets: [{
                     type:'bar',
-                    label: '@TranslationService.GetTranslation("TotalErrors", languageCode)',
+                    label: '@TranslationService.GetTranslation("POAccepted", languageCode)',
                     data: data,
-                    backgroundColor: 'rgba(95,15,152,0.6)',
-                    borderColor: 'rgba(95,15,152,1)',                   
+                     backgroundColor: 'rgba(75,192,192,0.6)',
+                    borderColor: 'rgba(75,192,192,1)',
+                                   
                     borderWidth: 1,
                     // Giảm độ rộng cột
                     barThickness: 40,           // Chiều rộng cố định của cột, bạn có thể điều chỉnh giá trị này
@@ -104,10 +123,10 @@
                 },
                 {
                     type:'bar',
-                    label: '@TranslationService.GetTranslation("TotalPOQty", languageCode)',
+                    label: '@TranslationService.GetTranslation("PORejected", languageCode)',
                     data: poQtyData,
-                    backgroundColor: 'rgba(75,192,192,0.6)',
-                    borderColor: 'rgba(75,192,192,1)',
+                    backgroundColor: 'rgba(95,15,152,0.6)',
+                    borderColor: 'rgba(95,15,152,1)',
                     borderWidth: 1,
                     // Giảm độ rộng cột
                     barThickness: 40,           // Chiều rộng cố định của cột, bạn có thể điều chỉnh giá trị này
@@ -118,7 +137,7 @@
                 }
                 ,
                 {   type:'line',
-                    label: '@TranslationService.GetTranslation("ErrorRate", languageCode)',
+                    label: '@TranslationService.GetTranslation("AcceptRate", languageCode)',
                     data: errorRateData,
                     backgroundColor: 'rgba(255, 206, 86, 0.2)',
                     borderColor: 'rgba(255, 206, 86, 1)',
@@ -142,7 +161,7 @@
                             beginAtZero: true,
                             title: {
                             display: true,
-                            text: '@TranslationService.GetTranslation("TotalErrors", languageCode)'
+                            text: '@TranslationService.GetTranslation("POCount", languageCode)'
                         }
                     },
                     y2: {
@@ -151,7 +170,7 @@
                             beginAtZero: true,
                             title: {
                                         display: true,
-                                        text: 'Error Rate'
+                                        text: 'Accepted Rate'
                                     },
                             grid: {
                                     drawOnChartArea: false // Ẩn đường lưới trục x

@@ -1,8 +1,10 @@
 ﻿using MESWebDev.Common;
 using MESWebDev.Data;
 using MESWebDev.Extensions;
+using MESWebDev.Models;
 using MESWebDev.Models.IQC;
 using MESWebDev.Models.IQC.VM;
+using MESWebDev.Models.WHS.VM;
 using MESWebDev.Repositories;
 using MESWebDev.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -33,6 +35,9 @@ namespace MESWebDev.Controllers
         // GET: Permission/Index
         public async Task<IActionResult> Index(string VendorCode, string PartCode, DateTime? startDate, DateTime? endDate, int page = 1, int pageSize = 10)
         {
+            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
+            startDate ??= DateTime.Now.AddDays(-30);
+            endDate ??= DateTime.Now;
             var query = _context.UV_IQC_Reports.AsQueryable();
 
             if (!string.IsNullOrEmpty(VendorCode))
@@ -59,11 +64,11 @@ namespace MESWebDev.Controllers
             var totalItems = await query.CountAsync();
 
             // Lấy dữ liệu theo trang, sắp xếp ví dụ theo CreatedDate
-            var reports = await query
+            var reports =  query
                 .Include(r => r.InspectionGroups)
                 .OrderBy(r => r.CreatedDate)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                //.Skip((page - 1) * pageSize)
+                //.Take(pageSize)
                 .Select(m => new ReportVM
                 {
                     ReportID = m.ReportID,
@@ -91,25 +96,34 @@ namespace MESWebDev.Controllers
                     NotesReturn = m.NotesReturn,
                     TextRemark = m.TextRemark,
                 })
-                .ToListAsync();
+                .ToPagedResult(page,pageSize);
 
             // Tạo đối tượng PagedResult
-            var pagedReports = new PagedResult<ReportVM>
-            {
-                Items = reports,
-                TotalItems = totalItems,
-                CurrentPage = page,
-                PageSize = pageSize
-            };
+            //var pagedReports = new PagedResult<ReportVM>
+            //{
+            //    Items = reports,
+            //    TotalItems = totalItems,
+            //    CurrentPage = page,
+            //    PageSize = pageSize
+            //};
 
             var viewModel = new ReportIQCViewModel
             {
-                ReportIQC = pagedReports,
+                ReportIQC = reports,
                 StartDate = startDate,
                 EndDate = endDate,
                 VenderCode = VendorCode,
                 Partcode = PartCode,
             };
+            ViewBag.FromDate = startDate?.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = endDate?.ToString("yyyy-MM-dd");
+            ViewBag.VenderCode = VendorCode ?? "";
+            ViewBag.Partcode = PartCode ?? "";
+
+            if (reports == null || !reports.Items.Any())
+            {
+                ViewBag.Message = _translationService.GetTranslation("NotFoundData", languageCode);
+            }
 
             return View(viewModel);
         }
@@ -166,86 +180,92 @@ namespace MESWebDev.Controllers
 
             return View(viewModel);
         }
+        [HttpGet]
 
         // Action để hiển thị biểu đồ Top 2 lỗi (tính từ tổng CRI + MAJ + MIN)
         public async Task<IActionResult> ChartTopErrors(DateTime? startDate, DateTime? endDate)
         {
-            // Nếu không truyền startDate hoặc endDate, mặc định lấy dữ liệu của 1 tuần vừa qua
-            if (!startDate.HasValue || !endDate.HasValue)
-            {
-                // Giả sử bạn muốn từ 7 ngày trước đến hôm nay
-                endDate = DateTime.Today; // hoặc DateTime.Now nếu bạn muốn cả thời gian
-                startDate = endDate.Value.AddDays(-7);
-            }
-            // Lấy dữ liệu từ ReportItems, join với bảng ErrorsItemMaster và Reports
-            var query = _context.UV_IQC_ReportItems
-                .Include(ri => ri.Reports)              // để lấy VendorCode, PartCode và InspectionDate
-                .Include(ri => ri.ErrorsItemMasters)           // để lấy mô tả lỗi (Description)
-                .AsQueryable();
+            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
+            startDate ??= DateTime.Now.AddDays(-30);
+            endDate ??= DateTime.Now;
+            var data = _context.UV_IQC_Reports
+                .Where(r => r.Status == "ACCEPTED" || r.Status == "REJECTED")
+                .Where(r => r.InspectionDate >= startDate && r.InspectionDate <= endDate)
+                .GroupBy(r => r.PartCode)
+                .Select(g => new
+                {
+                    PartCode = g.Key,
+                    POAccept = g.Where(x => x.Status == "ACCEPTED").Sum(x => x.POCount),
+                    POReject = g.Where(x => x.Status == "REJECTED").Sum(x => x.POCount)
+                })
+                .Where(x => x.POAccept > 0)
+                .Select(x => new
+                {
+                    x.PartCode,
+                    x.POAccept,
+                    x.POReject,
+                    Total = x.POAccept + x.POReject,
+                    AcceptRate = x.POAccept + x.POReject > 0
+                        ? Math.Round((double)x.POAccept * 100.0 / (x.POAccept + x.POReject), 2)
+                        : 0
+                })
+                .OrderBy(x => x.AcceptRate)
+                .Take(15)
+                .ToList();
 
-            // Lọc theo điều kiện: lỗi (ErrorCodeID) khác 4 và > 0
-            query = query.Where(ri => ri.ErrorCodeID != 4 && ri.ErrorCodeID > 0);
-
-            // Lọc theo khoảng thời gian dựa trên InspectionDate trong Reports (có thể dùng CreatedDate nếu cần)
-            if (startDate.HasValue)
+            var vm = new PartCodePoChartViewModel
             {
-                query = query.Where(ri => ri.CreatedDate >= startDate.Value);
-            }
-            if (endDate.HasValue)
-            {
-                query = query.Where(ri => ri.CreatedDate <= endDate.Value);
-            }
-
-            // Nhóm theo lỗi, nhà cung cấp và mã hàng: bạn có thể nhóm theo ErrorCodeID hoặc theo mô tả lỗi
-            var groupData = query.GroupBy(ri => new
-            {
-                ri.ErrorCodeID,
-                ErrorDescription = ri.ErrorsItemMasters.Description,
-                ri.Reports.VendorCode,
-                ri.Reports.PartCode
-            })
-            .Select(g => new
-            {
-                ErrorCodeID = g.Key.ErrorCodeID,
-                ErrorDescription = g.Key.ErrorDescription,
-                VendorCode = g.Key.VendorCode,
-                PartCode = g.Key.PartCode,
-                TotalError = g.Sum(ri => ri.CRI + ri.MAJ + ri.MIN),
-                TotalPOQty = g.Sum(ri => ri.Reports.POQty)
-            })
-            .AsEnumerable()
-            .Select(x => new
-            {
-                x.ErrorCodeID,
-                x.ErrorDescription,
-                x.VendorCode,
-                x.PartCode,
-                x.TotalError,
-                x.TotalPOQty,
-                ErrorRate = x.TotalPOQty != 0 ? (double)x.TotalError / x.TotalPOQty : 0
-            });
-            // Lấy top 20 nhóm theo tổng lỗi giảm dần
-            var top20 = groupData.OrderByDescending(g => g.TotalError)
-                                         .Take(20)
-                                         .ToList();
-
-            // Chuẩn bị dữ liệu cho biểu đồ
-            // Ví dụ, mỗi nhãn là "VendorCode - PartCode - ErrorDescription"
-            var labels = top20.Select(x => $"{x.PartCode} - {x.ErrorDescription}").ToArray();
-            var data = top20.Select(x => x.TotalError).ToArray();
-            var poQtyData = top20.Select(x => x.TotalPOQty).ToArray();
-            var errorRateData = top20.Select(x => x.ErrorRate).ToArray();
-
-            // Tạo view model cho chart
-            var chartModel = new ChartTopErrorViewModel
-            {
-                Labels = labels,
-                Data = data,
-                POQty = poQtyData,
-                ErrorRateData = errorRateData
+                Labels = data.Select(x => x.PartCode).ToArray(),
+                POAccept = data.Select(x => x.POAccept).ToArray(),
+                POReject = data.Select(x => x.POReject).ToArray(),
+                AcceptRate = data.Select(x => x.AcceptRate).ToArray(),
+                StartDate = startDate,
+                EndDate = endDate
             };
+            return View(vm);
 
-            return View(chartModel);
+        }
+        [HttpGet]
+        public async Task<IActionResult> ExportToExcelPartcodeRateReport(DateTime? startDate, DateTime? endDate)
+        {
+            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
+            startDate ??= DateTime.Now.AddDays(-30);
+            endDate ??= DateTime.Now;
+            var data = _context.UV_IQC_Reports
+                .Where(r => r.Status == "ACCEPTED" || r.Status == "REJECTED")
+                .Where(r => r.InspectionDate >= startDate && r.InspectionDate <= endDate)
+                .GroupBy(r => r.PartCode)
+                .Select(g => new
+                {
+                    PartCode = g.Key,
+                    POAccept = g.Where(x => x.Status == "ACCEPTED").Sum(x => x.POCount),
+                    POReject = g.Where(x => x.Status == "REJECTED").Sum(x => x.POCount)
+                })
+                .Where(x => x.POAccept > 0)
+                .Select(x => new
+                {
+                    x.PartCode,
+                    x.POAccept,
+                    x.POReject,
+                    Total = x.POAccept + x.POReject,
+                    AcceptRate = x.POAccept + x.POReject > 0
+                        ? Math.Round((double)x.POAccept * 100.0 / (x.POAccept + x.POReject), 2)
+                        : 0
+                })
+                .OrderBy(x => x.AcceptRate)
+                .Take(15)
+                .ToList();
+
+            if (data == null || !data.Any())
+            {
+                // Nếu không có dữ liệu, trả về view với thông báo
+                ViewBag.Message = "Không có dữ liệu nào trong khoảng thời gian này.";
+                return View(new DownloadButtonModel());
+            }
+
+            var bytes = _excelExportService.ExportToExcel(data, "Report");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"ExportToExcelPartcodeRateReport_Report_{DateTime.Now:yyyyMMdd}.xlsx");
         }
 
         public async Task<IActionResult> IncommingPartInspectionSummaryReport(int Year = 0)
@@ -326,19 +346,115 @@ namespace MESWebDev.Controllers
 
         public async Task<IActionResult> TopSupplierError(DateTime? startDate, DateTime? endDate)
         {
-            // Nếu không truyền startDate hoặc endDate, mặc định lấy dữ liệu của 1 tuần vừa qua
-            if (!startDate.HasValue || !endDate.HasValue)
+            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
+            startDate ??= DateTime.Now.AddDays(-30);
+            endDate ??= DateTime.Now;
+            var query = _context.UV_IQC_Reports
+                .Where(r => (r.Status == "ACCEPTED" || r.Status == "REJECTED")
+                    && r.InspectionDate >= startDate
+                    && r.InspectionDate <= endDate)
+                .GroupBy(r => new { r.VendorCode, r.VendorName })
+                .Select(g => new
+                    {
+                        g.Key.VendorCode,
+                        g.Key.VendorName,
+                        AcceptedQty = g.Where(r => r.Status == "ACCEPTED").Sum(r => r.POCount),
+                        RejectedQty = g.Where(r => r.Status == "REJECTED").Sum(r => r.POCount),
+                    })
+                .Where(x => x.AcceptedQty > 0)
+                .Select(x => new
+                {
+                    x.VendorCode,
+                    x.VendorName,
+                    x.AcceptedQty,
+                    x.RejectedQty,
+                    TotalQty = x.AcceptedQty + x.RejectedQty,
+                })
+                .AsEnumerable()
+                .Select(x => new
+                {
+                    x.VendorCode,
+                    x.VendorName,
+                    x.AcceptedQty,
+                    x.RejectedQty,
+                    AcceptRate = x.TotalQty > 0
+                        ? Math.Round(x.AcceptedQty * 100.0 / x.TotalQty, 2)
+                        : 0
+                })
+                .OrderBy(x => x.AcceptRate)
+                .ThenBy(x => x.AcceptedQty)
+                .Take(15)
+                .ToList();
+
+            var vm = new SupplierRateViewModel
             {
-                // Giả sử bạn muốn từ 7 ngày trước đến hôm nay
-                endDate = DateTime.Today; // hoặc DateTime.Now nếu bạn muốn cả thời gian
-                startDate = endDate.Value.AddDays(-14);
-            }
-            var supplierErrorReport = await _repository.GetMonthlyAcceptRateByGroupAsync(startDate, endDate);
-            if (supplierErrorReport == null)
+                StartDate = startDate,
+                EndDate = endDate,
+                Labels = query.Select(x => $"{x.VendorCode}-{x.VendorName.ToUpper()}").ToArray(),
+                Accepted = query.Select(x => x.AcceptedQty).ToArray(),
+                Rejected = query.Select(x => x.RejectedQty).ToArray(),
+                AcceptRate = query.Select(x => x.AcceptRate).ToArray()
+            };
+
+            ViewBag.FromDate = startDate?.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = endDate?.ToString("yyyy-MM-dd");           
+
+            return View(vm);
+        }
+        [HttpGet]
+        public async Task<IActionResult> ExportToExcelSupplierRateReport(DateTime? startDate, DateTime? endDate)
+        {
+            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
+            startDate ??= DateTime.Now.AddDays(-30);
+            endDate ??= DateTime.Now;
+            var query = _context.UV_IQC_Reports
+                .Where(r => (r.Status == "ACCEPTED" || r.Status == "REJECTED")
+                    && r.InspectionDate >= startDate
+                    && r.InspectionDate <= endDate)
+                .GroupBy(r => new { r.VendorCode, r.VendorName })
+                .Select(g => new
+                {
+                    g.Key.VendorCode,
+                    g.Key.VendorName,
+                    AcceptedQty = g.Where(r => r.Status == "ACCEPTED").Sum(r => r.POCount),
+                    RejectedQty = g.Where(r => r.Status == "REJECTED").Sum(r => r.POCount),
+                })
+                .Where(x => x.AcceptedQty > 0)
+                .Select(x => new
+                {
+                    x.VendorCode,
+                    x.VendorName,
+                    x.AcceptedQty,
+                    x.RejectedQty,
+                    TotalQty = x.AcceptedQty + x.RejectedQty,
+                })
+                .AsEnumerable()
+                .Select(x => new
+                {
+                    x.VendorCode,
+                    x.VendorName,
+                    x.AcceptedQty,
+                    x.RejectedQty,
+                    x.TotalQty,
+                    AcceptRate = x.TotalQty > 0
+                        ? Math.Round(x.AcceptedQty * 100.0 / x.TotalQty, 2)
+                        : 0
+                })
+                .OrderBy(x => x.AcceptRate)
+                .ThenBy(x => x.AcceptedQty)
+                .Take(15)
+                .ToList();
+
+            if (query == null || !query.Any())
             {
-                return NotFound();
+                // Nếu không có dữ liệu, trả về view với thông báo
+                ViewBag.Message = "Không có dữ liệu nào trong khoảng thời gian này.";
+                return View(new DownloadButtonModel());
             }
-            return View(supplierErrorReport);
+           
+            var bytes = _excelExportService.ExportToExcel(query, "Report");
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"ExportToExcelSupplierRateReport_Report_{DateTime.Now:yyyyMMdd}.xlsx");
         }
 
         // Input IQC
