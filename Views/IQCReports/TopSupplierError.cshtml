@@ -2,14 +2,14 @@
 @using MESWebDev.Models.IQC.VM
 @using MESWebDev.Services
 @inject ITranslationService TranslationService
-@model List<TopSupplierErrorReportModel>
+@model SupplierRateViewModel
 
 @{
     var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
     ViewData["Title"] = TranslationService.GetTranslation("TopErrorReport", languageCode);
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
-<style>
+@* <style>
     /* Thêm khoảng cách giữa các section */
     .section-spacing {
         margin-top: 10px;
@@ -30,7 +30,7 @@
             width: 100% !important;
             height: 100% !important;
         }
-</style>
+</style> *@
 @section ContentHeader {
     @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
 }
@@ -38,83 +38,179 @@
     <div class="container-fluid">
         <!-- Dropdown chọn năm với khoảng cách -->
         <div class="row section-spacing">
-            <div class="col-md-4">
-                <form method="get" asp-action="TopSupplierError" class="mb-12">
-                    <div class="row g-3">
-                        <!-- Row 1: StartDate và EndDate -->
+            <div class="col-md-12">
+                <form method="get" asp-action="TopSupplierError" class="mb-12">   
+                    <div class="row align-items-end">
                         <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label" for="startDate">
-                                    @TranslationService.GetTranslation("StartDate", languageCode)
-                                </label>
-                                <input type="date" id="startDate" name="startDate" class="form-control"
-                                       value="@Context.Request.Query["startDate"]" />
-                            </div>
+                            <label class="form-label" for="startDate">@TranslationService.GetTranslation("StartDate", languageCode)</label>
+                            <input type="date" id="startDate" name="startDate" class="form-control"
+                                   value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
                         </div>
                         <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label" for="endDate">
-                                    @TranslationService.GetTranslation("EndDate", languageCode)
-                                </label>
-                                <input type="date" id="endDate" name="endDate" class="form-control"
-                                       value="@Context.Request.Query["endDate"]" />
-                            </div>
+                            <label class="form-label" for="endDate">@TranslationService.GetTranslation("EndDate", languageCode)</label>
+                            <input type="date" id="endDate" name="endDate" class="form-control"
+                                   value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Filter", languageCode)</button>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">@TranslationService.GetTranslation("Filter", languageCode)</button>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            @{
+                                var downloadModel = new DownloadButtonModel
+                                {
+                                    Controller = "IQCReports",
+                                    Action = "ExportToExcelSupplierRateReport",
+                                    RouteValues = new Dictionary<string, string>
+                                                {
+                                                { "startDate", Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "" },
+                                                { "endDate", Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "" },
+                                                },
+                                    ButtonText = TranslationService.GetTranslation("ExportToExcel", languageCode)
+                                };
+                            }
+                            <div class="w-100">
+                                @await Html.PartialAsync("_DownloadButton", downloadModel)
+                            </div>
                         </div>
                     </div>
                 </form>
             </div>
-        </div>
-        <!-- Bảng dữ liệu -->
-        <div class="row section-spacing">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">@TranslationService.GetTranslation("TopSupplierErrorReport", languageCode)</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>@TranslationService.GetTranslation("VENDER_NAME", languageCode)</th>
-                                        <th>@TranslationService.GetTranslation("ABBRE_GROUP", languageCode)</th>
-                                        <th>@TranslationService.GetTranslation("ACCEPTED", languageCode)</th>
-                                        <th>@TranslationService.GetTranslation("REJECTED", languageCode)</th>
-                                        <th>@TranslationService.GetTranslation("TOTAL", languageCode)</th>
-                                        <th>@TranslationService.GetTranslation("RATE_ACCEPT", languageCode)</th>                                   
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in Model)
-                                    {
-                                        <tr>
-                                            <td>@item.VENDER_NAME</td>
-                                            <td>@item.ABBRE_GROUP</td>
-                                            <td>@item.ACCEPTED</td>
-                                            <td>@item.REJECTED</td>
-                                            <td>@item.TOTAL</td>
-                                            <td>@item.RATE_ACCEPT</td>                                       
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+            <!-- Khung biểu đồ -->
+            <div class="row">
+                <div class="chart-container" style="position: relative; height:600px; width:100%;">
+                    <canvas id="topSupplierRateErrorsChart"></canvas>
                 </div>
             </div>
-        </div>
-        <!-- Khung biểu đồ nằm trong container có khoảng cách -->
-       @*  <div class="row section-spacing">
-            <div class="col-12">
-                <div class="chart-container">
-                    <canvas id="chartContainer"></canvas>
-                </div>
-            </div>
-        </div> *@
+        </div>  
     </div>
 </div>
+@section Scripts {
+    <script src="~/js/chart.js"></script>
+    <script src="~/js/chartjs-plugin-datalabels.js"></script>
+    <script>
+            document.querySelector('form').addEventListener('submit', function(e) {
+            const startDate = document.querySelector('input[name="startDate"]').value;
+            const endDate = document.querySelector('input[name="endDate"]').value;
 
+            if (startDate && endDate && new Date(startDate) > new Date(endDate))
+            {
+                e.preventDefault();
+                alert('Start Date cannot be later than End Date.');
+            }
+        });
+        const labels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Labels));
+        const accepted = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Accepted));
+        const rejected=@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Rejected));
+        var acceptedRate = @Html.Raw(Json.Serialize(Model.AcceptRate));
+
+
+        const ctx = document.getElementById('topSupplierRateErrorsChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            data: {
+                labels: labels,
+                datasets: [{
+                    type:'bar',
+                    label: '@TranslationService.GetTranslation("Accepted", languageCode)',
+                    data: accepted,
+                    backgroundColor: 'rgba(75,192,192,0.6)',
+                    borderColor: 'rgba(75,192,192,1)',
+                    borderWidth: 1,
+                    // Giảm độ rộng cột
+                    barThickness: 40,           // Chiều rộng cố định của cột, bạn có thể điều chỉnh giá trị này
+                    maxBarThickness: 50,        // Chiều rộng tối đa của cột (nếu cần)
+                    categoryPercentage: 0.5,    // Tỷ lệ chiếm không gian của từng cột trong nhóm
+                    barPercentage: 0.8,          // Tỷ lệ cột so với không gian dành cho cột
+                    yAxisID: 'y1'
+                },
+                {
+                    type:'bar',
+                    label: '@TranslationService.GetTranslation("Rejected", languageCode)',
+                    data: rejected,
+                    backgroundColor: 'rgba(95,15,152,0.6)',
+                    borderColor: 'rgba(95,15,152,1)',
+                   
+                    borderWidth: 1,
+                    // Giảm độ rộng cột
+                    barThickness: 40,           // Chiều rộng cố định của cột, bạn có thể điều chỉnh giá trị này
+                    maxBarThickness: 50,        // Chiều rộng tối đa của cột (nếu cần)
+                    categoryPercentage: 0.5,    // Tỷ lệ chiếm không gian của từng cột trong nhóm
+                    barPercentage: 0.8,          // Tỷ lệ cột so với không gian dành cho cột
+                    yAxisID: 'y1'
+                }
+                ,
+                {   type:'line',
+                    label: '@TranslationService.GetTranslation("AcceptedRate", languageCode)',
+                    data: acceptedRate,
+                    backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 2,
+                    // Giảm độ rộng cột
+                    barThickness: 40,           // Chiều rộng cố định của cột, bạn có thể điều chỉnh giá trị này
+                    maxBarThickness: 50,        // Chiều rộng tối đa của cột (nếu cần)
+                    categoryPercentage: 0.5,    // Tỷ lệ chiếm không gian của từng cột trong nhóm
+                    barPercentage: 0.8,          // Tỷ lệ cột so với không gian dành cho cột
+                    yAxisID: 'y2'
+                }
+                ]
+            },
+            options: {
+                responsive: true,            // Biểu đồ tự co giãn
+                maintainAspectRatio: false,  // Nếu muốn biểu đồ chiếm hết chiều cao container
+                scales: {
+                        y1: {
+                            type:'linear',
+                            position:'left',
+                            beginAtZero: true,
+                            title: {
+                            display: true,
+                            text: '@TranslationService.GetTranslation("TotalPO", languageCode)'
+                        }
+                    },
+                    y2: {
+                            type:'linear',
+                            position:'right',
+                            beginAtZero: true,
+                            title: {
+                                        display: true,
+                                        text: 'Accepted Rate'
+                                    },
+                            grid: {
+                                    drawOnChartArea: false // Ẩn đường lưới trục x
+                                },
+                        ticks: {
+                            autoSkip: false,     // Tùy chọn: tắt autoSkip nếu bạn muốn hiện tất cả nhãn
+                            maxRotation: 45,     // Tùy chọn: xoay nhãn x khi màn hình hẹp
+                            minRotation: 0
+                        }
+                    }
+                },
+                plugins: {
+                     // Cấu hình hiển thị số trực tiếp trên các cột/bar/dòng
+                    datalabels: {
+                    display: true,
+                    color: 'black',
+                    anchor: 'end',
+                    align: 'top',
+                        formatter: function(value, context) {
+                            // Hiển thị giá trị như số nguyên nếu dataset đang là bar,
+                            // hoặc có thể định dạng lại nếu cần, ví dụ: 0.00 cho line
+                            if(context.dataset.type === 'bar'){
+                                return typeof value === 'number' ? value.toLocaleString() : value;
+                            } else {
+                                return value.toFixed(2);
+                            }
+                        }
+                    },
+                    legend: {
+                        display: true
+                    },
+                    tooltip: {
+                        enabled: true
+                    }
+                }
+            },
+             plugins: [ChartDataLabels]  // Đảm bảo plugin được đăng ký
+        });
+    </script>
+}
 

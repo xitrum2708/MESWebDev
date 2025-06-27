@@ -207,7 +207,7 @@ namespace MESWebDev.Controllers
                 ModelData = new List<ModelData>(),
                 ModelDetailTable = new DataTable()
             };
-            //await LoadNGModelReportDataAsync(model);
+            await LoadNGModelReportDataAsync(model);
             return View(model);
         }
 
@@ -241,7 +241,7 @@ namespace MESWebDev.Controllers
             dateDataParams.Add("@Model", Model);
             var ModelListData = new List<ModelData>();
             //model.ModelData = await _sqlHelperService.ExecuteStoredProcedureAsync<ModelData>("sp_web_Repair_Uniden_ByModelDate_Chart1", dateChartParams);
-            model.ModelDetailTable = await _sqlHelperService.ExecuteStoredProcedureToDataTableAsync("sp_web_Repair_Uniden_ByModelDate1", dateDataParams);
+            model.ModelDetailTable = await _sqlHelperService.ExecuteStoredProcedureToDataTableAsync("sp_web_Repair_Uniden_ByModelDate2", dateDataParams);
             if (model.ModelDetailTable.Rows.Count > 0)
             {
                 for (int i = 0; i < Math.Min(10, model.ModelDetailTable.Rows.Count); i++)
@@ -276,7 +276,7 @@ namespace MESWebDev.Controllers
                 PartDetailTable = new DataTable(),
                 ExportTopError = new DataTable(),
             };
-            //await LoadNGModelReportDataAsync(model);
+            await LoadTopErrorReportDataAsync(model);
             return View(model);
         }
 

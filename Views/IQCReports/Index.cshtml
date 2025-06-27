@@ -19,17 +19,37 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
+                    @* <div class="card-header">
                         <h3 class="card-title">@TranslationService.GetTranslation("ListOfIQCReport", languageCode)</h3>
                         <div class="card-tools">                          
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <!-- Phân trang -->
+                    </div> *@
+                    <div class="card-body">                        
                         <form method="get" asp-action="Index">
                             <div class="row">
+                                <!-- StartDate & EndDate trên cùng một hàng -->
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="startDate">@TranslationService.GetTranslation("StartDate", languageCode)</label>
+                                        <input type="date"
+                                               id="startDate"
+                                               name="startDate"
+                                               class="form-control"
+                                               value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="endDate">@TranslationService.GetTranslation("EndDate", languageCode)</label>
+                                        <input type="date"
+                                               id="endDate"
+                                               name="endDate"
+                                               class="form-control"
+                                               value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                                    </div>
+                                </div>
                                 <!-- VendorCode & PartCode trên cùng một hàng -->
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="VendorCode">@TranslationService.GetTranslation("VenderCode", languageCode)</label>
                                         <input type="text"
@@ -40,7 +60,7 @@
                                                value="@Context.Request.Query["VenderCode"]" />
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="PartCode">@TranslationService.GetTranslation("Partcode", languageCode)</label>
                                         <input type="text"
@@ -51,33 +71,18 @@
                                                value="@Context.Request.Query["PartCode"]" />
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row mt-3">
-                                <!-- StartDate & EndDate trên cùng một hàng -->
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="startDate">@TranslationService.GetTranslation("StartDate", languageCode)</label>
-                                        <input type="date"
-                                               id="startDate"
-                                               name="startDate"
-                                               class="form-control"
-                                               value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="endDate">@TranslationService.GetTranslation("EndDate", languageCode)</label>
-                                        <input type="date"
-                                               id="endDate"
-                                               name="endDate"
-                                               class="form-control"
-                                               value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
-                                    </div>
-                                </div>
-                            </div>
+                            </div>                            
                             <!-- Nếu bạn dùng phân trang, truyền pageSize, page = 1 khi click Filter -->
+                            <!-- Hidden Fields -->
                             <input type="hidden" name="page" value="1" />
-                            <input type="hidden" name="pageSize" value="@Model.ReportIQC.PageSize" />
+                            @if (Model.ReportIQC.Items.Count > 0)
+                            {
+                                <input type="hidden" name="pageSize" value="@Model.ReportIQC.PageSize" />
+                            }
+                            else
+                            {
+                                <input type="hidden" name="pageSize" value="10" />
+                            }                           
 
                             <div class="row mt-3">
                                 <div class="col-12 d-flex align-items-end">
@@ -90,45 +95,59 @@
                                 </div>
                             </div>
                         </form>
-                        <table class="table table-bordered table-hover">
-                            <thead>
-                                <tr>
-                                    <th>@TranslationService.GetTranslation("ReportID", languageCode)</th>
-                                    <th>@TranslationService.GetTranslation("LottagId", languageCode)</th>
-                                    <th>@TranslationService.GetTranslation("VendorCode", languageCode)</th>
-                                    <th>@TranslationService.GetTranslation("PartCode", languageCode)</th>
-                                    <th>@TranslationService.GetTranslation("POQty", languageCode)</th>
-                                    <th>@TranslationService.GetTranslation("POCount", languageCode)</th>
-                                    <th>@TranslationService.GetTranslation("GroupName", languageCode)</th>
-                                    <th>@TranslationService.GetTranslation("Status", languageCode)</th>
-                                    <th>@TranslationService.GetTranslation("CheckerStatus", languageCode)</th>
-                                    <th>@TranslationService.GetTranslation("CreatedDate", languageCode)</th>
-                                    <th>@TranslationService.GetTranslation("Action", languageCode)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var report in Model.ReportIQC.Items)
-                                {
+                         <!-- Phân trang -->
+                        @if (Model.ReportIQC != null && Model.ReportIQC.TotalPages > 1)
+                        {
+                            @await Html.PartialAsync("_Pagination", Model.ReportIQC)
+                        }
+                        <div style="max-height:600px; overflow-y:auto;">
+                            <table class="table table-bordered table-hover table-sm m-0" style="margin:0;">
+                                <thead style="position: sticky; top:0; z-index:1;">
                                     <tr>
-                                        <td>@report.ReportID</td>
-                                        <td>@report.LottagId</td>
-                                        <td>@report.VendorCode</td>
-                                        <td>@report.PartCode</td>
-                                        <td>@string.Format("{0:#,###}",report.POQty)</td>
-                                        <td>@string.Format("{0:#,###}",report.POCount)</td>
-                                        <td>@report.GroupName</td>
-                                        <td>@report.Status</td>
-                                        <td>@report.CheckerStatus</td>
-                                        <td>@report.CreatedDate.ToString("yyyy/MM/dd")</td>
-                                        <td>
-                                            <a asp-action="DetailReport" asp-route-id="@report.ReportID" class="btn btn-sm btn-primary">@TranslationService.GetTranslation("Detail", languageCode)</a>
-                                        </td>
+                                        <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("ReportID", languageCode)</th>
+                                        <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("LottagId", languageCode)</th>
+                                        <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("VendorCode", languageCode)</th>
+                                        <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("PartCode", languageCode)</th>
+                                        <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("POQty", languageCode)</th>
+                                        <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("POCount", languageCode)</th>
+                                        <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("GroupName", languageCode)</th>
+                                        <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("Status", languageCode)</th>
+                                        <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("CheckerStatus", languageCode)</th>
+                                        <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("CreatedDate", languageCode)</th>
+                                        <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("Action", languageCode)</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
-                        <!-- Phân trang -->
-                        @await Html.PartialAsync("_Pagination", Model.ReportIQC)
+                                </thead>
+                                <tbody>
+                                @if (Model.ReportIQC != null && Model.ReportIQC.Items != null)
+                                {
+                                    @foreach (var report in Model.ReportIQC.Items)
+                                    {
+                                        <tr>
+                                            <td>@report.ReportID</td>
+                                            <td>@report.LottagId</td>
+                                            <td>@report.VendorCode</td>
+                                            <td>@report.PartCode</td>
+                                            <td>@string.Format("{0:#,###}", report.POQty)</td>
+                                            <td>@string.Format("{0:#,###}", report.POCount)</td>
+                                            <td>@report.GroupName</td>
+                                            <td>@report.Status</td>
+                                            <td>@report.CheckerStatus</td>
+                                            <td>@report.CreatedDate.ToString("yyyy/MM/dd")</td>
+                                            <td>
+                                                <a asp-action="DetailReport" asp-route-id="@report.ReportID" class="btn btn-sm btn-primary">@TranslationService.GetTranslation("Detail", languageCode)</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                 }
+                                 else
+                                 {
+                                     <tr>
+                                            <td colspan="8" class="text-center">@TranslationService.GetTranslation(ViewBag.Message, languageCode)</td>
+                                     </tr>
+                                 }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
