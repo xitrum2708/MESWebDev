@@ -1,0 +1,378 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model ProdPlanViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="float-start">
+                                <h3 class="card-title fw-bold fs-6">
+                                    @* Production Plan *@
+                                    @if (Model.start_sch_dt != null)
+                                    {
+                                        <span class="lastRun badge bg-success fs-6 p-2">
+                                            Last run: @Convert.ToDateTime(Model.start_sch_dt).ToString("yyyy-MM-dd HH:mm:ss")
+                                        </span>
+                                    }
+                                </h3>
+                            </div>
+                            <div class="float-end">
+                                <a class="btn btn-info btn-sm bt_upload me-2">
+                                    <i class="bi bi-file-earmark-arrow-up"></i>
+                                    Upload</a>
+                                <a class="btn btn-success btn-sm bt_reload me-2">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    Reload</a>
+                                @* <a class="btn btn-secondary btn-sm bt_master me-2">Master</a> *@
+                                <a class="btn btn-primary btn-sm bt_save me-2">
+                                    <i class="bi bi-floppy"></i>
+                                    Save</a>
+@*                                 <a class="btn btn-light btn-sm bt_download me-2">
+                                    <i class="bi bi-download"></i>
+                                    Download
+                                </a> *@
+                                
+
+                            </div>
+                        </div>
+                        <div class="card-body" >
+                            @* <h2>Product Schedule (Resource Timeline View)</h2> *@
+                            <div style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative" id='calendar'></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <Partial name="_Upload" />
+    <Partila name="_LoadingPartial" />
+}
+catch(Exception ex)
+{
+    string t = ex.Message;
+}
+
+
+@section Scripts {
+    <script src="~/js/index.global.min.js"></script>
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <link href="~/css/prodplan.css?@DateTime.Now.Ticks" rel="stylesheet" />
+    @using System.Text.Json
+    <script>
+        // --- Show Upload Windows --- \\
+        $('.bt_upload').click( function(){
+             $('#uploadModal').modal('show');
+        });
+
+        $(document).on('click','.bt_save',function(){
+                ProcessData('SaveProdPlan');
+        })
+
+        $(document).on('click','.bt_reload',function(){
+            if(hasChanges)
+            {
+                    ProcessData('ReloadProdPlan');
+            }
+            else{
+                    alert('Nothing changes !');
+            }
+        })
+
+        // CHECK if UTC + 7 or not ???
+
+        const offsetMs = 7 * 60 * 60 * 1000;
+
+        function ProcessData(title) {
+            const events = calendar.getEvents(); // Get all current events
+            const updatedEvents = events.map(e => {
+                return {
+                    id: e.id,
+                    resourceId: e.getResources()[0]?.id,
+                    start: new Date(e.start.toLocaleString()),
+                    end: new Date(e.start.toLocaleString()),
+                    backgroundColor: e.backgroundColor,
+                    borderColor:e.borderColor,
+                    title: e.title,
+                     ...e.extendedProps ///Include extra data like model, lot_no, qty
+                };
+            });
+
+            const ppv = {
+                events: updatedEvents,
+                holidays:holidays,
+                resources:resources,
+                start_sch_dt: start_sch_dt // Assuming this is a Date object
+            };
+
+            // Send to controller via AJAX
+            $.ajax({
+                url: '/ProdPlan/'+title,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(ppv),
+                success: function (data) {
+                    toastr.success(data.message,'',{
+                        closeButton: true,
+                        progressBar: true,
+                        timeOut: 1000
+                    });
+                    // Reload calendar events
+                    // Update holidays
+                    // holidays = data.holidays;
+                    // resources = data.resources;
+                    calendar.removeAllEvents();
+                    calendar.addEventSource(data.events);
+                    $('.lastRun').html('Last run: '+data.start_sch_dt);
+                    // Optional: Use start_sch_dt or resources
+                    console.log("Start schedule date:", data.start_sch_dt);
+                    // calendar.setOption("resources", data.resources); // if needed
+
+                    hasChanges = false;
+                    //alert(formatDateTime(start_sch_dt));
+                },
+                error: function () {
+                    alert('Error saving events.');
+                }
+            });
+        }
+        
+        // Test Holidays
+        //const holidays = ["2025-06-20","2025-06-21","2025-06-22"];
+    
+
+   
+        let holidays = @Html.Raw(JsonSerializer.Serialize(Model.holidays));
+        //alert(holidays);
+        const events = @Html.Raw(JsonSerializer.Serialize(Model.events));
+        let resources = @Html.Raw(JsonSerializer.Serialize(Model.resources));
+        let start_sch_dt = new Date(@Html.Raw(JsonSerializer.Serialize(Model.start_sch_dt)));
+
+
+        let lastClickTime = 0;
+        let calendar; // Declare it in a higher scope
+        let hasChanges = false;
+        // FullCalendar 
+        document.addEventListener('DOMContentLoaded', function () {
+          var calendarEl = document.getElementById('calendar');
+
+          calendar = new FullCalendar.Calendar(calendarEl, {
+            schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+            timeZone: 'local',
+            locale: 'en-GB', // This sets the locale
+            initialView: 'resourceTimelineDay',
+            resourceAreaHeaderContent: 'Line No.',
+            resourceAreaWidth: 'auto',
+            resourceAreaWidth: '100px',
+            aspectRatio: 2,
+            editable: true,
+            eventResizableFromStart: false,  // can't resize from start
+            eventDurationEditable: false,  // disable resizing completely
+            //contentHeight: 'auto',
+            contentHeight: 'auto', // Allow dynamic sizing
+            height: 'auto',        // Allow calendar to size within container
+
+            stickyHeaderDates: true, // sticky header
+            
+
+
+            headerToolbar: {
+              left: 'prev,next today',
+              center: 'title',
+              right: 'resourceTimelineDay,resourceTimelineWeek,resourceTimelineMonth,resourceTimelineYear'
+            },
+            //NEW
+            buttonText: {
+              today: 'Today',
+              resourceTimelineDay: '🗓️ Day',
+              resourceTimelineWeek: 'Week',
+              resourceTimelineMonth: 'Month',
+              resourceTimelineYear: 'Year'
+            },
+            views: {
+              resourceTimelineDay: {
+                slotDuration: '01:00:00',
+                snapDuration: '00:00:01',
+                slotMinTime: '08:00:00',
+                slotMaxTime: '17:00:00',
+                slotLabelFormat: [{ year: 'numeric', month: '2-digit', day: '2-digit' }, // yyyy/MM/dd
+                { hour: '2-digit', hour12: false } // HH
+                ]
+
+              },
+              resourceTimelineWeek: {
+                slotDuration: '01:00:00',
+                snapDuration: '00:00:01',
+                slotMinTime: '08:00:00',
+                slotMaxTime: '17:00:00',
+                slotLabelFormat: [
+                  { weekday: 'short', day: '2-digit', month: '2-digit' },
+                  { hour: '2-digit', hour12: false }
+                ]
+
+              },
+              resourceTimelineMonth: {
+                slotDuration: { days: 1 },
+                slotMinWidth: 120, // give room for longer text
+                slotLabelFormat: [
+                { year: 'numeric', month: '2-digit' },
+                  { day: '2-digit' }
+                ]
+              }
+            },
+            resources: resources,
+
+            // Load events from controller
+            events: events,
+
+            eventContent: function (arg) {
+              //const title = arg.event.title; // Correct way to access title
+              const { model,lot_no,qty } = arg.event.extendedProps;
+
+              return {
+                html: `
+                <div class="content_inside_cell">
+                <strong><font class="event-text-white-shadow">${model} </font>
+                    <font class="event-text-black-box"> ${qty} </font></strong>
+                    <div class="event-text-outline">${lot_no}</div>
+                  </div>
+                `
+              };
+            },
+
+            datesSet: function () {
+              setTimeout(() => {
+                holidays.forEach(dateStr => {
+                  //alert(dateStr);
+                  // document.querySelectorAll(`[data-date='${dateStr}']`).forEach(cell => {
+                  document.querySelectorAll(`[data-date='${dateStr}'], [data-date^='${dateStr}T']`)
+                    .forEach(cell => {
+                    cell.classList.add('fc-day-holiday');
+                  });
+                });
+                $("td[data-date$='T08:00:00']").addClass("day-start-slot");
+                $("th").addClass("day-start-slot");
+                //$("th[data-date$='T08:00:00']").addClass("day-start-slot");
+              }, 20); // Delay slightly to ensure DOM is rendered
+              
+            },
+
+            // Click to go to that day
+            dateClick: function(info) {
+              const now = new Date().getTime();
+              // If last click was within 400ms, treat as double click
+              if (now - lastClickTime < 400) {
+                // Change view when clicking to a specific day
+                calendar.changeView('resourceTimelineDay', info.dateStr);
+              }
+
+              lastClickTime = now;
+            },
+
+            // Detect drag and drog
+            eventDrop: function(info) {
+                hasChanges = true;
+            },
+
+            // Tooltip
+            eventDidMount: function (info) {
+              const { line, model, lot_no, qty, bal_qty, capa_qty, is_new, is_fpp, lot_size } = info.event.extendedProps;
+                const start = info.event.start;
+                const end = info.event.end;
+              const tooltip = document.createElement('div');
+              tooltip.className = 'custom-tooltip';
+              let html = `
+                <div class="row">
+                  <div class="col-5 text-start">Line:</div>
+                  <div class="col-7 fw-bold text-start">${line}</div>
+                  <div class="col-5 text-start">Model:</div>
+                  <div class="col-7 fw-bold text-start">${model}</div>
+                  <div class="col-5 text-start">Lot No:</div>
+                  <div class="col-7 fw-bold text-start">${lot_no}</div>
+                  <div class="col-5 text-start">Lot Size:</div>
+                  <div class="col-7 fw-bold text-start">${lot_size}</div>
+                  <div class="col-5 text-start">Balance Qty:</div>
+                  <div class="col-7 fw-bold text-start">${bal_qty}</div>
+                  <div class="col-5 text-start">Capacity Qty:</div>
+                  <div class="col-7 fw-bold text-start">${capa_qty}</div>
+                  <div class="col-5 text-start">Quantity:</div>
+                  <div class="col-7 fw-bold text-start">${qty}</div>
+              `;
+
+                if (is_new) {
+                    html += `
+                    <div class="col-5 text-start">New:</div>
+                    <div class="col-7 fw-bold text-start">Yes</div>
+                    `;
+                }
+
+                if(is_fpp){
+                    html += `
+                        <div class="col-5 text-start">FPP:</div>
+                        <div class="col-7 fw-bold text-start">Yes</div>`;
+                }
+                html += `
+                    <div class="col-5 text-start">Start:</div>
+                    <div class="col-7 fw-bold text-start">${formatDateTime(start)}</div>
+                    <div class="col-5 text-start">End:</div>
+                    <div class="col-7 fw-bold text-start">${formatDateTime(end)}</div>
+                </div>`;
+
+                tooltip.innerHTML = html;
+
+                document.body.appendChild(tooltip);
+                document.addEventListener('mousemove', (e) => {
+                  if (!info.el.contains(e.target)) {
+                    tooltip.style.display = 'none';
+                  }
+                });
+                let showTooltipTimeout;
+
+                info.el.addEventListener('mouseenter', (e) => {
+                  showTooltipTimeout = setTimeout(() => {
+                    tooltip.style.visibility = 'hidden';
+                    tooltip.style.display = 'block';
+
+                    const tooltipWidth = tooltip.offsetWidth;
+                    tooltip.style.left = (e.pageX - tooltipWidth - 10) + 'px';
+                    tooltip.style.top = e.pageY + 'px';
+
+                    tooltip.style.visibility = 'visible';
+                  }, 100); // delay in ms
+                });
+
+                info.el.addEventListener('mouseleave', () => {
+                  clearTimeout(showTooltipTimeout);
+                  tooltip.style.display = 'none';
+                });
+            }
+
+                  // Detect drag & drop
+
+          });
+          calendar.render();
+        });
+
+        function formatDateTime(date) {
+            const pad = n => n.toString().padStart(2, '0');
+            return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} ` +
+                    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+        }
+
+    </script>
+}

@@ -2,6 +2,7 @@
 using MESWebDev.Models.COMMON;
 using MESWebDev.Models.IQC;
 using MESWebDev.Models.OQC;
+using MESWebDev.Models.ProdPlan;
 using MESWebDev.Models.REPAIR;
 using MESWebDev.Models.SMT;
 using MESWebDev.Models.SPO;
@@ -70,6 +71,10 @@ namespace MESWebDev.Data
         public DbSet<UV_LOTCONTROL_MASTER> UV_LOTCONTROL_MASTERs { get; set; }
         public DbSet<UV_LOTGENERALSUMMARY_MASTER> UV_LOTGENERALSUMMARY_MASTERs { get; set; }
 
+        //--------------+ Production Plan +-------------------
+        public DbSet<ProdPlanModel> PP_ProdPlan_tbl { get; set; }
+        public DbSet<ProdPlanParaModel> PP_Para_tbl { get; set; }
+        public DbSet<CalendarModel> PP_Calendar_tbl { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<UV_LOTCONTROL_MASTER>(entity =>

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -68,6 +69,9 @@ builder.Services.AddScoped<SqlHelperService>();
 builder.Services.AddScoped<IRepairResultRepository, RepairResultRepository>();
 builder.Services.AddScoped<IRepairResultService, RepairResultService>();
 builder.Services.AddScoped<IUV_LOTCONTROL_MASTER_Service, UV_LOTCONTROL_MASTER_Service>();
+
+builder.Services.AddScoped<IProdPlanService, ProdPlanService>();
+
 // Logging is already configured in ASP.NET Core by default, but you can customize it
 builder.Services.AddLogging(logging =>
 {
@@ -95,6 +99,10 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new AuthorizeFilter(policy));
 });
 
+//------ EPPlus : add it to use freely --------------
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+//------------- Add Mapper here (NOTE: error maybe because of version of mapper) ------------\\
+builder.Services.AddAutoMapper(typeof(MappingConfig));
 
 //builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
 //    .AddCookie(options =>

@@ -1,0 +1,70 @@
+﻿
+@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+<form id="UploadForm" enctype="multipart/form-data" asp-action="UploadFiles" asp-controller="ProdPlan" method="post">
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            @* <div class="modal-dialog"> *@
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadModalLabel">
+                        <i class='bx bxl-netlify'></i>
+                        UPLOAD FILES
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-2">
+
+                    <div class="row">
+                        <div class="col-10 my-2">
+                            <font class="text-success fw-bold">Upload file from IFS ( Model-Lot-BalanceQty ) </font>
+                        </div>
+                        <div class="col-10 my-2">
+                            <a href="~/UploadTemplate/IFSFile_Template.csv">[Download Template]</a>
+                        </div>
+                        <div class="col-10 mb-2">
+                            <input class="form-control form-control-sm" accept=".xls*,.csv" type="file" name="file1" required/>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                        <div class="col-10">
+                            <font class="text-success fw-bold">Upload Master file ( Line-Model-Capacity ) </font>
+                        </div>
+                        <div class="col-10 my-2">
+                            <a href="~/UploadTemplate/LineMaster_Templage.csv">[Download Template]</a>
+                        </div>
+                        <div class="col-10 mb-2">
+                            <input class="form-control form-control-sm" accept=".xls*,.csv" type="file" name="file2" required />
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                        <div class="col-10">
+                            <font class="text-success fw-bold">Upload Calendar file</font>
+                        </div>
+                        <div class="col-10 my-2">
+                            <a href="~/UploadTemplate/Calendar.csv">[Download Template]</a>
+                        </div>
+                        <div class="col-10 mb-2">
+                            <input class="form-control form-control-sm" accept=".xlsx*,.csv" type="file" name="file3" required />
+                        </div>
+                    </div>
+                    <font id="result" class="text-danger fw-bold"></font>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class='bx bx-upload'></i>
+                        Upload
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm" data-bs-dismiss="modal">
+                        <i class='bx bx-no-entry'></i>
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

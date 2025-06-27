@@ -1,0 +1,176 @@
+﻿
+
+#calendar {
+    max-width: auto;
+    margin: 0 auto;
+}
+
+.fc .fc-col-header-cell.fc-resource-area {
+    background-color: #004080;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+}
+
+/*-- first column --*/
+.fc .fc-datagrid-cell-frame {
+    overflow: hidden;
+    /* padding: 8px; */
+    white-space: nowrap;
+    justify-content: center;
+    background: #a5f2f5;
+    font-weight: bold !important;
+    color: #640357;
+}
+
+/*-- HEADER --*/
+.fc .fc-timeline-header-row {
+    background-color: #a5f2f5;
+    color: black;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Add border cell */
+.fc-theme-standard td,
+.fc-theme-standard th {
+    border: 1px solid black;
+}
+
+/* Add border for outline table */
+.fc .fc-scrollgrid {
+    border: 1px solid black;
+}
+
+/* Center text of hours: 08, 09, 10 */
+.fc .fc-timeline-header-row-chrono .fc-timeline-slot-frame {
+    justify-content: center;
+}
+
+.fc-scroller-harness-liquid {
+    height: auto !important;
+}
+
+/*-- first column --*/
+.fc .fc-timeline-slot-frame a{
+    text-decoration:none !important;
+    color:black !important;
+    
+}
+
+
+/*-- CSS Button --*/
+.fc-button.fc-button-active {
+    background-color: #28a745 !important;
+}
+/* Add space between buttons */
+.fc .fc-button-group > .fc-button {
+    margin-right: 6px;
+    border-radius: 10%;
+    border: none;
+}
+
+    .fc .fc-button-group > .fc-button:hover {
+        background-color: rgb(6, 107, 57);
+    }
+
+    /* Optional: remove margin from the last button */
+    .fc .fc-button-group > .fc-button:last-child {
+        margin-right: 0;
+    }
+
+/* Highlight Sunday column in timeline view */
+.fc .fc-timeline-slot.fc-day-sun,
+.fc .fc-timeline-header .fc-day-sun {
+    background-color: #ffe0e0 !important;
+}
+
+
+/* Custom holiday highlight */
+.fc-day-holiday {
+    background-color: #ffe0e0 !important;
+}
+
+
+
+/* CSS for content in cells of Full Calendar */
+.content_inside_cell {
+    display: flex;
+    flex-direction : column;
+    justify-content: center;
+    align-items:center;
+    height:100%;
+    text-align:center;
+    line-height:1.4;
+    padding:4px;
+}
+
+/* Make text clearer */
+.event-text-white-shadow {
+    color: black;
+    text-shadow: 1px 1px 2px white;
+    /*font-weight: bold;*/
+}
+.event-text-black-box {
+    background-color: rgba(255, 255, 255, 0.55);
+    color: black;
+    padding: 0px 2px;
+    border-radius: 7px;
+    font-weight: bold;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
+}
+.event-text-outline {
+    color: rgb(5, 81, 43);
+    font-weight: bold;
+    text-shadow: 1px 1px 2px white;
+    /*  color: white;
+    font-weight: bold;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;*/
+}
+
+
+/* Default border */
+.fc-timeline-slot {
+    border-left: 1px double #ccc !important;
+}
+
+ /*Stronger border for day-start slots*/ 
+.fc-timeline-slot.day-start-slot {
+    border-left: 1px solid #000 !important;
+    /*background-color: #f9f9f9;  optional: slightly different bg*/ 
+}
+
+/*Customize Tooltip*/
+.custom-tooltip {
+    position: absolute;
+    background: linear-gradient(135deg, #000000,#000000,rgb(5, 81, 43), rgb(13, 108, 60)); /* grey to black */
+    color: white;
+    border: none;
+    padding: 8px;
+    width: 300px;
+    border-radius: 7px;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 100000;
+    display: none;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    transform: scale(0.95);
+}
+    .custom-tooltip.show {
+        display: block;
+        background-color: #e0ffe0; /* transition to greenish background */
+        transform: scale(1);
+    }
+
+/* Sticky header toolbar */
+.fc-header-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background-color: white;
+}
+
+
+
+
+
