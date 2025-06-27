@@ -9,5 +9,6 @@ namespace MESWebDev.Services
         Task<string> SaveProdPlan(ProdPlanViewModel ppv);
         Task<ProdPlanViewModel> ReloadProdPlan(ProdPlanViewModel ppv);
         Task<ProdPlanViewModel> ViewProdPlan(RequestDTO _request);
+        //Task<ProdPlanModel> ExportProdPlanToExcel(ProdPlanViewModel ppv); // 1.
     }
 }

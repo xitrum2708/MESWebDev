@@ -9,21 +9,21 @@
 
         if (i < Model.Count - 1)
         {
-            <li class="breadcrumb-item">
+            <li class="breadcrumb-item fw-bold">
                 @if (isNonNavigable)
                 {
-                    @item.Title
+                    @item.Title?.ToUpper()
                 }
                 else
                 {
-                    <a href="@item.Url">@item.Title</a>
+                    <a href="@item.Url fw-bold">@item.Title?.ToUpper()</a>
                 }
             </li>
         }
         else
         {
             // Mục cuối cùng hiển thị ở dạng active (không link)
-            <li class="breadcrumb-item active" aria-current="page">@item.Title</li>
+            <li class="breadcrumb-item active" aria-current="page">@item.Title?.ToUpper()</li>
         }
     }
 </ol>
