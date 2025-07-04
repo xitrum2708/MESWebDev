@@ -396,14 +396,11 @@
         $(document).on('click', '.fullscreen', function () {
             // Delay 50ms để đợi UI cập nhật (icon swap)
             setTimeout(() => {
-                const isMaximized = $('[data-lte-icon="maximize"]').is(':visible');
-
-                if (isMaximized) { // đang ở chế độ fullscreen
                     if ($('body').hasClass('sidebar-open')) {
                         console.log('Auto remove sidebar-collapsed in fullscreen');
                         $('body').removeClass('sidebar-collapsed');
                     }
-                }
+                
             }, 50);
         });
 

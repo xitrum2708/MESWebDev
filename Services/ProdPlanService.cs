@@ -958,11 +958,13 @@ namespace MESWebDev.Services
             }).ToList() ?? new List<CalendarModel>();
             // Step 1: Delete all records (if needed)
             await _con.Database.ExecuteSqlRawAsync(@"DELETE FROM PP_Calendar_tbl WHERE is_holiday = 1");
-            try
-            {
-                await _con.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT ('PP_Calendar_tbl', RESEED, 0)");
-            }
-            catch { }
+            //try
+            //{
+            //    var maxId = await _con.PP_ProdPlan_tbl.MaxAsync(p => (int?)p.id) ?? 0;
+            //    maxId = maxId == 0 ? 0 : maxId + 1;
+            //    await _con.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT ('PP_Calendar_tbl', RESEED, 0)");
+            //}
+            //catch { }
 
             await _con.AddRangeAsync(calendar);
             await _con.SaveChangesAsync();
