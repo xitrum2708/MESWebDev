@@ -276,7 +276,7 @@
                         </div>
                     </li> *@
                     <li class="nav-item">
-                        <a class="nav-link" href="#" data-lte-toggle="fullscreen">
+                        <a class="nav-link fullscreen" href="#" data-lte-toggle="fullscreen">
                             <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
                             <i data-lte-icon="minimize" class="bi bi-fullscreen-exit" style="display: none"></i>
                         </a>
@@ -386,7 +386,31 @@
         document.querySelector('[data-lte-toggle="sidebar"]').addEventListener('click', function(e) {
             e.preventDefault();
             document.body.classList.toggle('sidebar-collapsed');
+        //             const body = document.body;
+        // if (body.classList.contains('sidebar-collapsed') && body.classList.contains('sidebar-open')) {
+        //     body.classList.remove('sidebar-collapsed');
+        //     // hoặc body.classList.remove('sidebar-open');
+        // }
         });
+
+        $(document).on('click', '.fullscreen', function () {
+            // Delay 50ms để đợi UI cập nhật (icon swap)
+            setTimeout(() => {
+                const isMaximized = $('[data-lte-icon="maximize"]').is(':visible');
+
+                if (isMaximized) { // đang ở chế độ fullscreen
+                    if ($('body').hasClass('sidebar-open')) {
+                        console.log('Auto remove sidebar-collapsed in fullscreen');
+                        $('body').removeClass('sidebar-collapsed');
+                    }
+                }
+            }, 50);
+        });
+
+
+
+                // Cleanup class conflict
+
     </script>
    
 

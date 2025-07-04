@@ -1,14 +1,11 @@
 ﻿using AutoMapper;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Vml;
 using ExcelDataReader;
+using MESWebDev.Common;
 using MESWebDev.Data;
-using MESWebDev.Models;
 using MESWebDev.Models.ProdPlan;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using System.Data;
-using System.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -18,10 +15,12 @@ namespace MESWebDev.Services
     {
         private readonly AppDbContext _con;
         private readonly IMapper _mapper;
+        private readonly Procedure _proc;
         public ProdPlanService(AppDbContext con, IMapper mapper)
         {
             _con = con;
             _mapper = mapper;
+            _proc = new Procedure(_con);
         }
         public async Task<ProdPlanViewModel> GetDataFromUploadFile(RequestDTO _request)
         {
@@ -31,10 +30,6 @@ namespace MESWebDev.Services
             {
                 throw new ArgumentException("No files provided for processing.");
             }
-            else if (files.Count != 3)
-            {
-                throw new ArgumentException("Exactly three files are required for processing.");
-            }
 
             // GET ProdPlan Data
             try
@@ -43,7 +38,7 @@ namespace MESWebDev.Services
                 pp.prod_plans = await GetProdData(files[0], files[1]);
 
                 // GET Holiday Data
-                pp.holidays = await GetHolidayData(files[2]);
+                pp.holidays = await GetHoliday(new());// GetHolidayData(files[2]);
                 pp = await ProdPlanViewModel(pp);                
             }
             catch (Exception ex)
@@ -271,7 +266,6 @@ namespace MESWebDev.Services
             if (_ppm != null && _ppm.Any())
                 lines = _ppm.GroupBy(i => i.line).Select(i => i.Key).ToList();
 
-
             DateTime sch_dt = ppv.sch_dt ?? DateTime.Now.Date;
             foreach (var line in lines)
             {
@@ -288,7 +282,6 @@ namespace MESWebDev.Services
                     await _CalProdPlan(ppv);
                 }
             }
-
             ppv.prod_plans = ppm;
             return ppv;
         }
@@ -319,7 +312,7 @@ namespace MESWebDev.Services
             {
                 if ((ppv.start_hour ?? 0) == 8 && is_other_model)
                 {
-                    ppm.Add(CreateProdPlan(p, start_run, endOfWorking, working_hour, ppv.line, start_sch_date));
+                    ppm.Add(CreateProdPlan(p, start_run, endOfWorking, working_hour, ppv.line, start_sch_date, Math.Min(p.capa_qty,p.bal_qty)));
                     ppv.sch_dt = start_run.Date.AddDays(1);
                     ppv.start_hour = DefaultStartHour;
                     ppv.prodPlanModel.bal_qty -= p.qty;
@@ -328,7 +321,6 @@ namespace MESWebDev.Services
 
                     if (p.bal_qty > p.capa_qty)
                         return await _CalProdPlan(ppv);
-
                     return ppv;
                 }
 
@@ -654,7 +646,6 @@ namespace MESWebDev.Services
         }
 
 
-
         public async Task<ProdPlanViewModel> ReloadProdPlan(ProdPlanViewModel ppv)
         {
             try
@@ -760,6 +751,16 @@ namespace MESWebDev.Services
             return ppv;
         }
 
+        public async Task<List<string>> GetHolidays(RequestDTO _request = null)
+        {
+            var holidays = _con.PP_Calendar_tbl.Where(i => i.is_holiday == true 
+                                            && (_request == null || _request==new RequestDTO() ||(i.date.Year == _request.year && i.date.Month == _request.month)));
+
+            if (holidays.Any())
+                return holidays.Select(i => i.date.ToString("yyyy-MM-dd")).ToList();
+            else return new();
+        }
+
         public async Task<ProdPlanViewModel> ViewProdPlan(RequestDTO _request)
         {
             ProdPlanViewModel ppv = new();
@@ -773,10 +774,7 @@ namespace MESWebDev.Services
                     ppv.start_sch_dt = date;
                     ppv.prod_plans = prodPlans.Where(i => i.start_sch_dt == date).ToList();
 
-                    ppv.holidays = new();
-                    var holidays = _con.PP_Calendar_tbl.Where(i => i.is_holiday == true);
-                    if (holidays.Any())
-                        ppv.holidays = holidays.Select(i => i.date.ToString("yyyy-MM-dd")).ToList();
+                    ppv.holidays = await GetHolidays();
 
                     ppv.resources = new();
                     ppv.events = new();
@@ -795,7 +793,20 @@ namespace MESWebDev.Services
                             i.old_start = i.start;
                             i.id = i.old_id;
                         }); // set resourceId for each event
+                        //ppv.events = ppv.events.OrderBy(i => i.line).ThenBy(i => i.id).ToList();
                     }
+                    Dictionary<string,object> para = await GetParas();
+                    // model_change_time
+                    if(para.TryGetValue("model_change_time", out var value))
+                    {
+                        ppv.model_stransfer_time = Convert.ToInt32(value);
+                    }         
+                    // model_fisrt_run_percent
+                    if(para.TryGetValue("model_fisrt_run_percent", out var value2))
+                    {
+                        ppv.new_model_rate = Convert.ToInt32(value2);
+                    }
+                    
                 }
                 else
                 {
@@ -875,33 +886,132 @@ namespace MESWebDev.Services
                 {
                     return msg;
                 }
-
-                List<CalendarModel> calendar = new();
-                calendar = ppv.holidays?.Select(i => new CalendarModel
-                {
-                    date = Convert.ToDateTime(i),
-                    is_holiday = true,
-                    note = "Holiday"
-                }).ToList() ?? new List<CalendarModel>();
-                foreach (var item in calendar)
-                {
-                    var existingHolidays = _con.PP_Calendar_tbl.Where(i => i.date.Date == item.date.Date);
-                    if (existingHolidays.Any())
-                    {
-                        existingHolidays.First().is_holiday = item.is_holiday;
-                    }
-                    else
-                    {
-                        await _con.PP_Calendar_tbl.AddAsync(item);
-                    }
-                    await _con.SaveChangesAsync();
-                }
+                await addHolidays(ppv.holidays);
+                
             }
             catch (Exception ex)
             {
                 msg += $" Error saving holidays: {ex.Message}";
             }
             return msg;
+        }
+
+        public async Task<DataSet> ExportProdPlan(Dictionary<string,object> dic)
+        {
+            DataSet ds = new();
+            DataSet dset = await _proc.Proc_GetDataset("PP_ProdPlan_Export", dic);
+            if(dset != null && dset.Tables.Count >1)
+            {
+                DataTable data = new();// dset.Tables[0];
+                DataTable holiday = new();// dset.Tables[1];
+                if (dset.Tables[0] != null && dset.Tables[0].Rows.Count > 0)
+                {
+                    if(dset.Tables[1].Rows.Count > 0)
+                    {
+                        holiday = dset.Tables[1].Copy();
+                    }
+                    holiday.TableName = "holiday";
+                    ds.Tables.Add(holiday);
+
+                    // remove the first row that is holiday
+                    data = dset.Tables[0].Copy();
+                    data.TableName = "COMB";
+                    data.Rows.RemoveAt(0);
+                    ds.Tables.Add(data);
+
+                    var line_list = data.AsEnumerable()
+                        .Select(row => row.Field<string>("line"))
+                        .Distinct()
+                        .ToList();
+                    foreach (var line in line_list)
+                    {
+                        DataTable dt = data.Clone();
+                        dt.TableName = line;
+                        var rows = data.AsEnumerable().Where(r => r.Field<string>("line") == line).CopyToDataTable();
+                        foreach (DataRow row in rows.Rows)
+                        {
+                            dt.ImportRow(row);
+                        }
+                        ds.Tables.Add(dt);
+                    }
+
+                }
+            } 
+            return ds;
+        }
+
+        public async Task<List<string>> SaveHoliday(List<string> holidays)
+        {
+            await addHolidays(holidays);
+            return await GetHolidays();
+        }
+
+        public async Task addHolidays(List<string> holidays)
+        {
+            //string msg = string.Empty;
+            List<CalendarModel> calendar = new();
+            calendar = holidays?.Select(i => new CalendarModel
+            {
+                date = Convert.ToDateTime(i),
+                is_holiday = true,
+                note = "Holiday"
+            }).ToList() ?? new List<CalendarModel>();
+            // Step 1: Delete all records (if needed)
+            await _con.Database.ExecuteSqlRawAsync(@"DELETE FROM PP_Calendar_tbl WHERE is_holiday = 1");
+            try
+            {
+                await _con.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT ('PP_Calendar_tbl', RESEED, 0)");
+            }
+            catch { }
+
+            await _con.AddRangeAsync(calendar);
+            await _con.SaveChangesAsync();
+            //return msg;
+        }
+
+        public async Task<List<string>> GetHoliday(RequestDTO _request)
+        {
+            return await GetHolidays(_request);
+        }
+
+        public async Task<string> SavePara(ProdPlanViewModel ppv)
+        {
+            string msg = "Update data successfully";
+            try
+            {
+                var data = _con.PP_Para_tbl.Where(i => i.name == "model_change_time");
+                if (data.Any())
+                {
+                    data.First().value = ppv.model_stransfer_time?.ToString() ?? "30";
+                }
+                var data2 = _con.PP_Para_tbl.Where(i => i.name == "model_fisrt_run_percent");
+                if (data2.Any())
+                {
+                    data2.First().value = ppv.new_model_rate?.ToString() ?? "65";
+                }
+                await _con.SaveChangesAsync();
+            }
+            catch(Exception ex)
+            {
+                msg = ex.Message;
+            }
+
+            return msg;
+        }
+
+        public async Task<Dictionary<string, object>> GetPara()
+        {
+            return await GetParas();
+        }
+
+        public async Task<Dictionary<string, object>> GetParas()
+        {
+            Dictionary<string, object> dic = new();
+
+            var data = _con.PP_Para_tbl;
+            if (data.Any())
+                dic = await data.ToDictionaryAsync(i => i.name, i => (object)i.value);
+            return dic;
         }
     }
 }

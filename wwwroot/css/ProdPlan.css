@@ -63,7 +63,7 @@
 .fc-button.fc-button-active {
     background-color: #28a745 !important;
 }
-/* Add space between buttons */
+/*-- Add space between buttons --*/
 .fc .fc-button-group > .fc-button {
     margin-right: 6px;
     border-radius: 10%;
@@ -80,10 +80,10 @@
     }
 
 /* Highlight Sunday column in timeline view */
-.fc .fc-timeline-slot.fc-day-sun,
+/*.fc .fc-timeline-slot.fc-day-sun,
 .fc .fc-timeline-header .fc-day-sun {
     background-color: #ffe0e0 !important;
-}
+}*/
 
 
 /* Custom holiday highlight */
@@ -158,18 +158,80 @@
 }
     .custom-tooltip.show {
         display: block;
-        background-color: #e0ffe0; /* transition to greenish background */
+        background-color: #e0ffe0; 
+        /* transition to greenish background */
         transform: scale(1);
     }
 
 /* Sticky header toolbar */
-.fc-header-toolbar {
+.fc .fc-toolbar.fc-header-toolbar, .fc-header-toolbar {
     position: sticky;
     top: 0;
-    z-index: 999;
-    background-color: white;
+    z-index: 100;
+    background: white;
+    padding-bottom: 1.5em !important;
+    margin-bottom: 0 !important;
 }
 
+.fc .fc-scrollgrid-section-header {
+    position: sticky;
+    top: 40px;
+    z-index: 90;
+}
+
+/*.fc .fc-scrollgrid-sync-table th:first-child,*/
+.fc .fc-col-header-cell:first-child 
+{
+    position: sticky;
+    left: 0;
+    z-index: 80;
+}
+
+
+/* ---------------+ Custom styles for setting holiday +----------------- */
+.calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    text-align: center;
+}
+
+.day-header {
+    font-weight: bold;
+    background-color: #f1f1f1;
+    padding: 5px;
+}
+
+.day-cell {
+    border: 1px solid #ccc;
+    padding: 10px 5px;
+    height: 80px;
+    position: relative;
+}
+
+.day-number {
+    position: absolute;
+    top: 4px;
+    left: 6px;
+    font-size: 0.9rem;
+}
+
+.holiday-checkbox {
+    position: absolute;
+    bottom: 4px;
+    right: 6px;
+}
+
+.holiday-checked {
+    background-color: #ffe3e3;
+}
+/* ------- end of holiday -------- */
+
+/* ---- Dropdown item ---- */
+.dropdown-item:hover{
+    background-color: #e9c605 !important;
+    color: black;    
+}
 
 
 

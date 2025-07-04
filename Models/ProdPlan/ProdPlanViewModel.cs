@@ -28,6 +28,7 @@ namespace MESWebDev.Models.ProdPlan
         public int? model_stransfer_time { get; set; } = 30;
         public ProdPlanModel? prodPlanModel { get; set; }
 
-        
+        public List<ProdPlanParaModel>? parameters { get; set; }
+
     }
 }
