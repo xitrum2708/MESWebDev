@@ -252,6 +252,9 @@ namespace MESWebDev.Controllers
                                                        string? SearchTerm,
                                                        int page = 1, int pageSize = 10)
         {
+            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
+            startDate ??= DateTime.Now.AddDays(-30);
+            endDate ??= DateTime.Now;
             var telstarListPro = _context.TELSTAR_ASSYs
                 .AsQueryable();
 
@@ -307,6 +310,10 @@ namespace MESWebDev.Controllers
                                                        string? SearchTerm,
                                                        int page = 1, int pageSize = 10)
         {
+
+            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
+            startDate ??= DateTime.Now.AddDays(-30);
+            endDate ??= DateTime.Now;
             var telstarListPro = _context.TELSTAR_DQCs
                 .AsQueryable();
 
@@ -404,6 +411,7 @@ namespace MESWebDev.Controllers
         [HttpGet]
         public async Task<IActionResult> ExportToExcelDQC(DateTime? startDate, DateTime? endDate, string? SearchTerm)
         {
+           
             var results = _context.TELSTAR_DQCs
                 .AsQueryable();
 
@@ -599,6 +607,9 @@ namespace MESWebDev.Controllers
                                                        string? SearchTerm,
                                                        int page = 1, int pageSize = 10)
         {
+            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
+            startDate ??= DateTime.Now.AddDays(-30);
+            endDate ??= DateTime.Now;
             var tonlyListPro = _context.TONLY_DQCs
                 .AsQueryable();
 
@@ -653,6 +664,9 @@ namespace MESWebDev.Controllers
         [HttpGet]
         public async Task<IActionResult> TonlyExportToExcelDQC(DateTime? startDate, DateTime? endDate, string? SearchTerm)
         {
+            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
+            startDate ??= DateTime.Now.AddDays(-30);
+            endDate ??= DateTime.Now;
             var results = _context.TONLY_DQCs
                 .AsQueryable();
 

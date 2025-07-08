@@ -184,21 +184,21 @@
                     <div class="card-header">
                         <h3 class="card-title">@TranslationService.GetTranslation("DailyResult", languageCode)</h3>
                     </div>
-                    <div class="card-body table-container">
-                        <table class="table table-bordered table-hover">                      
-                            <thead class="thead-dark">
+                    <div style="max-height:250px; overflow-y:auto;">
+                        <table class="table table-bordered table-hover table-sm m-0" style="margin:0;">
+                            <thead style="position: sticky; top:0; z-index:1;">
                                 <tr>
-                                    <th>No</th>
-                                    <th>Div</th>
-                                    <th>Category</th>
-                                    <th>Model</th>
-                                    <th>B-Model</th>
-                                    <th>LotNo</th>
-                                    <th>LotSize</th>
-                                    <th>Target Qty</th>
-                                    <th>Prod Qty</th>
-                                    <th>Prod Date</th>
-                                    <th>Prod Line</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">No</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">Div</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">Category</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">Model</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">B-Model</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">LotNo</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">LotSize</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">Target Qty</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">Prod Qty</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">Prod Date</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">Prod Line</th>
                                 </tr>
                             </thead>
                             <tbody id="productionResultsBody">

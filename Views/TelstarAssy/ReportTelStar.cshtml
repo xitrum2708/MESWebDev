@@ -17,9 +17,9 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                <div class="card-header">
+               @*  <div class="card-header">
                     <h3 class="card-title">@TranslationService.GetTranslation("ListOfTelStarProduct", languageCode)</h3>
-                </div>
+                </div> *@
                 <div class="card-body">
                     <form asp-action="ReportTelStar" method="get" class="mb-3">
                         <div class="d-flex flex-wrap align-items-end">                           
@@ -74,46 +74,47 @@
                             @await Html.PartialAsync("_DownloadButton", downloadModel)
                         </div>
                     </form>
-
-                    <table class="table table-bordered table-hover" style="margin:0;">
-                        <thead class="thead-light" style="position: sticky; top:0; z-index:1; background-color:white;">
-                            <tr>
-                                <th>@TranslationService.GetTranslation("QrCode", languageCode)</th>
-                                <th>@TranslationService.GetTranslation("Model", languageCode)</th>
-                                <th>@TranslationService.GetTranslation("LotNo", languageCode)</th>
-                                <th>@TranslationService.GetTranslation("Line", languageCode)</th>
-                                <th>@TranslationService.GetTranslation("CreatedDate", languageCode)</th>
-                                <th>@TranslationService.GetTranslation("CreatedBy", languageCode)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model.TelstarVM != null && Model.TelstarVM.Items != null)
-                            {
-                                @foreach (var log in Model.TelstarVM.Items)
+                    <!-- Phân trang -->
+                    @if (Model.TelstarVM != null && Model.TelstarVM.TotalPages > 1)
+                    {
+                        @await Html.PartialAsync("_Pagination", Model.TelstarVM)
+                    }
+                    <div style="max-height:600px; overflow-y:auto;">
+                        <table class="table table-bordered table-hover table-sm m-0" style="margin:0;">
+                            <thead style="position: sticky; top:0; z-index:1;">
+                                <tr>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("QrCode", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("Model", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("LotNo", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("Line", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("CreatedDate", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("CreatedBy", languageCode)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.TelstarVM != null && Model.TelstarVM.Items != null)
+                                {
+                                    @foreach (var log in Model.TelstarVM.Items)
+                                    {
+                                        <tr>
+                                            <td>@log.QRCode</td>
+                                            <td>@log.Model</td>
+                                            <td>@log.SelectedLotNo</td>
+                                            <td>@log.SelectedLine</td>                                       
+                                            <td>@log.CreatedDate.Value.ToString("yyyy/MM/dd")</td>
+                                            <td>@log.CreatedBy</td>
+                                        </tr>
+                                    }
+                                }
+                                else
                                 {
                                     <tr>
-                                        <td>@log.QRCode</td>
-                                        <td>@log.Model</td>
-                                        <td>@log.SelectedLotNo</td>
-                                        <td>@log.SelectedLine</td>                                       
-                                        <td>@log.CreatedDate.Value.ToString("yyyy/MM/dd")</td>
-                                        <td>@log.CreatedBy</td>
+                                        <td colspan="8" class="text-center">@TranslationService.GetTranslation(ViewBag.Message, languageCode)</td>
                                     </tr>
                                 }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="8" class="text-center">@TranslationService.GetTranslation(ViewBag.Message, languageCode)</td>
-                                </tr>
-                            }
-                        </tbody>
-                        <!-- Phân trang -->
-                        @if (Model.TelstarVM != null && Model.TelstarVM.TotalPages > 1)
-                        {
-                            @await Html.PartialAsync("_Pagination", Model.TelstarVM)
-                        }
-                    </table>
+                            </tbody>                           
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
