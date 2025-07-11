@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Data;
 
 namespace MESWebDev.Models.ProdPlan
 {
@@ -29,6 +30,9 @@ namespace MESWebDev.Models.ProdPlan
         public ProdPlanModel? prodPlanModel { get; set; }
 
         public List<ProdPlanParaModel>? parameters { get; set; }
+
+        // line itemlist
+        public List<SelectListItem>? line_items { get; set; }
 
     }
 }
