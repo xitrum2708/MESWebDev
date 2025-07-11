@@ -70,8 +70,11 @@
                             }
                             @await Html.PartialAsync("_DownloadButton", downloadModel)
                         </div>
-
+                        <button type="button" class="btn btn-success mx-2" id="btnRegisterLot">
+                            @T.GetTranslation("RegisterNewLot", languageCode)
+                        </button>
                     </form>
+                   
                     <!-- Phân trang -->
                     @if (Model.LotControlMasterList != null && Model.LotControlMasterList.TotalPages > 1)
                     {
@@ -141,3 +144,165 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="registerLotModal" tabindex="-1" aria-labelledby="registerLotModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@T.GetTranslation("RegisterLotControl", languageCode)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>@T.GetTranslation("LotNo", languageCode)</label>
+                    <input type="text" id="inputLotNo" class="form-control" placeholder="Enter LotNo from SPO..." />
+                </div>
+                <button type="button" class="btn btn-primary" id="btnLoadLot">@T.GetTranslation("LoadLotData", languageCode)</button>
+                <div id="lotFormContainer" class="mt-4" style="display:none;">
+                    <form id="lotForm" method="post" asp-controller="Master" asp-action="SaveLotControl">
+                        <input type="hidden" name="LotControlID" />
+                        <!-- Add your fields like Quantity, Code, etc. -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>LotNo</label>
+                                <input name="lotNo" class="form-control" readonly />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Model</label>
+                                <input name="model" class="form-control" readonly />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Quantity</label>
+                                <input name="quantity" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>PONumber</label>
+                                <input name="poNumber" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Lot Special Info</label>
+                                <input name="specialInfo" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>Date Code</label>
+                                <input name="dateCode" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>Code</label>
+                                <input name="code" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Start Serial</label>
+                                <input name="serialStart" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>End Serial</label>
+                                <input name="serialEnd" class="form-control" readonly />
+                            </div>
+                            <div class="col-md-4">
+                                <label>Revised</label>
+                                <input name="revised" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label>Approved By</label>
+                                <input name="approvedBy" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label>Issued By</label>
+                                <input name="issuedBy" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Pro Date</label>
+                                <input name="proDate" type="date" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Issue Date</label>
+                                <input name="issueDate" type="date" class="form-control" />
+                            </div>
+                            <!-- Add more fields as needed -->
+                        </div>
+                        <button type="submit" class="btn btn-success mt-3">@T.GetTranslation("Save", languageCode)</button>
+                    </form>
+                </div>
+                <div id="lotMessage" class="text-danger mt-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        $("#btnRegisterLot").on("click", function () {
+            $("#registerLotModal").modal("show");
+            $("#inputLotNo").val('');
+            $("#lotFormContainer").hide();
+            $("#lotMessage").text('');
+        });
+
+        $("#btnLoadLot").on("click", function () {
+            const lotNo = $("#inputLotNo").val();
+            if (!lotNo) {
+                $("#lotMessage").text("Please input LotNo.");
+                return;
+            }
+
+            $.get("/Master/LoadLotControlOrSpo", { lotNo }, function (data) {
+                if (data) {
+                    const form = $("#lotForm");
+                    console.log(data);
+                    for (const key in data) {
+                        console.log(key, data[key]);
+                        form.find(`[name='${key}']`).val(data[key]);
+                    }
+                    $("#lotFormContainer").show();
+                    $("#lotMessage").text('');
+                } else {
+                    $("#lotFormContainer").hide();
+                    $("#lotMessage").text("Lot not found in SPO or already registered.");
+                }
+            });
+            $('#lotForm').on('input', '[name="serialStart"], [name="quantity"]', function () {
+                const startSerial = $('[name="serialStart"]').val();
+                const qty = parseInt($('[name="quantity"]').val());
+
+                if (!startSerial || isNaN(qty)) return;
+
+                // Match: letters (prefix) + digits (number part)
+                const match = startSerial.match(/^([A-Za-z]*)(\d+)$/);
+                if (!match) {
+                    $('[name="serialEnd"]').val("Invalid Start Serial");
+                    return;
+                }
+
+                const prefix = match[1];
+                const numberPart = match[2];
+                const startNum = parseInt(numberPart);
+                const length = numberPart.length;
+                const endNum = startNum + qty - 1;
+
+                const endSerial = prefix + endNum.toString().padStart(length, '0');
+                $('[name="serialEnd"]').val(endSerial);
+            });
+            $("#lotForm").on("submit", function (e) {
+                e.preventDefault();
+                const data = $(this).serializeArray().reduce((obj, item) => {
+                    obj[item.name] = item.value;
+                    return obj;
+                }, {});
+
+                $.ajax({
+                    url: '/Master/SaveLotControl',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function () {
+                        alert('Lot saved successfully');
+                        location.reload();
+                    },
+                    error: function (xhr) {
+                        alert('Error: ' + xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+}

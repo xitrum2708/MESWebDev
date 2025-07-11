@@ -58,6 +58,7 @@ namespace MESWebDev.Models.COMMON
         public string PONumber { get; set; }
         public string? CreatedBy { get; set; } = "System";
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public bool IsActive { get; set; } = true;
         // Navigation Property
         public ICollection<UV_LOTGENERALSUMMARY_MASTER> UV_LOTGENERALSUMMARY_MASTER { get; set; }
         [ForeignKey("LotNo")]

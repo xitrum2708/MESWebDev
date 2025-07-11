@@ -31,5 +31,6 @@ namespace MESWebDev.Models.COMMON
         public string PONumber { get; set; }
         public string? CreatedBy { get; set; } = "System";
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public bool IsActive { get; set; } = true;
     }
 }

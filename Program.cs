@@ -44,6 +44,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     }));
 });
 builder.Services.AddDistributedMemoryCache();
+
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -112,6 +113,8 @@ builder.Services.AddAutoMapper(typeof(MappingConfig));
 //        options.SlidingExpiration = true; // Optional: Enable sliding expiration
 //        options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // Set the expiration time for the cookie
 //    });
+
+
 
 var app = builder.Build();
 
