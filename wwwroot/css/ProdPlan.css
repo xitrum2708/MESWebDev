@@ -225,12 +225,35 @@
 .holiday-checked {
     background-color: #ffe3e3;
 }
+
+.workingHour {
+    position: absolute;
+    top: 40px;
+    /*width: 50px;*/
+}
+.ip_workingHour {
+    width: 38px;
+    margin-right:2px;
+}
 /* ------- end of holiday -------- */
 
-/* ---- Dropdown item ---- */
-.dropdown-item:hover{
+
+/* ------- Dropdown item ------- */
+.dropdown-item:hover {
     background-color: #e9c605 !important;
-    color: black;    
+    color: black;
+}
+
+/*------ Disable Time Slot for week--------*/
+.fc-slot-disabled {
+    background-color: orangered !important;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.fc-slot-header-disabled {
+    background-color: rgba(255, 255, 255, 0.55) !important;
+    opacity: 0.5;
 }
 
 

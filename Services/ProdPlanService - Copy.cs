@@ -3,7 +3,6 @@ using ExcelDataReader;
 using MESWebDev.Common;
 using MESWebDev.Data;
 using MESWebDev.Models.ProdPlan;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using System.Data;
@@ -12,12 +11,12 @@ using System.Text.RegularExpressions;
 
 namespace MESWebDev.Services
 {
-    public class ProdPlanService : IProdPlanService
+    public class ProdPlanService2 : IProdPlanService
     {
         private readonly AppDbContext _con;
         private readonly IMapper _mapper;
         private readonly Procedure _proc;
-        public ProdPlanService(AppDbContext con, IMapper mapper)
+        public ProdPlanService2(AppDbContext con, IMapper mapper)
         {
             _con = con;
             _mapper = mapper;
@@ -747,12 +746,6 @@ namespace MESWebDev.Services
                     i.resourceId = i.line;
                     i.old_start = i.start;
                 }); // set resourceId for each event
-                ppv.line_items = ppv.resources
-                    .Select(i => new SelectListItem
-                    {
-                        Value = i.id,
-                        Text = i.title
-                    }).ToList();
 
             }
             return ppv;
@@ -800,12 +793,6 @@ namespace MESWebDev.Services
                             i.old_start = i.start;
                             i.id = i.old_id;
                         }); // set resourceId for each event
-                        ppv.line_items = ppv.resources
-                            .Select(i => new SelectListItem
-                            {
-                                Value = i.id,
-                                Text = i.title
-                            }).ToList();
                         //ppv.events = ppv.events.OrderBy(i => i.line).ThenBy(i => i.id).ToList();
                     }
                     Dictionary<string,object> para = await GetParas();
@@ -828,7 +815,6 @@ namespace MESWebDev.Services
                     ppv.resources = new();
                     ppv.events = new();
                     ppv.start_sch_dt = null;
-                    ppv.line_items = new();
                 }
                 // Get all holidays
             }
@@ -1028,6 +1014,6 @@ namespace MESWebDev.Services
             if (data.Any())
                 dic = await data.ToDictionaryAsync(i => i.name, i => (object)i.value);
             return dic;
-        }      
+        }
     }
 }

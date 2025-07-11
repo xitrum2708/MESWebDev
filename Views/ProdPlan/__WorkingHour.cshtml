@@ -1,0 +1,41 @@
+﻿@using MESWebDev.Models.ProdPlan
+@model ProdPlanViewModel
+
+<div class="modal fade" id="whModal" tabindex="-1" aria-labelledby="whLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header d-flex justify-content-between align-items-center w-100">
+                <button class="btn btn-outline-secondary btn-sm" id="prevMonth2">
+                    <i class="bi bi-caret-left-square"></i>
+                </button>
+                <div class="d-flex justify-content-center align-items-center">
+                    <h5 class="modal-title mx-3" id="calendarTitle2">
+                        <i class="bi bi-calendar-date"></i>
+                        Working Hour Setup
+                    </h5>
+                    @if (Model.line_items != null && Model.line_items.Count > 0)
+                    {
+                        <select class="form-select" asp-items="@Model.line_items">
+                        </select>
+                    }
+                </div>
+
+                <button class="btn btn-outline-secondary btn-sm" id="nextMonth2">
+                    <i class="bi bi-caret-right-square"></i>
+                </button>
+
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="calendar mb-3" id="calendarGrid2"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" id="saveWorkingHour">
+                    <i class="bi bi-save"></i>
+                    Save
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

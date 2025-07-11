@@ -15,7 +15,7 @@ function initHolidayCalendarModal() {
 
         $('#calendarTitle').text(`${monthName} ${currentYear}`);
 
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayNames = ['Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         dayNames.forEach(d => $calendarGrid.append(`<div class="day-header">${d}</div>`));
 
         for (let i = 0; i < startDay; i++) $calendarGrid.append('<div></div>');
@@ -67,7 +67,7 @@ function initHolidayCalendarModal() {
     }
     function refreshCalendar() {
         //loadHolidays(currentYear, currentMonth + 1).then(renderCalendar);
-        filteredHolidays = loadHolidays(currentYear, currentMonth + 1); // assign result
+        //filteredHolidays = loadHolidays(currentYear, currentMonth + 1); // assign result
         renderCalendar();
     }
 

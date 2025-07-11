@@ -65,6 +65,13 @@
                                         <i class="bi bi-gear"></i>
                                     </button>
                                     <ul class="dropdown-menu">
+      @*                                   <li>
+                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#whModal">
+                                                <i class="bi bi-calendar3"></i>
+                                                Working Hour
+                                            </a>
+
+                                        </li> *@
                                         <li>
                                             <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#holidayModal">
                                                 <i class="bi bi-calendar-date"></i>
@@ -81,6 +88,7 @@
                                     </ul>
                                     <partial name="__Holiday" model="@Model.holidays" />
                                     <partial name="__Parameter" model="@Model" />
+                                    <partial name="__WorkingHour" model="@Model" />
                                 </div>
                             </div>
                         </div>
@@ -100,7 +108,12 @@ catch(Exception ex)
 {
     string t = ex.Message;
 }
-
+@*         /* ------+ 2025-07-08 +-------
+            Pending task:
+            1. save working hour settup
+            2. Bind it here
+            3. Calculate base on line/date/working hour
+        */ *@
 
 @section Scripts {
     <link href="~/css/prodplan.css?@DateTime.Now.Ticks" rel="stylesheet" />
@@ -108,10 +121,12 @@ catch(Exception ex)
     <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
     <script src="~/js/pp_holidayCalendar.js?@DateTime.Now.Ticks"></script>
     <script src="~/js/pp_prodPlanSchedule.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/pp_workingCalendar.js?@DateTime.Now.Ticks"></script>
     @using System.Text.Json
     <script>
         $(document).ready(function(){
             initHolidayCalendarModal();
+            initWorkingCalendarModel();
         });
         // --- Show Upload Windows --- \\
         $('.bt_upload').click( function(){
@@ -247,7 +262,7 @@ catch(Exception ex)
         const maxZoom = 2;
         const baseSlotWidth = 100; // base width in pixels
 
-            function applyZoom() {
+        function applyZoom() {
           const scaledWidth = baseSlotWidth * zoomLevel;
           calendar.setOption('slotMinWidth', scaledWidth);
           document.querySelector('#calendar').style.fontSize = `${zoomLevel}em`;
