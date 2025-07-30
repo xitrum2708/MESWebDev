@@ -4,15 +4,19 @@ using MESWebDev.Extensions;
 using MESWebDev.Models.OQC.VM;
 using MESWebDev.Models.SMT;
 using MESWebDev.Models.SMT.VM;
+using MESWebDev.Services;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
+using System.Data;
 
 namespace MESWebDev.Controllers
 {
     public class AOIErrorController : BaseController    
     {
-        public AOIErrorController(AppDbContext context) : base(context)
+        readonly ISMTService _smtService;
+        public AOIErrorController(AppDbContext context, ISMTService smtService) : base(context)
         {
+            _smtService = smtService;
         }
 
         public IActionResult AOIMatrixHistory(string? SearchTerm, int page = 1, int pageSize = 10)
@@ -115,6 +119,47 @@ namespace MESWebDev.Controllers
             }
 
             return RedirectToAction("AOIMatrixHistory");
+        }
+
+
+        // AOIMachineSpectionData
+        [HttpGet]
+        public async Task<IActionResult> AOIMachineSpectionData()
+        {
+            DateTime startDate = DateTime.Now.AddDays(-3).Date;
+            DateTime endDate = DateTime.Now.Date;
+
+            SMT_ViewModel viewModel = await GetMachineSpectionData(startDate, endDate);
+
+            return View("MachineSpectionData/Index",viewModel);
+
+        }
+        [HttpPost]
+        public async Task<IActionResult> AOIMachineSpectionData(SMT_ViewModel viewModel)
+        {
+            viewModel = await GetMachineSpectionData(Convert.ToDateTime(viewModel.StartDate), Convert.ToDateTime(viewModel.EndDate));
+
+            return View("MachineSpectionData/Index", viewModel);
+        }
+        public async Task<SMT_ViewModel> GetMachineSpectionData(DateTime startDate, DateTime endEnd)
+        {
+
+            Dictionary<string, object> data = new()
+            {
+                { "@start_dt", startDate },
+                { "@end_dt", endEnd }
+            };
+
+            DataTable dt = await _smtService.GetMachineSpectionData(data);
+
+            SMT_ViewModel viewModel = new SMT_ViewModel
+            {
+                StartDate = startDate,
+                EndDate = endEnd,
+                MachineSpectionData = dt
+            };
+
+            return viewModel;
         }
     }
 }

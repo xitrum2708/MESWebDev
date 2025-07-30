@@ -71,6 +71,7 @@ builder.Services.AddScoped<IRepairResultService, RepairResultService>();
 builder.Services.AddScoped<IUV_LOTCONTROL_MASTER_Service, UV_LOTCONTROL_MASTER_Service>();
 
 builder.Services.AddScoped<IProdPlanService, ProdPlanService>();
+builder.Services.AddScoped<ISMTService, SMTService>();
 
 // Logging is already configured in ASP.NET Core by default, but you can customize it
 builder.Services.AddLogging(logging =>
@@ -79,7 +80,6 @@ builder.Services.AddLogging(logging =>
     logging.AddDebug();
     // Add other logging providers if needed (e.g., Serilog)
 });
-
 
 // Add authentication services (example using cookie authentication)
 builder.Services.AddAuthentication("CookieAuth")
