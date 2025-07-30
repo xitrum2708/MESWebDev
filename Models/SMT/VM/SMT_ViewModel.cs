@@ -1,5 +1,6 @@
 ﻿using MESWebDev.Common;
 using MESWebDev.Models.OQC.VM;
+using System.Data;
 
 namespace MESWebDev.Models.SMT.VM
 {
@@ -9,5 +10,7 @@ namespace MESWebDev.Models.SMT.VM
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string? SearchTerm { get; set; }
+
+        public DataTable? MachineSpectionData { get; set; }
     }
 }

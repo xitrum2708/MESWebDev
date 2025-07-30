@@ -273,8 +273,7 @@ function loadProPlanSchedule() {
             calendar.render();
         }
         renderCalendar(currentDate);    
-    });
-    
+    });    
 
     function formatDateTime(date) {
         const pad = n => n.toString().padStart(2, '0');

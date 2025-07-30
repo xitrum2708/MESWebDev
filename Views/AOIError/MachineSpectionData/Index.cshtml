@@ -1,0 +1,226 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.SMT.VM
+@using MESWebDev.Services
+@using System.Data
+@using System.Text.Json
+@inject ITranslationService translate
+@model SMT_ViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = translate.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+
+    // Convert data to json here
+    var lines = new List<string>();
+    var ok_count = new List<int>();
+    var ng_count = new List<int>();
+    var ng_rate = new List<double>();
+
+    string DatePeriod = $"Date period: {Model.StartDate?.ToString("yyyy/MM/dd")} ~ {Model.EndDate?.ToString("yyyy/MM/dd")}";
+    
+    if (Model.MachineSpectionData != null && Model.MachineSpectionData.Rows.Count > 0)
+    {
+        DataTable dt = Model.MachineSpectionData;
+        foreach (DataRow row in dt.Rows)
+        {
+            lines.Add(row["Line"].ToString());
+            ok_count.Add(Convert.ToInt32(row["OK_Count"]));
+            ng_count.Add(Convert.ToInt32(row["NG_Count"]));
+            ng_rate.Add(Convert.ToDouble(row["NG_Rate"]));
+        }
+    }
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+    <form method="post" asp-action="AOIMachineSpectionData">
+        <div class="app-content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="float-start p-2 mt-1 bg-info text-dark mx-2 rounded-2">
+                                    <h3 class="card-title fw-bold fs-5 fw-bold">
+                                        @DatePeriod
+                                    </h3>
+                                </div>
+                                <div class="float-end d-flex justify-content-center align-items-center">
+                                    <!-- StartDate -->
+                                    <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                        @* <label>@translate.GetTranslation("StartDate", languageCode):</label> *@
+                                        <input type="date" name="startDate" class="form-control"
+                                               value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                                    </div>
+                                    <div>
+                                        <font class="fs-6 fw-bold"> ~ </font>
+                                    </div>
+                                    <!-- EndDate -->
+                                    <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                        @* <label>@translate.GetTranslation("EndDate", languageCode):</label> *@
+                                        <input type="date" name="endDate" class="form-control"
+                                               value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                                    </div>
+                                    <button class="btn btn-sm btn-info">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+
+
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="chart_area" style="height: calc(100vh - 280px)"></canvas>
+                                @* <canvas id="chart_area" class="w-100" style="height: calc(100vh - 250px)"></canvas> *@
+                                @* <canvas id="chart_area"></canvas> *@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" 
+        class="position-fixed top-0 start-0 w-100 h-100 d-none d-flex align-items-center justify-content-center" 
+        style="background: rgba(255,255,255,0.7); z-index: 9999;">
+        <div class="spinner-border text-success fw-bold" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    
+}
+catch(Exception ex)
+{
+    string t = ex.Message;
+}
+@section Scripts {
+    <script src="~/js/chart.js"></script>
+    <script src="~/js/chartjs-plugin-datalabels.js"></script>
+    <script>
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const startDate = document.querySelector('input[name="startDate"]').value;
+            const endDate = document.querySelector('input[name="endDate"]').value;
+
+            if (startDate && endDate && new Date(startDate) > new Date(endDate))
+            {
+                e.preventDefault();
+                toastr.error('Start Date cannot be later than End Date.');
+            }
+            else{
+                document.getElementById("loadingOverlay").classList.remove("d-none");
+            }
+            
+        });
+        const labels = @Html.Raw(JsonSerializer.Serialize(lines));
+        const okData = @Html.Raw(JsonSerializer.Serialize(ok_count));
+        const ngData = @Html.Raw(JsonSerializer.Serialize(ng_count));
+        const ngRateData = @Html.Raw(JsonSerializer.Serialize(ng_rate));
+        const ctx = document.getElementById('chart_area').getContext('2d');
+        const chart = new Chart(ctx, 
+        {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'OK Count',
+                        type:'bar',
+                        data: okData,
+                        backgroundColor: 'green',
+                        datalabels: {
+                            color: 'green',
+                            font: {
+                                weight: 'bold'
+                            },
+                        formatter: Math.round
+                    }
+                    },
+                    {
+                        label: 'NG Count',
+                        type:'bar',
+                        data: ngData,
+                        backgroundColor: 'red',
+                        datalabels: {
+                            color: 'red',
+                            font: {
+                                weight: 'bold'
+                            },
+                            formatter: Math.round
+                        },
+                        
+                    },
+                    {
+                        label: 'NG Rate',
+                        type: 'line',
+                        data: ngRateData,
+                        backgroundColor: 'rgba(255, 206, 86, 0.5)',
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        fill: false,
+                        yAxisID: 'y2'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'OK/NG Count'
+                        }
+                    },
+                    y2: {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'NG Rate'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                            },
+                        ticks: {
+                            autoSkip: false,     
+                            maxRotation: 45,     
+                            minRotation: 0
+                        }
+                    }
+                },
+            
+            plugins: {
+                datalabels: {
+                display: true,
+                color: 'black',
+                anchor: 'end',
+                align: 'top',
+                    formatter: function(value, context) {
+                        if(context.dataset.type === 'bar'){
+                            return typeof value === 'number' ? value.toLocaleString() : value;
+                        } else {
+                            return value.toFixed(2);
+                        }
+                    }
+                },
+                legend: {
+                    display: true
+                },
+                tooltip: {
+                    enabled: true
+                }
+            }
+            },
+        plugins: [ChartDataLabels]
+
+        });
+    </script>
+}
