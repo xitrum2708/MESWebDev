@@ -20,5 +20,12 @@ namespace MESWebDev.Services
             dt = await _proc.Proc_GetDatatable("SMT_Chart_MachineSpectionData", data);
             return dt;
         }
+
+        public async Task<DataTable> GetMachineSpectionData_Download(Dictionary<string, object> data)
+        {
+            DataTable dt = new();
+            dt = await _proc.Proc_GetDatatable("SMT_Chart_MachineSpectionData_Download", data);
+            return dt;
+        }
     }
 }

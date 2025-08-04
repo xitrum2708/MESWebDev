@@ -19,7 +19,7 @@
     var ng_count = new List<int>();
     var ng_rate = new List<double>();
 
-    string DatePeriod = $"Date period: {Model.StartDate?.ToString("yyyy/MM/dd")} ~ {Model.EndDate?.ToString("yyyy/MM/dd")}";
+    string DatePeriod = $" {Model.StartDate?.ToString("yyyy/MM/dd")}  ~  {Model.EndDate?.ToString("yyyy/MM/dd")}";
     
     if (Model.MachineSpectionData != null && Model.MachineSpectionData.Rows.Count > 0)
     {
@@ -45,7 +45,7 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <div class="float-start p-2 mt-1 bg-info text-dark mx-2 rounded-2">
+                                <div class="float-start  p-2 mt-1 bg-info text-dark mx-2 rounded-2">
                                     <h3 class="card-title fw-bold fs-5 fw-bold">
                                         @DatePeriod
                                     </h3>
@@ -54,7 +54,7 @@
                                     <!-- StartDate -->
                                     <div class="form-group mx-2 py-1" style="min-width: 180px;">
                                         @* <label>@translate.GetTranslation("StartDate", languageCode):</label> *@
-                                        <input type="date" name="startDate" class="form-control"
+                                        <input id="startDate" type="date" name="startDate" class="form-control"
                                                value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
                                     </div>
                                     <div>
@@ -63,14 +63,16 @@
                                     <!-- EndDate -->
                                     <div class="form-group mx-2 py-1" style="min-width: 180px;">
                                         @* <label>@translate.GetTranslation("EndDate", languageCode):</label> *@
-                                        <input type="date" name="endDate" class="form-control"
+                                        <input id="endDate" type="date" name="endDate" class="form-control"
                                                value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
                                     </div>
-                                    <button class="btn btn-sm btn-info">
+                                    <button title="Search" class="btn btn-sm btn-info me-2">
                                         <i class="bi bi-search"></i>
                                     </button>
-
-
+                                    <a id="downloadBtn" title="Download" class="btn btn-sm btn-primary" asp-action="AOIMachineSpectionData_Download" asp-controller="AOIError"
+                                       asp-route-dateRange="@(Model.StartDate.Value.ToString("yyyy/MM/dd")+"*"+Model.EndDate.Value.ToString("yyyy/MM/dd"))">
+                                        <i class="bi bi-download"></i>
+                                    </a>
                                 </div>
                             </div>
                             <div class="card-body">
@@ -103,6 +105,33 @@ catch(Exception ex)
     <script src="~/js/chartjs-plugin-datalabels.js"></script>
     <script>
 
+        // update for download button
+        function UpdateDownloadString(){
+            var sd = String($('#startDate').val()) ;
+            var ed = String($('#endDate').val());
+            if(sd && ed){
+                var formattedStart = sd.replace(/-/g, '/');
+                var formattedEnd = ed.replace(/-/g, '/');
+                var url = '/AOIError/AOIMachineSpectionData_Download?dateRange=' + formattedStart + '*' + formattedEnd;
+                $('#downloadBtn').attr('href',url);
+            }
+        }
+
+        $('#startDate, #endDate').on('change',UpdateDownloadString);
+
+        $(document).ready(UpdateDownloadString);
+        // Show loading page for downloading
+        $('#downloadBtn').on('click', function() {
+            $("#loadingOverlay").removeClass('d-none');
+            setTimeout(()=>{
+                if( !$('#loadingOverlay').hasClass('d-none') ){
+                    $('#loadingOverlay').addClass('d-none');
+                }                 
+            },5000);
+        });
+
+
+        // Check date and show loading page
         document.querySelector('form').addEventListener('submit', function(e) {
             const startDate = document.querySelector('input[name="startDate"]').value;
             const endDate = document.querySelector('input[name="endDate"]').value;
@@ -129,7 +158,7 @@ catch(Exception ex)
                 labels: labels,
                 datasets: [
                     {
-                        label: 'OK Count',
+                        label: 'OK Total',
                         type:'bar',
                         data: okData,
                         backgroundColor: 'green',
@@ -142,7 +171,7 @@ catch(Exception ex)
                     }
                     },
                     {
-                        label: 'NG Count',
+                        label: 'NG Total',
                         type:'bar',
                         data: ngData,
                         backgroundColor: 'red',
@@ -175,7 +204,7 @@ catch(Exception ex)
                         position: 'left',
                         title: {
                             display: true,
-                            text: 'OK/NG Count'
+                            text: 'OK/NG Total'
                         }
                     },
                     y2: {

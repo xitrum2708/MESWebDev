@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
+using MESWebDev.Common;
 using MESWebDev.Data;
 using MESWebDev.Extensions;
 using MESWebDev.Models.OQC.VM;
@@ -14,9 +15,11 @@ namespace MESWebDev.Controllers
     public class AOIErrorController : BaseController    
     {
         readonly ISMTService _smtService;
+        private readonly Export2Excel _ee;
         public AOIErrorController(AppDbContext context, ISMTService smtService) : base(context)
         {
             _smtService = smtService;
+            _ee = new();
         }
 
         public IActionResult AOIMatrixHistory(string? SearchTerm, int page = 1, int pageSize = 10)
@@ -141,6 +144,19 @@ namespace MESWebDev.Controllers
 
             return View("MachineSpectionData/Index", viewModel);
         }
+        //[HttpPost]
+        public async Task<IActionResult> AOIMachineSpectionData_Download(string dateRange)
+        {
+            string[] dates = dateRange.Split('*');
+            DataTable dt = await _smtService.GetMachineSpectionData_Download(new Dictionary<string, object>
+            {
+                { "@start_dt", Convert.ToDateTime(dates[0]) },
+                { "@end_dt", Convert.ToDateTime(dates[1]) }
+            });
+            return _ee.DownloadData(dt, "MachineSpectionData");
+        }
+
+
         public async Task<SMT_ViewModel> GetMachineSpectionData(DateTime startDate, DateTime endEnd)
         {
 
