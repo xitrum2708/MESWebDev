@@ -124,7 +124,7 @@
                                             <td>@log.IssuedBy</td>
                                             <td>@log.ProDate.ToString("yyyy/MM/dd")</td>
                                             <td>@log.IssueDate.ToString("yyyy/MM/dd")</td>
-                                            <td>@log.PONumber</td>
+                                            <td>@log.PoNumber</td>
                                             <td>@log.CreatedBy</td>
                                             <td>@log.CreatedDate.ToString("yyyy/MM/dd")</td>
                                         </tr>
@@ -165,59 +165,59 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <label>LotNo</label>
-                                <input name="lotNo" class="form-control" readonly />
+                                <input name="LotNo" class="form-control" readonly />
                             </div>
                             <div class="col-md-6">
                                 <label>Model</label>
-                                <input name="model" class="form-control" readonly />
+                                <input name="Model" class="form-control" readonly />
                             </div>
                             <div class="col-md-6">
                                 <label>Quantity</label>
-                                <input name="quantity" class="form-control" />
+                                <input name="Quantity" class="form-control" />
                             </div>
                             <div class="col-md-6">
                                 <label>PONumber</label>
-                                <input name="poNumber" class="form-control" />
+                                <input name="PoNumber" class="form-control" />
                             </div>
                             <div class="col-md-6">
                                 <label>Lot Special Info</label>
-                                <input name="specialInfo" class="form-control" />
+                                <input name="SpecialInfo" class="form-control" />
                             </div>
                             <div class="col-md-3">
                                 <label>Date Code</label>
-                                <input name="dateCode" class="form-control" />
+                                <input name="DateCode" class="form-control" />
                             </div>
                             <div class="col-md-3">
                                 <label>Code</label>
-                                <input name="code" class="form-control" />
+                                <input name="Code" class="form-control" />
                             </div>
                             <div class="col-md-6">
                                 <label>Start Serial</label>
-                                <input name="serialStart" class="form-control" />
+                                <input name="SerialStart" class="form-control" />
                             </div>
                             <div class="col-md-6">
                                 <label>End Serial</label>
-                                <input name="serialEnd" class="form-control" readonly />
+                                <input name="SerialEnd" class="form-control" readonly />
                             </div>
                             <div class="col-md-4">
                                 <label>Revised</label>
-                                <input name="revised" class="form-control" />
+                                <input name="Revised" class="form-control" />
                             </div>
                             <div class="col-md-4">
                                 <label>Approved By</label>
-                                <input name="approvedBy" class="form-control" />
+                                <input name="ApprovedBy" class="form-control" />
                             </div>
                             <div class="col-md-4">
                                 <label>Issued By</label>
-                                <input name="issuedBy" class="form-control" />
+                                <input name="IssuedBy" class="form-control" />
                             </div>
                             <div class="col-md-6">
                                 <label>Pro Date</label>
-                                <input name="proDate" type="date" class="form-control" />
+                                <input name="ProDate" type="date" class="form-control" />
                             </div>
                             <div class="col-md-6">
                                 <label>Issue Date</label>
-                                <input name="issueDate" type="date" class="form-control" />
+                                <input name="IssueDate" type="date" class="form-control" />
                             </div>
                             <!-- Add more fields as needed -->
                         </div>
@@ -248,10 +248,16 @@
             $.get("/Master/LoadLotControlOrSpo", { lotNo }, function (data) {
                 if (data) {
                     const form = $("#lotForm");
-                    console.log(data);
-                    for (const key in data) {
-                        console.log(key, data[key]);
-                        form.find(`[name='${key}']`).val(data[key]);
+                    //console.log(data);
+                    // for (const key in data) {
+                    //     console.log(key, data[key]);
+                    //     form.find(`[name='${key}']`).val(data[key]);
+                    // }
+                      for (const key in data) {
+                        const input = form.find(`[name='${key.charAt(0).toUpperCase() + key.slice(1)}']`);
+                        if (input.length) {
+                            input.val(data[key]);
+                        }
                     }
                     $("#lotFormContainer").show();
                     $("#lotMessage").text('');
@@ -281,19 +287,31 @@
 
                 const endSerial = prefix + endNum.toString().padStart(length, '0');
                 $('[name="serialEnd"]').val(endSerial);
-            });
-            $("#lotForm").on("submit", function (e) {
+            });           
+        });
+         $("#lotForm").on("submit", function (e) {
                 e.preventDefault();
-                const data = $(this).serializeArray().reduce((obj, item) => {
-                    obj[item.name] = item.value;
-                    return obj;
-                }, {});
+                    const formData = {};
+                    $(this).serializeArray().forEach(x => {
+                        // Parse types explicitly
+                        if (x.name === "__RequestVerificationToken") return;  // skip token
+                        
+                     if (["Quantity", "LotControlID"].includes(x.name)) {
+                        formData[x.name] = parseInt(x.value) || 0;
+                    } else if (["ProDate", "IssueDate"].includes(x.name)) {
+                        formData[x.name] = x.value || null;
+                    } else {
+                        formData[x.name] = x.value;
+                    }
+                    });
+                    console.log(formData);
 
                 $.ajax({
                     url: '/Master/SaveLotControl',
-                    method: 'POST',
+                    type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify(data),
+                    data: JSON.stringify(formData),
+                    
                     success: function () {
                         alert('Lot saved successfully');
                         location.reload();
@@ -303,6 +321,5 @@
                     }
                 });
             });
-        });
     </script>
 }

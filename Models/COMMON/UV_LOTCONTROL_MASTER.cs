@@ -55,7 +55,7 @@ namespace MESWebDev.Models.COMMON
 
         [Required(ErrorMessage = "PONumber is required")]
         [MaxLength(50)]
-        public string PONumber { get; set; }
+        public string PoNumber { get; set; }
         public string? CreatedBy { get; set; } = "System";
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public bool IsActive { get; set; } = true;

@@ -82,7 +82,7 @@ namespace MESWebDev.Services
                     (x.LotNo ?? "").Contains(searchTerm) ||
                     (x.SerialStart ?? "").Contains(searchTerm) ||
                     (x.SerialEnd ?? "").Contains(searchTerm) ||
-                    (x.PONumber ?? "").Contains(searchTerm) ||
+                    (x.PoNumber ?? "").Contains(searchTerm) ||
                     (x.SPO_MASTER.Model ?? "").Contains(searchTerm));
             }
             query = query.OrderByDescending(x => x.CreatedDate);
@@ -102,7 +102,7 @@ namespace MESWebDev.Services
                 IssuedBy = x.IssuedBy,
                 ProDate = x.ProDate,
                 IssueDate = x.IssueDate,
-                PONumber = x.PONumber,
+                PoNumber = x.PoNumber,
                 CreatedBy = x.CreatedBy,
                 CreatedDate = x.CreatedDate
             });
@@ -137,7 +137,7 @@ namespace MESWebDev.Services
                     IssuedBy = lot.IssuedBy,
                     ProDate = lot.ProDate,
                     IssueDate = lot.IssueDate,
-                    PONumber = lot.PONumber,
+                    PoNumber = lot.PoNumber,
                     CreatedBy = lot.CreatedBy,
                     CreatedDate = lot.CreatedDate
                 };
@@ -151,7 +151,7 @@ namespace MESWebDev.Services
                     LotNo = spo.LotNo,
                     Model = spo.Model ?? string.Empty,
                     Quantity = spo.LotSize,
-                    PONumber = spo.PoNo ?? string.Empty,
+                    PoNumber = spo.PoNo ?? string.Empty,
                     CreatedDate = DateTime.Now
                 };
             }
@@ -193,7 +193,7 @@ namespace MESWebDev.Services
                 IssuedBy = model.IssuedBy,
                 ProDate = model.ProDate,
                 IssueDate = model.IssueDate,
-                PONumber = model.PONumber,
+                PoNumber = model.PoNumber,
                 CreatedBy = model.CreatedBy,
                 CreatedDate = DateTime.Now,
                 IsActive = true
