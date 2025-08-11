@@ -28,8 +28,9 @@ namespace MESWebDev.Models.COMMON
         public string IssuedBy { get; set; }       
         public DateTime ProDate { get; set; }       
         public DateTime IssueDate { get; set; }        
-        public string PONumber { get; set; }
+        public string PoNumber { get; set; }
         public string? CreatedBy { get; set; } = "System";
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public bool IsActive { get; set; } = true;
     }
 }

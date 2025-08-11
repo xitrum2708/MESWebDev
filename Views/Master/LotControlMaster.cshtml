@@ -70,8 +70,11 @@
                             }
                             @await Html.PartialAsync("_DownloadButton", downloadModel)
                         </div>
-
+                        <button type="button" class="btn btn-success mx-2" id="btnRegisterLot">
+                            @T.GetTranslation("RegisterNewLot", languageCode)
+                        </button>
                     </form>
+                   
                     <!-- Phân trang -->
                     @if (Model.LotControlMasterList != null && Model.LotControlMasterList.TotalPages > 1)
                     {
@@ -121,7 +124,7 @@
                                             <td>@log.IssuedBy</td>
                                             <td>@log.ProDate.ToString("yyyy/MM/dd")</td>
                                             <td>@log.IssueDate.ToString("yyyy/MM/dd")</td>
-                                            <td>@log.PONumber</td>
+                                            <td>@log.PoNumber</td>
                                             <td>@log.CreatedBy</td>
                                             <td>@log.CreatedDate.ToString("yyyy/MM/dd")</td>
                                         </tr>
@@ -141,3 +144,182 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="registerLotModal" tabindex="-1" aria-labelledby="registerLotModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@T.GetTranslation("RegisterLotControl", languageCode)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>@T.GetTranslation("LotNo", languageCode)</label>
+                    <input type="text" id="inputLotNo" class="form-control" placeholder="Enter LotNo from SPO..." />
+                </div>
+                <button type="button" class="btn btn-primary" id="btnLoadLot">@T.GetTranslation("LoadLotData", languageCode)</button>
+                <div id="lotFormContainer" class="mt-4" style="display:none;">
+                    <form id="lotForm" method="post" asp-controller="Master" asp-action="SaveLotControl">
+                        <input type="hidden" name="LotControlID" />
+                        <!-- Add your fields like Quantity, Code, etc. -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>LotNo</label>
+                                <input name="LotNo" class="form-control" readonly />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Model</label>
+                                <input name="Model" class="form-control" readonly />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Quantity</label>
+                                <input name="Quantity" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>PONumber</label>
+                                <input name="PoNumber" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Lot Special Info</label>
+                                <input name="SpecialInfo" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>Date Code</label>
+                                <input name="DateCode" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label>Code</label>
+                                <input name="Code" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Start Serial</label>
+                                <input name="SerialStart" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>End Serial</label>
+                                <input name="SerialEnd" class="form-control" readonly />
+                            </div>
+                            <div class="col-md-4">
+                                <label>Revised</label>
+                                <input name="Revised" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label>Approved By</label>
+                                <input name="ApprovedBy" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label>Issued By</label>
+                                <input name="IssuedBy" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Pro Date</label>
+                                <input name="ProDate" type="date" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label>Issue Date</label>
+                                <input name="IssueDate" type="date" class="form-control" />
+                            </div>
+                            <!-- Add more fields as needed -->
+                        </div>
+                        <button type="submit" class="btn btn-success mt-3">@T.GetTranslation("Save", languageCode)</button>
+                    </form>
+                </div>
+                <div id="lotMessage" class="text-danger mt-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        $("#btnRegisterLot").on("click", function () {
+            $("#registerLotModal").modal("show");
+            $("#inputLotNo").val('');
+            $("#lotFormContainer").hide();
+            $("#lotMessage").text('');
+        });
+
+        $("#btnLoadLot").on("click", function () {
+            const lotNo = $("#inputLotNo").val();
+            if (!lotNo) {
+                $("#lotMessage").text("Please input LotNo.");
+                return;
+            }
+
+            $.get("/Master/LoadLotControlOrSpo", { lotNo }, function (data) {
+                if (data) {
+                    const form = $("#lotForm");
+                    //console.log(data);
+                    // for (const key in data) {
+                    //     console.log(key, data[key]);
+                    //     form.find(`[name='${key}']`).val(data[key]);
+                    // }
+                      for (const key in data) {
+                        const input = form.find(`[name='${key.charAt(0).toUpperCase() + key.slice(1)}']`);
+                        if (input.length) {
+                            input.val(data[key]);
+                        }
+                    }
+                    $("#lotFormContainer").show();
+                    $("#lotMessage").text('');
+                } else {
+                    $("#lotFormContainer").hide();
+                    $("#lotMessage").text("Lot not found in SPO or already registered.");
+                }
+            });
+            $('#lotForm').on('input', '[name="serialStart"], [name="quantity"]', function () {
+                const startSerial = $('[name="serialStart"]').val();
+                const qty = parseInt($('[name="quantity"]').val());
+
+                if (!startSerial || isNaN(qty)) return;
+
+                // Match: letters (prefix) + digits (number part)
+                const match = startSerial.match(/^([A-Za-z]*)(\d+)$/);
+                if (!match) {
+                    $('[name="serialEnd"]').val("Invalid Start Serial");
+                    return;
+                }
+
+                const prefix = match[1];
+                const numberPart = match[2];
+                const startNum = parseInt(numberPart);
+                const length = numberPart.length;
+                const endNum = startNum + qty - 1;
+
+                const endSerial = prefix + endNum.toString().padStart(length, '0');
+                $('[name="serialEnd"]').val(endSerial);
+            });           
+        });
+         $("#lotForm").on("submit", function (e) {
+                e.preventDefault();
+                    const formData = {};
+                    $(this).serializeArray().forEach(x => {
+                        // Parse types explicitly
+                        if (x.name === "__RequestVerificationToken") return;  // skip token
+                        
+                     if (["Quantity", "LotControlID"].includes(x.name)) {
+                        formData[x.name] = parseInt(x.value) || 0;
+                    } else if (["ProDate", "IssueDate"].includes(x.name)) {
+                        formData[x.name] = x.value || null;
+                    } else {
+                        formData[x.name] = x.value;
+                    }
+                    });
+                    console.log(formData);
+
+                $.ajax({
+                    url: '/Master/SaveLotControl',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    
+                    success: function () {
+                        alert('Lot saved successfully');
+                        location.reload();
+                    },
+                    error: function (xhr) {
+                        alert('Error: ' + xhr.responseText);
+                    }
+                });
+            });
+    </script>
+}

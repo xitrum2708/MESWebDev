@@ -55,9 +55,10 @@ namespace MESWebDev.Models.COMMON
 
         [Required(ErrorMessage = "PONumber is required")]
         [MaxLength(50)]
-        public string PONumber { get; set; }
+        public string PoNumber { get; set; }
         public string? CreatedBy { get; set; } = "System";
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public bool IsActive { get; set; } = true;
         // Navigation Property
         public ICollection<UV_LOTGENERALSUMMARY_MASTER> UV_LOTGENERALSUMMARY_MASTER { get; set; }
         [ForeignKey("LotNo")]

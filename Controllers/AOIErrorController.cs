@@ -129,7 +129,7 @@ namespace MESWebDev.Controllers
         [HttpGet]
         public async Task<IActionResult> AOIMachineSpectionData()
         {
-            DateTime startDate = DateTime.Now.AddDays(-3).Date;
+            DateTime startDate = DateTime.Now.AddDays(-2).Date;
             DateTime endDate = DateTime.Now.Date;
 
             SMT_ViewModel viewModel = await GetMachineSpectionData(startDate, endDate);

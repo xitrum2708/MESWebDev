@@ -41,36 +41,36 @@
         {
             <div class="row mb-3">
                 <div class="col-7 d-flex flex-column justify-content-end pb-5">
-                <div class="row g-2 align-items-stretch">
+                <div class="row g-2 align-items-center px-5 mx-5" >
                     <div class="col">
                         <div class="inspect-box p-2 border-bottom border-light border-5">
-                            <h5>INSPECTING</h5>
+                            <font class="fs-7 fw-bold">INSPECTING</font>
                             <h1 class="fw-bold">@Model.sum_data.Rows[0][0]</h1>
                         </div>
                     </div>
                     <div class="col">
                         <div class="inspect-box p-2 border-bottom border-warning border-5">
-                            <h5 class="text-warning">WAITING INSPECT</h5>
+                                <font class="text-warning fs-7 fw-bold">WAITING INSPECT</font>
                             <h1 class="text-warning fw-bold">@Model.sum_data.Rows[0][1]</h1>
                         </div>
                     </div>
                     <div class="col">
                         <div class="inspect-box p-2 border-bottom border-success border-5">
-                            <h5 class="text-success">INSPECTED TODAY</h5>
-                            <h1 class="text-success fw-bold">@Model.sum_data.Rows[0][1]</h1>
+                                <font class="text-success fs-7 fw-bold">INSPECTED TODAY</font>
+                            <h1 class="text-success fw-bold">@Model.sum_data.Rows[0][2]</h1>
                         </div>
                     </div>
                     <div class="col">
-                        <div class="inspect-box p-2 border-bottom border-light border-5">
-                            <h5>STOCK IN TODAY</h5>
-                            <h1 class="fw-bold">@Model.sum_data.Rows[0][1]</h1>
+                        <div class="inspect-box p-2 border-bottom border-info border-5">
+                                <font class="fw-bold fs-7 text-info">STOCK IN TODAY</font>
+                            <h1 class="fw-bold text-info">@Model.sum_data.Rows[0][3]</h1>
                         </div>
                     </div>
                 </div>
                 </div>
                 <div class="col-5 d-flex align-items-center justify-content-center">
                     <div class="p-2 px-5 inspect-result d-flex align-items-center justify-content-center mx-5" style="height: 300px;">
-                        <h4 class="pt-3">DISTRIBUTION OF DETECTS</h4>
+                        <h5 class="mt-4">DISTRIBUTION OF DETECTS</h5>
                         <!-- <h1>0</h1> -->
                         <canvas id="myDoughnutChart" width="400" height="400"></canvas>
                     </div>
@@ -80,11 +80,11 @@
         <!-- TABLE -->
         @if (Model.detail_data != null && Model.detail_data.Rows.Count > 0)
         {
-            <div class="row mb-3 overflow-auto" style="height: calc(100vh - 580px)">
+            <div class="row mb-1 overflow-auto" style="height: calc(100vh - 530px)">
                 <div class="col-12">
                     <table class="table">
                         <thead>
-                            <tr class="table sticky-top" style="background-color: #00c0ff; padding: 0 5px;">
+                            <tr class="table sticky-top" style="background-color: #00c0ff; padding: 0 3px;">
                                 @foreach(DataColumn col in Model.detail_data.Columns)
                                 {
                                     <th>@col.Caption</th>
@@ -163,16 +163,16 @@
                   'background-color': '#00c0ff',
                   'padding': '20px 0px'
               });
-              $(this).addClass('fs-4 p-0 mx-2 py-3 fw-bold');
+              $(this).addClass('fs-5 p-0 mx-2 py-2 fw-bold');
           });
 
           $('table tbody tr').each(function (index) {
             if ((index + 1) % 2 === 0) {
-              $(this).find('td').addClass('bg-primary text-white py-2 fs-5 fw-bold');
+              $(this).find('td').addClass('bg-primary text-white py-2 fs-6');
 
             } else {
               $(this).find('td').removeClass('bg-primary');// Clear any inline styles
-              $(this).find('td').addClass('text-white py-2 fs-5 fw-bold')
+              $(this).find('td').addClass('text-white py-2 fs-6')
               $(this).find('td').css({'background-color':'#1c2b88'})
               // $(this).find('td').removeClass('bg-primary text-white');
             }

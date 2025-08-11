@@ -68,5 +68,35 @@ namespace MESWebDev.Controllers
 
             return RedirectToAction("LotControlMaster");
         }
+        [HttpGet]
+        public async Task<IActionResult> LoadLotControlOrSpo(string lotNo)
+        {
+            var model = await _uvLotControlService.LoadLotControlOrSpoAsync(lotNo);
+            if (model == null)
+                return NotFound();
+
+            return Json(model);
+        }
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> SaveLotControl([FromBody] LotControlViewModel model)
+        {
+            if (model == null)
+                return BadRequest("Model is null");
+
+            // (Optional) Log the model to debug
+            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(model));
+
+            return await _uvLotControlService.SaveLotControlAsync(model);
+        }
+
+        //public async Task<IActionResult> SaveLotControl()
+        //{
+        //    using var reader = new StreamReader(Request.Body);
+        //    var body = await reader.ReadToEndAsync();
+        //    Console.WriteLine("Raw Body:");
+        //    Console.WriteLine(body);
+        //    return Ok();
+        //}
     }
 }
