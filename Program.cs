@@ -73,6 +73,7 @@ builder.Services.AddScoped<IUV_LOTCONTROL_MASTER_Service, UV_LOTCONTROL_MASTER_S
 
 builder.Services.AddScoped<IProdPlanService, ProdPlanService>();
 builder.Services.AddScoped<ISMTService, SMTService>();
+builder.Services.AddScoped<IDashboard, Dashboard>();
 
 // Logging is already configured in ASP.NET Core by default, but you can customize it
 builder.Services.AddLogging(logging =>
