@@ -1,0 +1,264 @@
+﻿@* @using MESWebDev.Models.UVASSY
+@using MESWebDev.Models.VM
+@model List<UVAssyAllOutputResult> *@
+@model DashboardViewModel;
+@using System.Text.Json;
+@using System.Data;
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <ol class="breadcrumb float-sm-end d-flex justify-content-center align-content-center" style="margin-bottom:0px !important">
+                    <li class="breadcrumb-item text-black fw-bold">HOME</li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">DASHBOARD</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+}
+<div class="app-content">
+    <div class="container-fluid p-0 m-0 px-5">
+        <!-- HEADER -->
+        <div class="row text-center sticky-top">
+            <div class="col-md-3 d-flex align-items-center justify-content-center">
+                <!-- <h4>Info</h4> -->
+            </div>
+            <div class="col-md-6">
+                <div class="iqc-shape">IQC INSPECT DASHBOARD</div>
+            </div>
+            <div class="col-md-3 d-flex align-items-center justify-content-center">
+                <h4 id="clock"></h4>
+            </div>
+        </div>
+        <!-- SUMARY -->
+        @if (Model.sum_data != null && Model.sum_data.Rows.Count > 0)
+        {
+            <div class="row mb-3">
+                <div class="col-7 d-flex flex-column justify-content-end pb-5">
+                <div class="row g-2 align-items-stretch">
+                    <div class="col">
+                        <div class="inspect-box p-2 border-bottom border-light border-5">
+                            <h5>INSPECTING</h5>
+                            <h1 class="fw-bold">@Model.sum_data.Rows[0][0]</h1>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="inspect-box p-2 border-bottom border-warning border-5">
+                            <h5 class="text-warning">WAITING INSPECT</h5>
+                            <h1 class="text-warning fw-bold">@Model.sum_data.Rows[0][1]</h1>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="inspect-box p-2 border-bottom border-success border-5">
+                            <h5 class="text-success">INSPECTED TODAY</h5>
+                            <h1 class="text-success fw-bold">@Model.sum_data.Rows[0][1]</h1>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="inspect-box p-2 border-bottom border-light border-5">
+                            <h5>STOCK IN TODAY</h5>
+                            <h1 class="fw-bold">@Model.sum_data.Rows[0][1]</h1>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="col-5 d-flex align-items-center justify-content-center">
+                    <div class="p-2 px-5 inspect-result d-flex align-items-center justify-content-center mx-5" style="height: 300px;">
+                        <h4 class="pt-3">DISTRIBUTION OF DETECTS</h4>
+                        <!-- <h1>0</h1> -->
+                        <canvas id="myDoughnutChart" width="400" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        }
+        <!-- TABLE -->
+        @if (Model.detail_data != null && Model.detail_data.Rows.Count > 0)
+        {
+            <div class="row mb-3 overflow-auto" style="height: calc(100vh - 580px)">
+                <div class="col-12">
+                    <table class="table">
+                        <thead>
+                            <tr class="table sticky-top" style="background-color: #00c0ff; padding: 0 5px;">
+                                @foreach(DataColumn col in Model.detail_data.Columns)
+                                {
+                                    <th>@col.Caption</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (DataRow row in Model.detail_data.Rows)
+                            {
+                                <tr>
+                                    @foreach (var f in row.ItemArray)
+                                    {
+                                        <td>@f?.ToString()</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+@*         <div>
+            <table class="table ">
+                <thead>
+                    <tr class="table" style="background-color: #00c0ff; padding: 0 10px;">
+                        <th style="">#</th>
+                        <th>Doc No</th>
+                        <th>Status</th>
+                        <th>Material No</th>
+                        <th>Inspection Slip</th>
+                        <th>Inspection Time</th>
+                        <th>Inspect By</th>
+                        <th>Progress</th>
+                        <th>Final Yield</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>4</td>
+                        <td>IQC204101000009</td>
+                        <td>待检验</td>
+                        <td>辅助材料</td>
+                        <td>177</td>
+                        <td>2024-10-31 14:59:37</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>IQC204101000017</td>
+                        <td>待检验</td>
+                        <td>IC</td>
+                        <td>1</td>
+                        <td>2024-10-31 17:05:01</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div> *@
+    </div>
+</div>
+
+@section Scripts {
+    <link href="~/css/dashboard.css?@DateTime.Now.Ticks" rel="stylesheet" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        //--------------------->> TABLE <<-------------------------------
+          $(document).ready(function () {
+          $('table thead th').each(function (index) {
+              $(this).css({
+                  'background-color': '#00c0ff',
+                  'padding': '20px 0px'
+              });
+              $(this).addClass('fs-4 p-0 mx-2 py-3 fw-bold');
+          });
+
+          $('table tbody tr').each(function (index) {
+            if ((index + 1) % 2 === 0) {
+              $(this).find('td').addClass('bg-primary text-white py-2 fs-5 fw-bold');
+
+            } else {
+              $(this).find('td').removeClass('bg-primary');// Clear any inline styles
+              $(this).find('td').addClass('text-white py-2 fs-5 fw-bold')
+              $(this).find('td').css({'background-color':'#1c2b88'})
+              // $(this).find('td').removeClass('bg-primary text-white');
+            }
+          });
+        });
+
+        //--------------------->> LOCK <<-------------------------------
+        function updateClock() {
+          const now = new Date();
+
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const day = String(now.getDate()).padStart(2, '0');
+          const hour = String(now.getHours()).padStart(2, '0');
+          const minute = String(now.getMinutes()).padStart(2, '0');
+          const second = String(now.getSeconds()).padStart(2, '0');
+
+          const formatted = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+
+          document.getElementById('clock').textContent = formatted;
+        }
+
+        // Update immediately and every second
+        updateClock();
+        setInterval(updateClock, 1000);
+
+
+
+        //-------------------->> CHART <<-----------------------------
+        const chartData = @Html.Raw(Json.Serialize(Model.chart_data));
+        const labels = chartData.map(item => item.label);
+        const values = chartData.map(item => item.value);
+        const total = values.reduce((sum, val) => sum + val, 0);
+
+        const ctx = document.getElementById('myDoughnutChart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                      '#28a745', // green
+                      '#dc3545', // red
+                      '#ffc107', // yellow
+                      '#0dcaf0', // cyan
+                      '#6f42c1', // purple
+                      '#fd7e14', // orange
+                      '#20c997', // teal
+                      '#6610f2', // indigo
+                      '#198754', // dark green
+                      '#e83e8c', // pink
+                      '#17a2b8', // info blue
+                      '#343a40', // dark gray
+                      '#adb5bd', // light gray
+                      '#ff6384', // soft red
+                      '#36a2eb', // soft blue
+                      '#ff9f40', // soft orange
+                      '#4bc0c0', // turquoise
+                      '#9966ff', // violet
+                      '#c9cbcf', // light silver
+                      '#f94144', // coral red
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const percent = ((value / total) * 100).toFixed(1);
+                                return `${context.label}: ${value} (${percent}%)`;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'right',
+                        labels:{
+                            color: '#ffffff'
+                        }                        
+                    }
+                }
+            }
+        });
+    </script>
+}
