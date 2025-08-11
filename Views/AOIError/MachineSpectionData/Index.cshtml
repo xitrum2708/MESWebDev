@@ -103,6 +103,7 @@ catch(Exception ex)
 @section Scripts {
     <script src="~/js/chart.js"></script>
     <script src="~/js/chartjs-plugin-datalabels.js"></script>
+
     <script>
 
         // update for download button
@@ -120,6 +121,7 @@ catch(Exception ex)
         $('#startDate, #endDate').on('change',UpdateDownloadString);
 
         $(document).ready(UpdateDownloadString);
+
         // Show loading page for downloading
         $('#downloadBtn').on('click', function() {
             $("#loadingOverlay").removeClass('d-none');
@@ -129,7 +131,6 @@ catch(Exception ex)
                 }                 
             },5000);
         });
-
 
         // Check date and show loading page
         document.querySelector('form').addEventListener('submit', function(e) {

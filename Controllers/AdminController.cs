@@ -1,7 +1,9 @@
 ﻿using MESWebDev.Common;
+using MESWebDev.Models;
 using MESWebDev.Repositories;
 using MESWebDev.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace MESWebDev.Controllers
 {
@@ -10,36 +12,45 @@ namespace MESWebDev.Controllers
         private readonly IUVAssyProductionRepository _repository;
         private readonly ILoggingService _loggingService;
         private readonly IExcelExportService _excelExportService;
+        private readonly IDashboard _dashboardService;
 
-        public AdminController(IUVAssyProductionRepository repository, ILoggingService loggingService, IExcelExportService excelExportService)
+        public AdminController(IUVAssyProductionRepository repository, ILoggingService loggingService, IExcelExportService excelExportService, IDashboard dashboardService  )
         {
             _repository = repository;
             _loggingService = loggingService;
             _excelExportService = excelExportService;
+            _dashboardService = dashboardService;
         }
 
         public async Task<IActionResult> Dashboard(DateTime? date)
         {
             return View();
-            ////date ??= new DateTime(2025, 4, 5);
-            //date ??= DateTime.Now;
+        }
 
-            //var userId = HttpContext.Session.GetInt32("UserId");
-            //if (!userId.HasValue)
-            //{
-            //    return RedirectToAction("Login", "Account");
-            //}
-            //var results = new List<UVAssyAllOutputResult>();
-            //results = await _repository.GetAllOutputResultsAsync(date.Value);
+        public async Task<IActionResult> IQCDashboard()
+        {
+            DashboardViewModel model = await GetIQGDashboard();
+            return View("IQCDashboard/IQCDashboard", model);
+        }
+        public async Task<DashboardViewModel> GetIQGDashboard()
+        {
+            var model = new DashboardViewModel();
+            DataSet ds = await _dashboardService.GetIQCDashboard(new());
+            if(ds!= null&& ds.Tables.Count > 0)
+            {
+                model.sum_data = ds.Tables[0];
+                model.detail_data = ds.Tables[1];
 
-            //// Tính tổng ProdQty theo ProdSec cho biểu đồ
-            //var chartData = results
-            //    .GroupBy(r => r.ProdSec)
-            //    .Select(g => new { ProdSec = g.Key, TotalProdQty = g.Sum(r => r.ProdQty) })
-            //    .ToList();
+                DataTable chartData = ds.Tables[2];
+                model.chart_data = chartData.AsEnumerable()
+                    .Select(row => new ChartItem
+                    {
+                        Label = row.Field<string>("Description"),
+                        Value = row.Field<int>("TotalErrors")
+                    }).ToList();
 
-            //ViewBag.ChartData = chartData; // Truyền dữ liệu biểu đồ qua ViewBag
-            //return View(results); // Truyền dữ liệu bảng qua model
+            }            
+            return model;
         }
     }
 }
