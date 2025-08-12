@@ -67,6 +67,53 @@
                             <tbody>
                                 @foreach (DataRow r in Model.Rows)
                                 {
+                                    // Lấy giá trị an toàn
+                                    var proc = Get(r, "ProcessID");
+                                    var qr = Get(r, "QRCode");
+                                    var bc = Get(r, "Barcode");
+                                    var hasQR = Model.Columns.Contains("HasAttachByQR") && Get(r, "HasAttachByQR") == "1";
+                                    var hasBC = Model.Columns.Contains("HasAttachByBC") && Get(r, "HasAttachByBC") == "1";
+                                    var show = hasQR || (!hasQR && hasBC); // ưu tiên QR, nếu không có thì dùng BC
+
+                                    <tr data-proc="@proc"
+                                        data-qr="@qr"
+                                        data-bc="@bc"
+                                        data-hasqr="@(hasQR ? "1" : "0")"
+                                        data-hasbc="@(hasBC ? "1" : "0")">
+                                        <td class="text-center">
+                                            @if (show)
+                                            {
+                                                <button type="button" class="btn btn-outline-primary btn-sm btn-expand" title="Xem file đính kèm">+</button>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+
+                                        @foreach (var c in cols)
+                                        {
+                                            if (c == "CreatedDate" || c == "Timestamp")
+                                            {
+                                                <td class="text-nowrap">@GetDate(r, c)</td>
+                                            }
+                                            else if (c == "QRCode" || c == "Barcode")
+                                            {
+                                                <td class="font-monospace">@Get(r, c)</td>
+                                            }
+                                            else
+                                            {
+                                                <td>@Get(r, c)</td>
+                                            }
+                                        }
+                                    </tr>
+
+                                    <tr class="child d-none">
+                                        <td colspan="@(cols.Length + 1)"><div class="att-box">—</div></td>
+                                    </tr>
+                                }
+                                @* @foreach (DataRow r in Model.Rows)
+                                {
                                     var has = Model.Columns.Contains("HasAttachment")
                                     && r["HasAttachment"] != DBNull.Value
                                     && Convert.ToInt32(r["HasAttachment"]) == 1;
@@ -92,11 +139,7 @@
                                             else if (c == "QRCode" || c == "Barcode")
                                             {
                                                 <td class="font-monospace">@Get(r, c)</td>
-                                            }
-                                           @*  else if (c == "ProcessID")
-                                            {
-                                                <td class="text-end">@Get(r, c)</td>
-                                            } *@
+                                            }                                          
                                             else
                                             {
                                                 <td>@Get(r, c)</td>
@@ -108,6 +151,7 @@
                                         <td colspan="@(cols.Length + 1)"><div class="att-box">—</div></td>
                                     </tr>
                                 }
+   *@                          
                             </tbody>
                            @*  <tbody>
                                 @foreach (System.Data.DataRow r in Model.Rows)
@@ -138,7 +182,7 @@
         </div>
     </div>
 </div>
-@section Scripts {
+@* @section Scripts {
     <script>
         document.querySelectorAll(".btn-expand").forEach(btn=>{
           btn.addEventListener("click", async (e)=>{
@@ -149,6 +193,49 @@
             if (!child.classList.contains("d-none")) { child.classList.add("d-none"); return; }
             box.textContent = "Đang tải...";
             const html = await (await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }})).text();
+            box.innerHTML = html;
+            child.classList.remove("d-none");
+          });
+        });
+    </script>
+} *@
+
+@section Scripts {
+    <script>
+        document.querySelectorAll(".btn-expand").forEach(btn=>{
+          btn.addEventListener("click", async (e)=>{
+            const tr   = e.target.closest("tr");
+            const proc = (tr.dataset.proc || "").trim();
+            const qr   = (tr.dataset.qr   || "").trim();
+            const bc   = (tr.dataset.bc   || "").trim();
+            const hasqr= tr.dataset.hasqr === "1";
+            const hasbc= tr.dataset.hasbc === "1";
+
+            const child = tr.nextElementSibling;
+            const box   = child.querySelector(".att-box");
+
+            // toggle đóng/mở
+            if (!child.classList.contains("d-none")) { child.classList.add("d-none"); return; }
+
+            // Ưu tiên QR, nếu không có thì BC
+            let url = null;
+            if (hasqr && qr) {
+              url = '@Url.Action("Attachments", "UVAssyProduction")'
+                  + `?processId=${encodeURIComponent(proc)}&qrcode=${encodeURIComponent(qr)}`;
+            } else if (hasbc && bc) {
+              url = '@Url.Action("Attachments", "UVAssyProduction")'
+                  + `?processId=${encodeURIComponent(proc)}&qrcode=${encodeURIComponent(bc)}`;
+            }
+
+            if (!url) {
+              box.textContent = "Không có file.";
+              child.classList.remove("d-none");
+              return;
+            }
+
+            box.textContent = "Đang tải...";
+            const res  = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }});
+            const html = await res.text();
             box.innerHTML = html;
             child.classList.remove("d-none");
           });
