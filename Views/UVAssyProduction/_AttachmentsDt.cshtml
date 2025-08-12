@@ -24,8 +24,9 @@ else
             <span>
                 <strong>@(r["Attach_Name"])</strong>
                 <small class="text-muted">
-                    | Read: @GetDate(r, "ReadDate")
-                    | By: @(r["CreatedBy"])
+                        | Status: @(r["Final_Status"])
+                        | Read: @GetDate(r, "ReadDate")
+                        | By: @(r["CreatedBy"])
                 </small>
             </span>
             <a class="btn btn-success btn-sm"

@@ -35,7 +35,7 @@ namespace MESWebDev.Services
 
         public Task<DataTable> SearchResult(string search)
         {
-            return _proc.Proc_GetDatatable("sp_UVASSY_PPRODUCT_HISTORY_SearchCascade", new Dictionary<string, object>
+            return _proc.Proc_GetDatatable("sp_UVASSY_PPRODUCT_HISTORY_SearchCascade_edit", new Dictionary<string, object>
             {
                 { "@key", search }
             });
