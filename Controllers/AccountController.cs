@@ -103,7 +103,7 @@ namespace MESWebDev.Controllers
                 _context.SaveChanges();
             }
 
-            return RedirectToAction("Dashboard", "Admin");
+            return RedirectToAction("IQCDashboard", "Admin");
         }
 
         // --- SAVE MENU TO SESSION ---

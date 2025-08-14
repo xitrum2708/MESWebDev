@@ -40,7 +40,7 @@
         <!-- SUMARY -->
         <div class="row">
             <!-- LEFT SIDE  -->
-            <div class="col-5 d-flex flex-column">
+            <div class="col-6 d-flex flex-column">
                 <div class="row mb-1">
                     <font class="text-start fs-6 text-light fw-bold">
                         <i class="bi bi-truck fs-3 text-info"></i>
@@ -118,7 +118,7 @@
             </div>
 
             <!-- RIGHT SIDE -->
-            <div class="col-7 mt-4 ps-3 d-flex flex-column ">
+            <div class="col-6 mt-4 ps-3 d-flex flex-column ">
                 <!-- <div class="row mb-1 ps-3">
                 <font class="text-start fs-6 text-light fw-bold">ORPERATION TASK</font>
                 <hr />
@@ -130,7 +130,6 @@
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th style="">#</th>
                                     @foreach (DataColumn column in Model.detail_data.Columns)
                                     {
                                         <th>@column.Caption</th>
@@ -140,11 +139,7 @@
                             <tbody>
                                 @foreach(DataRow row in Model.detail_data.Rows)
                                 {
-                                    i++;
                                     <tr>
-                                        <td>
-                                            @i
-                                        </td>
                                         @foreach (var item in row.ItemArray)
                                         {
                                             <td class="text-center">@item</td>

@@ -79,37 +79,35 @@
 
                 @if (Model.detail_data != null && Model.detail_data.Rows.Count > 0)
                 {
-                    <div class="row row-cols-2 g-2 overflow-auto" style="height:calc(100vh - 400px)">
+                    <div class="row row-cols-2 g-2 overflow-auto" style="height:calc(100vh - 370px)">
                         @foreach (DataRow row in Model.detail_data.Rows)
                         {
                             <!-- DIV 1 -->
                             <div>
                                 <div class="col-12 detail p-3 border border-2 border-info">
                                     <div class="row mb-3">
-                                        <div class="col-8">
+                                        <div class="col-12">
                                             <div class="row">
-                                                <div class="col-3 text-start text-label">LINE</div>
+                                                <div class="col-4 text-start text-label">LINE</div>
                                                 <div class="col-8 ps-2 text-start text-value">
                                                     :
                                                     @(((row["Line"] ?? string.Empty).ToString()).ToUpper())
                                                 </div>
                                             </div>
                                             <div class="row">
-                                                <div class="col-3 text-start text-label">MODEL</div>
+                                                <div class="col-4 text-start text-label">MODEL</div>
                                                 <div class="col-8 ps-2 text-start text-value">
                                                     :
                                                     @(((row["Model"] ?? string.Empty).ToString()).ToUpper())
                                                 </div>
                                             </div>
                                             <div class="row">
-                                                <div class="col-3 text-start text-label">LOT NO</div>
+                                                <div class="col-4 text-start text-label">LOT NO</div>
                                                 <div class="col-8 ps-2 text-start text-value">
                                                     :
                                                     @(((row["LotNo"] ?? string.Empty).ToString()).ToUpper())
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="col-4">
                                         </div>
                                     </div>
                                     <div class="row g-2 d-flex justify-content-center align-items-center">
@@ -146,7 +144,7 @@
                 </div>
                 @if (Model.detail_data2 != null && Model.detail_data2.Rows.Count > 0)
                 {
-                    <div class="overflow-y-auto" style="height:calc(100vh - 1200px); min-height:300px;">
+                    <div class="overflow-y-auto" style="height:calc(100vh - 1300px); min-height:220px;">
                         <!-- TABLE -->
                         <table class="table" id="tblDetail2">
                             <thead class="sticky-top">
@@ -178,7 +176,7 @@
                     <hr />
                 </div>
                 <div>
-                    <canvas class="mt-2" height="300" id="smoothLineChart"></canvas>
+                    <canvas class="mt-2" height="200" id="smoothLineChart"></canvas>
                 </div>
 
                 <!-- PIE CHART -->
@@ -186,7 +184,7 @@
                     <font class="text-start fs-6 text-light fw-bold">QUALITY ANOMANY OUTPUT</font>
                     <hr />
                 </div>
-                <div style="padding: 0px 170px;">
+                <div style="padding: 0px 10px;">
                     <canvas class="m-0 p-0 mx-5" height="200" width="200" id="myPieChart"></canvas>
                 </div>
             </div>
@@ -210,18 +208,20 @@
                     'background-color': '#00c0ff',
                     'padding': '10px 0px'
                 });
-                $(this).addClass('fs-7 p-0 mx-2 py-2 fw-bold text-center');
+                $(this).addClass('p-0 mx-2 py-1 fw-bold text-center');
+                $(this).css({'font-size':'12px'});
+
             });
 
             $('#tblDetail2 tbody tr').each(function (index) {
             if ((index + 1) % 2 === 0) {
-                $(this).find('td').addClass('bg-primary text-center text-white py-2');
-                $(this).find('td').css({'font-size':'12px'});
+                $(this).find('td').addClass('bg-primary text-center text-white py-1');
+                $(this).find('td').css({'font-size':'10px'});
 
             } else {
                 $(this).find('td').removeClass('bg-primary');// Clear any inline styles
-                $(this).find('td').addClass('text-white text-center py-2')
-                $(this).find('td').css({'background-color':'#1c2b88', 'font-size':'12px'})
+                $(this).find('td').addClass('text-white text-center py-1')
+                $(this).find('td').css({'background-color':'#1c2b88', 'font-size':'10px'})
                 // $(this).find('td').removeClass('bg-primary text-white');
             }
             });
@@ -351,9 +351,26 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
+
                         labels:{
-                            color: '#ffffff'
-                        },                        
+                //              generateLabels: function(chart) {
+                //     const original = Chart.overrides.doughnut.plugins.legend.labels.generateLabels(chart);
+                //     original.forEach(label => {
+                //         if (label.text.length > 15) {
+                //             // break into two lines
+                //             label.text = label.text.match(/.{1,15}/g);
+                //         }
+                //     });
+                //     return original;
+                // },
+                            boxWidth: 40,
+                            padding: 5,
+                            color: '#ffffff',
+                            font:{
+                                size:8
+                            }
+                        },
+
                         position: 'right'
                     },
                     tooltip: {

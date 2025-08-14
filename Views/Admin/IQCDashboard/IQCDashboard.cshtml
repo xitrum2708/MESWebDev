@@ -69,10 +69,10 @@
                 </div>
                 </div>
                 <div class="col-5 d-flex align-items-center justify-content-center">
-                    <div class="p-2 px-5 inspect-result d-flex align-items-center justify-content-center mx-5" style="height: 270px;">
+                    <div class="p-2 px-4 inspect-result d-flex align-items-center justify-content-center mx-5 mb-1" style="height: 200px;">
                         <h5 class="mt-4 mb-0">DISTRIBUTION OF DETECTS</h5>
                         <!-- <h1>0</h1> -->
-                        <canvas id="myDoughnutChart" class="p-0 m-0" width="300" height="300"></canvas>
+                        <canvas id="myDoughnutChart" class="p-0 m-0" width="200" height="200"></canvas>
                     </div>
                 </div>
             </div>
@@ -80,7 +80,7 @@
         <!-- TABLE -->
         @if (Model.detail_data != null && Model.detail_data.Rows.Count > 0)
         {
-            <div class="row mb-1 overflow-auto" style="height: calc(100vh - 510px)">
+            <div class="row mb-1 overflow-auto" style="height: calc(100vh - 410px)">
                 <div class="col-12">
                     <table class="table">
                         <thead>
@@ -106,7 +106,6 @@
                 </div>
             </div>
         }
-
     </div>
 </div>
 
@@ -121,18 +120,18 @@
           $('table thead th').each(function (index) {
               $(this).css({
                   'background-color': '#00c0ff',
-                  'padding': '20px 0px'
+                  'padding': '25px 0px'
               });
-              $(this).addClass('fs-5 p-0 mx-2 py-2 fw-bold text-center');
+              $(this).addClass('fs-6 p-0 mx-2 fw-bold text-center');
           });
 
           $('table tbody tr').each(function (index) {
             if ((index + 1) % 2 === 0) {
-              $(this).find('td').addClass('bg-primary text-center text-white py-2 fs-6');
+              $(this).find('td').addClass('bg-primary text-center text-white py-1 fs-8');
 
             } else {
               $(this).find('td').removeClass('bg-primary');// Clear any inline styles
-              $(this).find('td').addClass('text-white text-center py-2 fs-6')
+              $(this).find('td').addClass('text-white text-center py-1 fs-8')
               $(this).find('td').css({'background-color':'#1c2b88'})
               // $(this).find('td').removeClass('bg-primary text-white');
             }
@@ -217,11 +216,13 @@
                         //display:false
                         position: 'right',
                         labels:{
+                            boxWidth: 40,
+                            padding: 5,
                             color: '#ffffff',
                             font:{
-                                size:10
+                                size:8
                             }
-                        }                        
+                        } 
                     }
                 }
             }
