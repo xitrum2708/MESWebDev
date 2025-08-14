@@ -1,0 +1,215 @@
+﻿@* @using MESWebDev.Models.UVASSY
+@using MESWebDev.Models.VM
+@model List<UVAssyAllOutputResult> *@
+@model DashboardViewModel;
+@using System.Text.Json;
+@using System.Data;
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    int i = 0;
+}
+@section ContentHeader {
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <ol class="breadcrumb float-sm-end d-flex justify-content-center align-content-center" style="margin-bottom:0px !important">
+                    <li class="breadcrumb-item text-black fw-bold">HOME</li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">WHS DASHBOARD</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+}
+<div class="app-content">
+    <div class="container-fluid p-0 px-5">
+        <!-- HEADER -->
+        <div class="row text-center">
+            <div class="col-md-3 d-flex align-items-center justify-content-center">
+                <!-- <h4>Info</h4> -->
+            </div>
+            <div class="col-md-6">
+                <div class="iqc-shape">WAREHOUSE IN/OUT DASHBOARD</div>
+            </div>
+            <div class="col-md-3 d-flex align-items-center justify-content-center">
+                <h4 id="clock"></h4>
+            </div>
+        </div>
+        <!-- SUMARY -->
+        <div class="row">
+            <!-- LEFT SIDE  -->
+            <div class="col-5 d-flex flex-column">
+                <div class="row mb-1">
+                    <font class="text-start fs-6 text-light fw-bold">
+                        <i class="bi bi-truck fs-3 text-info"></i>
+                        PURCHASE IN/OUT OPERATION
+                    </font>
+                    <hr />
+                </div>
+                @if(Model.sum_data != null && Model.sum_data.Rows.Count > 0)
+                {
+                    <div class="row g-3 align-items-between">
+                        <div class="col ">
+                            <div class="whs-box p-2 border border-2 border-warning">
+                                <font class="text-warning fw-bold">Wait Receive</font>
+                                <h1 class="text-warning fw-bold">@Model.sum_data.Rows[0][0]</h1>
+                            </div>
+                        </div>
+                        <div class="col ">
+                            <div class="whs-box p-2 border border-2 border-info">
+                                <font class="text-info fs-7 fw-bold">Wait IQC</font>
+                                <h1 class="text-info fw-bold">@Model.sum_data.Rows[0][1]</h1>
+                            </div>
+                        </div>
+                        <div class="col ">
+                            <div class="whs-box p-2 border border-2 border-success">
+                                <font class="text-success fs-7 fw-bold">Wait In Stock</font>
+                                <h1 class="text-success fw-bold">@Model.sum_data.Rows[0][2]</h1>
+                            </div>
+                        </div>
+                        <div class="col ">
+                            <div class="whs-box p-2 border border-2 border-light">
+                                <font class="text-light  fs-7 fw-bold">In Stock</font>
+                                <h1 class="text-light fw-bold">@Model.sum_data.Rows[0][3]</h1>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="row mt-3 mb-1">
+                    <font class="text-start fs-6 text-light fw-bold">
+                        <i class="bi bi-tools fs-3 text-success"></i>
+                        PURCHASE IN/OUT OPERATION
+                    </font>
+                    <hr />
+                </div>
+                @if(Model.sum_data2 != null && Model.sum_data2.Rows.Count > 0)
+                {
+                    <div class="row g-3 align-items-between">
+                        <div class="col ">
+                            <div class="whs-box p-2 border border-2 border-warning">
+                                <font class="text-warning fw-bold">Wait Issue Material</font>
+                                <h1 class="text-warning fw-bold">@Model.sum_data.Rows[0][0]</h1>
+                            </div>
+                        </div>
+                        <div class="col ">
+                            <div class="whs-box p-2 border border-2 border-info">
+                                <font class="text-info fs-7 fw-bold">Issue To PD</font>
+                                <h1 class="text-info fw-bold">284</h1>
+                            </div>
+                        </div>
+                        <div class="col ">
+                            <div class="whs-box p-2 border border-2 border-success">
+                                <font class="text-success fs-7 fw-bold">Return To WH</font>
+                                <h1 class="text-success fw-bold">105</h1>
+                            </div>
+                        </div>
+                        <div class="col ">
+                            <div class="whs-box p-2 border border-2 border-light">
+                                <font class="text-light  fs-7 fw-bold">Return To Vendor</font>
+                                <h1 class="text-light fw-bold">0</h1>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+            <!-- RIGHT SIDE -->
+            <div class="col-7 mt-4 ps-3 d-flex flex-column ">
+                <!-- <div class="row mb-1 ps-3">
+                <font class="text-start fs-6 text-light fw-bold">ORPERATION TASK</font>
+                <hr />
+                </div> -->
+                <div class="overflow-y-auto" style="height: calc(100vh - 250px)">
+                    <!-- TABLE -->
+                    @if (Model.detail_data != null && Model.detail_data.Rows.Count > 0)
+                    {
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="">#</th>
+                                    @foreach (DataColumn column in Model.detail_data.Columns)
+                                    {
+                                        <th>@column.Caption</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach(DataRow row in Model.detail_data.Rows)
+                                {
+                                    i++;
+                                    <tr>
+                                        <td>
+                                            @i
+                                        </td>
+                                        @foreach (var item in row.ItemArray)
+                                        {
+                                            <td class="text-center">@item</td>
+                                        }
+                                    </tr>
+                                }
+                               
+                            </tbody>
+                        </table>
+                    }
+                    
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="~/css/dashboard.css?@DateTime.Now.Ticks" rel="stylesheet" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script>
+        //--------------------->> TABLE <<-------------------------------
+            $(document).ready(function () {
+            $('table thead th').each(function (index) {
+                $(this).css({
+                    'background-color': '#00c0ff',
+                    'padding': '10px 0px'
+                });
+                $(this).addClass('fs-6 p-0 mx-2 py-2 fw-bold text-center');
+            });
+
+            $('table tbody tr').each(function (index) {
+            if ((index + 1) % 2 === 0) {
+                $(this).find('td').addClass('bg-primary text-center text-white py-2');
+                $(this).find('td').css({'font-size':'14px'});
+
+            } else {
+                $(this).find('td').removeClass('bg-primary');// Clear any inline styles
+                $(this).find('td').addClass('text-white text-center py-2')
+                $(this).find('td').css({'background-color':'#1c2b88', 'font-size':'14px'})
+                // $(this).find('td').removeClass('bg-primary text-white');
+            }
+            });
+        });
+          function updateClock() {
+            const now = new Date();
+
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const minute = String(now.getMinutes()).padStart(2, '0');
+            const second = String(now.getSeconds()).padStart(2, '0');
+
+            const formatted = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+
+            document.getElementById('clock').textContent = formatted;
+          }
+
+          // Update immediately and every second
+          updateClock();
+          setInterval(updateClock, 1000);
+
+    </script>
+}

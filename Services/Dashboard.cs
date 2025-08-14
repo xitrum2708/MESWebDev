@@ -20,5 +20,18 @@ namespace MESWebDev.Services
             ds = await _proc.Proc_GetDataset("Dashboard_IQC", dic);
             return ds;
         }
+
+        public async Task<DataSet> GetSMTDashboard(Dictionary<string, object> dic)
+        {
+            DataSet ds = new();
+            ds = await _proc.Proc_GetDataset("Dashboard_SMT", dic);
+            return ds;
+        }
+        public async Task<DataSet> GetWHSDashboard(Dictionary<string, object> dic)
+        {
+            DataSet ds = new();
+            ds = await _proc.Proc_GetDataset("Dashboard_WHS", dic);
+            return ds;
+        }
     }
 }

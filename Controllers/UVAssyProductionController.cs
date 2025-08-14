@@ -6,6 +6,9 @@ using MESWebDev.Models.VMProcedure;
 using MESWebDev.Repositories;
 using MESWebDev.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using System.Data;
+using System.Threading.Tasks;
 
 namespace MESWebDev.Controllers
 {
@@ -14,13 +17,15 @@ namespace MESWebDev.Controllers
         private readonly IUVAssyProductionRepository _repository;
         private readonly ILoggingService _loggingService;
         private readonly IExcelExportService _excelExportService;
+        private readonly IUVASSY_PPRODUCT_HISTORY _uvassyPProductHistoryService;
 
-        public UVAssyProductionController(AppDbContext context, IUVAssyProductionRepository repository, ILoggingService loggingService, IExcelExportService excelExportService)
+        public UVAssyProductionController(AppDbContext context, IUVAssyProductionRepository repository, ILoggingService loggingService, IExcelExportService excelExportService, IUVASSY_PPRODUCT_HISTORY uvassyPProductHistoryService)
             : base(context)
         {
             _repository = repository;
             _loggingService = loggingService;
             _excelExportService = excelExportService;
+            _uvassyPProductHistoryService = uvassyPProductHistoryService;
         }
 
         public async Task<IActionResult> Index(string sortOrder, DateTime? startDate, DateTime? endDate)
@@ -221,6 +226,70 @@ namespace MESWebDev.Controllers
 
             string fileName = $"OutputDetails-{DateTime.Now:yyyyMMddHHmmss}.xlsx";
             return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+        [HttpGet]
+        public async Task<IActionResult> SearchResultByQrOrBarcode(string key)
+        {
+            var dt = await _uvassyPProductHistoryService.SearchResult(key);
+            ViewBag.Key = key;
+            //if (dt == null) return View(dt);
+
+            //bool hasCreated = dt.Columns.Contains("CreatedDate");
+            //bool hasTs = dt.Columns.Contains("Timestamp");
+
+            //if (hasCreated && !dt.Columns.Contains("CreatedDateFmt"))
+            //{
+            //    var c = dt.Columns.Add("CreatedDateFmt", typeof(string));
+            //    c.SetOrdinal(dt.Columns["CreatedDate"].Ordinal + 1);
+            //}
+            //if (hasTs && !dt.Columns.Contains("TimestampFmt"))
+            //{
+            //    var c = dt.Columns.Add("TimestampFmt", typeof(string));
+            //    c.SetOrdinal(dt.Columns["Timestamp"].Ordinal + 1);
+            //}
+
+            //foreach (DataRow row in dt.Rows)
+            //{
+            //    if (hasCreated && row["CreatedDate"] != DBNull.Value)
+            //    {
+            //        if (row["CreatedDate"] is DateTime d1)
+            //            row["CreatedDateFmt"] = d1.ToString("yyyy/MM/dd HH:mm:ss");
+            //        else if (DateTime.TryParse(Convert.ToString(row["CreatedDate"]), out var d2))
+            //            row["CreatedDateFmt"] = d2.ToString("yyyy/MM/dd HH:mm:ss");
+            //    }
+
+            //    if (hasTs && row["Timestamp"] != DBNull.Value && dt.Columns.Contains("TimestampFmt"))
+            //    {
+            //        var v = row["Timestamp"];
+            //        if (v is DateTime ts)
+            //            row["TimestampFmt"] = ts.ToString("yyyy/MM/dd HH:mm:ss");
+            //        else if (v is byte[] rv)            // trường hợp rowversion
+            //            row["TimestampFmt"] = BitConverter.ToString(rv).Replace("-", "");
+            //        else if (DateTime.TryParse(Convert.ToString(v), out var ts2))
+            //            row["TimestampFmt"] = ts2.ToString("yyyy/MM/dd HH:mm:ss");
+            //    }
+            //}
+
+            return View(dt);
+        }
+        // Lấy danh sách file đính kèm (cũng trả DataTable, load vào PartialView)
+        [HttpGet]
+        public async Task<IActionResult> Attachments(int processId, string qrcode)
+        {
+            var dt = await _uvassyPProductHistoryService.GetAttachedList(processId, qrcode);
+            return PartialView("_AttachmentsDt", dt);
+        }
+
+        // Download file theo Id (đọc 1 dòng, không cần DataTable)
+        [HttpGet]
+        public async Task<IActionResult> Download(int id)
+        {
+            var dt = await _uvassyPProductHistoryService.GetAttachedFile(id);
+            if (dt.Rows.Count == 0) return NotFound();
+            var row = dt.Rows[0];
+            var bytes = (byte[])row["Attach_File"];
+            var name = row["Attach_Name"] as string ?? "attachment.bin";
+            return File(bytes, "application/octet-stream", name);
         }
     }
 }

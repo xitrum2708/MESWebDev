@@ -15,7 +15,7 @@
             <div class="col-sm-12">
                 <ol class="breadcrumb float-sm-end d-flex justify-content-center align-content-center" style="margin-bottom:0px !important">
                     <li class="breadcrumb-item text-black fw-bold">HOME</li>
-                    <li class="breadcrumb-item active fw-bold" aria-current="page">DASHBOARD</li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">IQC DASHBOARD</li>
                 </ol>
             </div>
         </div>
@@ -80,7 +80,7 @@
         <!-- TABLE -->
         @if (Model.detail_data != null && Model.detail_data.Rows.Count > 0)
         {
-            <div class="row mb-1 overflow-auto" style="height: calc(100vh - 530px)">
+            <div class="row mb-1 overflow-auto" style="height: calc(100vh - 510px)">
                 <div class="col-12">
                     <table class="table">
                         <thead>
@@ -106,47 +106,7 @@
                 </div>
             </div>
         }
-@*         <div>
-            <table class="table ">
-                <thead>
-                    <tr class="table" style="background-color: #00c0ff; padding: 0 10px;">
-                        <th style="">#</th>
-                        <th>Doc No</th>
-                        <th>Status</th>
-                        <th>Material No</th>
-                        <th>Inspection Slip</th>
-                        <th>Inspection Time</th>
-                        <th>Inspect By</th>
-                        <th>Progress</th>
-                        <th>Final Yield</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>4</td>
-                        <td>IQC204101000009</td>
-                        <td>待检验</td>
-                        <td>辅助材料</td>
-                        <td>177</td>
-                        <td>2024-10-31 14:59:37</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>-</td>
-                    </tr>
-                    <tr>
-                        <td>5</td>
-                        <td>IQC204101000017</td>
-                        <td>待检验</td>
-                        <td>IC</td>
-                        <td>1</td>
-                        <td>2024-10-31 17:05:01</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>-</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div> *@
+
     </div>
 </div>
 
@@ -241,6 +201,8 @@
                 }]
             },
             options: {
+                responsive:true,
+                maintainAspectRatio:false,
                 plugins: {
                     tooltip: {
                         callbacks: {

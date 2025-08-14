@@ -7,54 +7,41 @@
     Layout = "~/Views/Shared/_LoginLayout.cshtml";
 }
 
-<div class="login-box">
-    <div class="login-logo">
-        <a href="#"><b>Admin</b>Login</a>
-    </div>
-    <div class="card">
-        <div class="card-body login-card-body">
-            <p class="login-box-msg">Sign in to start your session</p>
 
-            <form asp-action="Login" method="post">
-                <div class="input-group mb-3">
-                    <select name="languageCode" class="form-control" onchange="this.form.submit()">
-                        @foreach (var lang in ViewBag.Languages)
-                        {
-                            @: <option value="@lang.Code" @(ViewBag.SelectedLanguage == lang.Code ? "selected" : "")>@lang.Name</option>
-                        }
-                    </select>
-                    <div class="input-group-append">
-                        <div class="input-group-text">
-                            <span class="fas fa-globe"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="input-group mb-3">
-                    <input type="text" name="username" class="form-control" placeholder="Username">
-                    <div class="input-group-append">
-                        <div class="input-group-text">
-                            <span class="fas fa-user"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="input-group mb-3">
-                    <input type="password" name="password" class="form-control" placeholder="Password">
-                    <div class="input-group-append">
-                        <div class="input-group-text">
-                            <span class="fas fa-lock"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
-                    </div>
-                </div>
-                @if (ViewBag.Error != null)
-                {
-                    <p class="text-danger mt-3">@ViewBag.Error</p>
-                }
-            </form>
-        </div>
+<body>
+
+<div class="login-card">
+    <div class="text-center mb-3">        
+        <h4 class="fw-bold">LOGIN SYSTEM</h4>
+        <img src="~/Image/mes.jpg" class="logo" alt="MES Logo">
     </div>
+    <form  asp-action="Login" method="post">
+        <select name="languageCode" class="form-select fs-5 mb-3" onchange="this.form.submit()">
+            @foreach (var lang in ViewBag.Languages)
+            {
+                @: <option value="@lang.Code" @(ViewBag.SelectedLanguage == lang.Code ? "selected" : "")>@lang.Name</option>
+            }
+        </select>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control fs-5" id="username" name="username" placeholder="Username" required>
+            <label for="username">Username</label>
+        </div>
+        <div class="form-floating mb-4">
+            <input type="password" class="form-control fs-5" id="password" name="password" placeholder="Password" required>
+            <label for="password">Password</label>
+        </div>
+        <button type="submit" class="btn btn-login w-100 fs-5 py-2">Login</button>
+        @if (ViewBag.Error != null)
+        {
+            <p class="text-danger mt-3">@ViewBag.Error</p>
+        }
+        <div class="text-center mt-3">
+            <small class="text-muted">&copy; 2025 UNIDEN - Manufacturing Execution System</small>
+        </div>
+
+    </form>
 </div>
+@section Scripts {
+    <link href="~/css/Login.css?@DateTime.Now.Ticks" rel="stylesheet" />
+}
+</body>

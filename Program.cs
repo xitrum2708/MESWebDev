@@ -70,6 +70,8 @@ builder.Services.AddScoped<SqlHelperService>();
 builder.Services.AddScoped<IRepairResultRepository, RepairResultRepository>();
 builder.Services.AddScoped<IRepairResultService, RepairResultService>();
 builder.Services.AddScoped<IUV_LOTCONTROL_MASTER_Service, UV_LOTCONTROL_MASTER_Service>();
+builder.Services.AddScoped<IUVASSY_PPRODUCT_HISTORY, UVASSY_PPRODUCT_HISTORY>();
+
 
 builder.Services.AddScoped<IProdPlanService, ProdPlanService>();
 builder.Services.AddScoped<ISMTService, SMTService>();

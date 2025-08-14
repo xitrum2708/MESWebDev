@@ -1,0 +1,80 @@
+﻿@using System.Data
+@model DataTable
+
+@{
+    Func<DataRow, string, string> GetDate = (row, col) =>
+    {
+        if (!Model.Columns.Contains(col) || row[col] == DBNull.Value) return "";
+        if (row[col] is DateTime d1) return d1.ToString("yyyy/MM/dd HH:mm:ss");
+        if (DateTime.TryParse(Convert.ToString(row[col]), out var d2)) return d2.ToString("yyyy/MM/dd HH:mm:ss");
+        return "";
+    };
+}
+
+@if (Model.Rows.Count == 0)
+{
+    <span>Không có file đính kèm.</span>
+}
+else
+{
+    <ul class="list-group">
+    @foreach (DataRow r in Model.Rows)
+    {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>
+                <strong>@(r["Attach_Name"])</strong>
+                <small class="text-muted">
+                        | Status: @(r["Final_Status"])
+                        | Read: @GetDate(r, "ReadDate")
+                        | By: @(r["CreatedBy"])
+                </small>
+            </span>
+            <a class="btn btn-success btn-sm"
+               asp-action="Download"
+               asp-route-id="@(r["Id"])">Download</a>
+        </li>
+    }
+    </ul>
+}
+
+@* @model System.Data.DataTable
+@{
+    // Chỉ các cột bạn muốn hiển thị
+    var cols = new[]
+    {
+        "LotNo","Line","QRCode","CategoryName",
+        "ProcessID","ProcessName","CreatedBy",
+        "CreatedDate","Barcode","Unitcode","Status","Timestamp"
+    };
+
+    // Helper an toàn + format ngày tại View
+    Func<DataRow, string, string> Get = (r, c) =>
+        (Model.Columns.Contains(c) && r[c] != DBNull.Value) ? Convert.ToString(r[c]) : "";
+
+    Func<DataRow, string, string> GetDate = (r, c) =>
+    {
+        if (!Model.Columns.Contains(c) || r[c] == DBNull.Value) return "";
+        if (r[c] is DateTime d1) return d1.ToString("yyyy/MM/dd HH:mm:ss");
+        if (DateTime.TryParse(Convert.ToString(r[c]), out var d2)) return d2.ToString("yyyy/MM/dd HH:mm:ss");
+        return ""; // ví dụ Timestamp là rowversion (binary) thì để trống/đổi cách hiển thị tùy bạn
+    };
+}
+@if (Model.Rows.Count == 0)
+{
+     <span>Không có file đính kèm.</span>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (System.Data.DataRow r in Model.Rows)
+        {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                    <strong>@(r["Attach_Name"])</strong>
+                    <small class="text-muted"> | Read: @GetDate(r, @r["ReadDate"])  | By: @r["CreatedBy"]</small>
+                </span>
+                <a class="btn btn-success btn-sm" asp-action="Download" asp-route-id="@r["Id"]">Download</a>
+            </li>
+        }
+    </ul>
+} *@ 
