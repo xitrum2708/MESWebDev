@@ -53,6 +53,8 @@ namespace MESWebDev.Controllers
                 { "@end_dt", model.EndDate }
             };
             model = await GetIQGDashboard(parameters);
+            model.StartDate = model.StartDate ?? DateTime.Now.AddMonths(-1).Date;
+            model.EndDate = model.EndDate ?? DateTime.Now.Date;
             return View("IQCDashboard/IQCDashboard", model);
         }
         public async Task<DashboardViewModel> GetIQGDashboard(Dictionary<string, object> parameters)
