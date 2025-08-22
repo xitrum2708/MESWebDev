@@ -2,6 +2,7 @@
 using MESWebDev.Models.COMMON;
 using MESWebDev.Models.IQC;
 using MESWebDev.Models.OQC;
+using MESWebDev.Models.PE;
 using MESWebDev.Models.ProdPlan;
 using MESWebDev.Models.REPAIR;
 using MESWebDev.Models.SMT;
@@ -75,6 +76,12 @@ namespace MESWebDev.Data
         public DbSet<ProdPlanModel> PP_ProdPlan_tbl { get; set; }
         public DbSet<ProdPlanParaModel> PP_Para_tbl { get; set; }
         public DbSet<CalendarModel> PP_Calendar_tbl { get; set; }
+
+        //--------------+ PE - manpower +-------------------
+        public DbSet<ManpowerModel> PE_Manpower_tbl { get; set; }
+
+        public DbSet<UploadFileMaster> Master_UploadFile_mst { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<UV_LOTCONTROL_MASTER>(entity =>

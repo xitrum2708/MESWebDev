@@ -4,6 +4,7 @@ using MESWebDev.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MESWebDev.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250816064019_addTableUploadFileMaster2")]
+    partial class addTableUploadFileMaster2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -195,7 +198,7 @@ namespace MESWebDev.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("Master_UploadFile_mst");
+                    b.ToTable("Master_upload_file_mst");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.ExecutionLog", b =>
@@ -1140,9 +1143,8 @@ namespace MESWebDev.Migrations
                     b.Property<DateTime>("updated_dt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("upload_by")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("upload_by")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("upload_dt")
                         .HasColumnType("datetime2");

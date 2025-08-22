@@ -27,10 +27,27 @@ namespace MESWebDev.Services
             ds = await _proc.Proc_GetDataset("Dashboard_SMT", dic);
             return ds;
         }
+
+
         public async Task<DataSet> GetWHSDashboard(Dictionary<string, object> dic)
         {
             DataSet ds = new();
             ds = await _proc.Proc_GetDataset("Dashboard_WHS", dic);
+            return ds;
+        }
+
+
+        public async Task<DataTable> GetSMTLines()
+        {
+            DataTable dt = new();
+            dt = await _proc.Proc_GetDatatable("Dashboard_SMT_Line", new());
+            return dt;
+        }
+
+        public async Task<DataSet> GetSMTProdInfo(Dictionary<string, object> dic)
+        {
+            DataSet ds = new();
+            ds = await _proc.Proc_GetDataset("Dashboard_SMT_ProdInfo", dic);
             return ds;
         }
     }

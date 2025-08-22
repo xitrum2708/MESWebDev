@@ -7,5 +7,7 @@ namespace MESWebDev.Services
         Task<DataSet> GetIQCDashboard(Dictionary<string, object> dic);
         Task<DataSet> GetSMTDashboard(Dictionary<string, object> dic);
         Task<DataSet> GetWHSDashboard(Dictionary<string, object> dic);
+        Task<DataTable> GetSMTLines();
+        Task<DataSet> GetSMTProdInfo(Dictionary<string, object> dic);
     }
 }

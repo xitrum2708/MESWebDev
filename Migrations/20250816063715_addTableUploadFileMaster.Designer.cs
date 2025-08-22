@@ -4,6 +4,7 @@ using MESWebDev.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MESWebDev.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250816063715_addTableUploadFileMaster")]
+    partial class addTableUploadFileMaster
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -160,42 +163,6 @@ namespace MESWebDev.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("UV_PRO_LINE", (string)null);
-                });
-
-            modelBuilder.Entity("MESWebDev.Models.COMMON.UploadFileMaster", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
-
-                    b.Property<int>("col_index")
-                        .HasColumnType("int");
-
-                    b.Property<string>("col_type")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("db_col_name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("file_name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("file_type")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("header_row")
-                        .HasColumnType("int");
-
-                    b.Property<string>("note")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("id");
-
-                    b.ToTable("Master_UploadFile_mst");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.ExecutionLog", b =>
@@ -1091,15 +1058,13 @@ namespace MESWebDev.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
 
                     b.Property<decimal>("assy_cost")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("assy_headcount")
                         .HasColumnType("int");
 
                     b.Property<decimal>("average_cost")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("b_model")
                         .IsRequired()
@@ -1110,8 +1075,7 @@ namespace MESWebDev.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("insert_cost")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("insert_headcount")
                         .HasColumnType("int");
@@ -1120,15 +1084,13 @@ namespace MESWebDev.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("scl_cost")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("scl_headcount")
                         .HasColumnType("int");
 
                     b.Property<decimal>("smt_cost")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("smt_headcount")
                         .HasColumnType("int");
@@ -1140,9 +1102,8 @@ namespace MESWebDev.Migrations
                     b.Property<DateTime>("updated_dt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("upload_by")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("upload_by")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("upload_dt")
                         .HasColumnType("datetime2");

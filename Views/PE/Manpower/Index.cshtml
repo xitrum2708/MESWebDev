@@ -1,0 +1,264 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.PE
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Services
+@using System.Data
+@inject ITranslationService TranslationService
+@model PEViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="float-start d-flex justify-content-center align-items-center">
+                                <h3 class="card-title fw-bold fs-5">
+                                    <i class="bi bi-clock-history mx-2"></i>
+                                    MANPOWER
+                                </h3>
+                            </div>
+                            <div class="float-end d-flex justify-content-center align-items-center">
+                                <button class="btn btn-primary btn-sm search-icon me-2">
+                                     <i class="bi bi-search" style="cursor: pointer;"></i>
+                                     Search
+                                </button>
+                                <a class="btn btn-warning btn-sm bt_upload me-2">
+                                    <i class="bi bi-file-earmark-arrow-up"></i>
+                                    Upload</a>                                
+                                @* <a asp-action="DownloadProdPlan" asp-controller="ProdPlan" class="btn btn-secondary btn-sm me-2"> *@
+                                <a id="DownloadData" class="btn btn-info btn-sm me-2">
+                                    <i class="bi bi-download"></i>
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body" >
+                            @* <h2>Product Schedule (Resource Timeline View)</h2> *@
+                            @if(Model.error_msg == null)
+                            {
+                                @if (Model.data != null && Model.data.Rows.Count > 0)
+                                {
+                                    <div style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative">
+                                        <table class="table table-bordered table-striped table-hover" id="tb_manpower">
+                                            <thead class="">
+                                                <!-- Header Row -->
+                                                <tr>
+                                                    @foreach (DataColumn column in Model.data.Columns)
+                                                    {
+                                                        <th class="text-center table-info" >
+                                                            <span class="d-block p-0 header-text">@column.Caption</span>                                                           
+                                                        </th>
+                                                    }
+                                                </tr>
+
+                                                <!-- Search Row (initially hidden) -->
+                                                <tr class="search-row" style="display:none;">
+                                                    @foreach (DataColumn column in Model.data.Columns)
+                                                    {
+                                                        <th>
+                                                            <input type="text" class="form-control form-control-sm" placeholder="Search @column.ColumnName" />
+                                                        </th>
+                                                    }
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                @foreach (DataRow row in Model.data.Rows)
+                                                {
+                                                    <tr>
+                                                        @foreach (var item in row.ItemArray)
+                                                        {
+                                                            <td class="@(item is decimal or double or float ? "text-end" : "text-start")">
+                                                                @{
+                                                                    if (item is decimal decValue)
+                                                                    {
+                                                                        @decValue.ToString("#,##0.0000", System.Globalization.CultureInfo.InvariantCulture)
+                                                                    }
+                                                                    else if (item is double dblValue)
+                                                                    {
+                                                                        @dblValue.ToString("#,##0.0000", System.Globalization.CultureInfo.InvariantCulture)
+                                                                    }
+                                                                    else if (item is float floatValue)
+                                                                    {
+                                                                        @floatValue.ToString("#,##0.0000", System.Globalization.CultureInfo.InvariantCulture)
+                                                                    }                                                                    
+                                                                    else
+                                                                    {
+                                                                        @item
+                                                                    }
+                                                                }                                                                
+                                                            </td>
+                                                        }
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning text-center">
+                                        No data available for the Manpower. Please upload that data.
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning text-center">
+                                    @Model.error_msg
+                                </div>                                
+                            }
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <Partial name="Manpower/_Upload" />
+            <Partila name="_LoadingPartial" />
+        </div>
+    </div>
+
+}
+catch(Exception ex)
+{
+    string t = ex.Message;
+}
+
+@section Scripts {
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script>
+                // --- Show Upload Windows --- \\
+        $('.bt_upload').click( function(){
+             $('#uploadModal').modal('show');
+        });
+
+        $('#DownloadData').on('click', function () {
+            const headers = [];
+            $('table thead tr:first th .header-text').each(function () {
+                //alert($(this).text().trim());
+                headers.push($(this).text().trim());
+            });
+
+            const rows = [];
+            $('table tbody tr:visible').each(function () {
+                const rowData = [];
+                $(this).find('td').each(function () {
+                    rowData.push($(this).text().trim());
+                });
+                rows.push(rowData);
+            });
+
+            const payload = { headers: headers, rows: rows };
+
+            $.ajax({
+                url: '/PE/ExportToExcel',
+                type: 'POST',
+                data: JSON.stringify(payload),
+                contentType: 'application/json',
+                xhrFields: { responseType: 'blob' }, // important to download file'
+                success: function (data) {
+                const blob = new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                //a.download = "FilteredData.xlsx";
+
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                const fileName = `Manpower_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            }
+
+                // success: function (data) {
+                //     const url = window.URL.createObjectURL(data);
+                //     const a = document.createElement('a');
+                //     a.href = url;
+                //     // Generate dynamic filename
+                //     //const now = new Date();
+                //     //const pad = (n) => n.toString().padStart(2, '0');
+                //     //const fileName = `Manpower_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+
+                //     //a.download = fileName;
+                //     a.download = "FilteredData.xlsx";
+                //     document.body.appendChild(a);
+                //     a.click();
+                //     a.remove();
+                // },
+                // error: function (err) {
+                //     console.error("Export failed", err);
+                // }
+            });
+        });
+
+
+
+        // Search Row function
+
+          // Column search functionality
+          $('#tb_manpower thead .search-row th').each(function (i) {
+            $('input', this).on('keyup change', function () {
+              const filters = [];
+              $('#tb_manpower thead .search-row th input').each(function (j) {
+                filters[j] = this.value.toLowerCase();
+              });
+
+              $('#tb_manpower tbody tr').each(function () {
+                let show = true;
+                $(this).find('td').each(function (j) {
+                  if (filters[j] && $(this).text().toLowerCase().indexOf(filters[j]) === -1) {
+                    show = false;
+                  }
+                });
+                $(this).toggle(show);
+              });
+            });
+          });
+
+          // Toggle search row for each column
+          $('.search-icon').on('click', function (e) {
+            e.stopPropagation();
+            const index = $(this).closest('th').index();
+            const row = $('#tb_manpower thead .search-row');
+
+            // Hide all inputs first
+            //row.find('th input').hide();
+
+            const input = row.find('th').eq(index).find('input');
+
+            if (input.is(':visible')) {
+              row.hide()
+            } else {
+              row.show();
+              //input.show().focus();
+            }
+          });
+
+          // Hide search row if clicked outside
+          $(document).on('click', function (e) {
+            if (!$(e.target).closest('#tb_manpower thead').length) {
+              $('#tb_manpower thead .search-row').hide();
+              // $('#tb_manpower thead .search-row input').hide();
+            }
+          });
+
+    </script>
+    
+}

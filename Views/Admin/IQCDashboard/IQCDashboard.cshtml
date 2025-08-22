@@ -22,7 +22,9 @@
     </div>
 </div>
 }
+
 <div class="app-content">
+   
     <div class="container-fluid p-0 m-0 px-5">
         <!-- HEADER -->
         <div class="row text-center sticky-top p-0 m-0">
@@ -37,11 +39,11 @@
             </div>
         </div>
         <!-- SUMARY -->
-        @if (Model.sum_data != null && Model.sum_data.Rows.Count > 0)
+        @if(Model.sum_data != null && Model.sum_data.Rows.Count > 0)
         {
-            <div class="row mb-3">
-                <div class="col-7 d-flex flex-column justify-content-end pb-5">
-                <div class="row g-2 align-items-center px-5 mx-5" >
+            <div class="row my-2">
+                <div class="col-8 d-flex flex-column justify-content-end pb-5">
+                <div class="row g-2 align-items-center  mx-2 mb-2" >
                     <div class="col">
                         <div class="inspect-box p-2 border-bottom border-light border-5">
                             <font class="fs-7 fw-bold">INSPECTING</font>
@@ -55,9 +57,9 @@
                         </div>
                     </div>
                     <div class="col">
-                        <div class="inspect-box p-2 border-bottom border-success border-5">
-                            <font class="text-success fs-7 fw-bold">INSPECTED TODAY</font>
-                            <h1 class="text-success fw-bold">@Model.sum_data.Rows[0][2]</h1>
+                        <div class="inspect-box p-2 border-bottom border-primary border-5">
+                            <font class="text-primary fs-7 fw-bold">INSPECTED TODAY</font>
+                            <h1 class="text-primary fw-bold">@Model.sum_data.Rows[0][2]</h1>
                         </div>
                     </div>
                     <div class="col">
@@ -66,9 +68,55 @@
                             <h1 class="fw-bold text-info">@Model.sum_data.Rows[0][3]</h1>
                         </div>
                     </div>
+                    <div class="col">
+                           <div class="inspect-box p-2 border-bottom border-success border-5">
+                                <font class="fw-bold fs-6 text-success">OK</font>
+                                <h4 class="fw-bold text-success">@Model.sum_data.Rows[0][4]</h4>
+                                <h4 class="fw-bold text-success">@Model.sum_data.Rows[0][5]</h4>
+                            @* <h1 class="fw-bold text-success"> - </h1> *@
+                        </div>
+                    </div>
+                        <div class="col">
+                            <div class="inspect-box p-2 border-bottom border-danger border-5">
+                                <font class="fw-bold fs-6 text-danger">NG</font>
+
+                                <h4 class="fw-bold text-danger">@Model.sum_data.Rows[0][6]</h4>
+                                <h4 class="fw-bold text-danger">@Model.sum_data.Rows[0][7]</h4>
+                                @* <h1 class="fw-bold text-success"> - </h1> *@
+                            </div>
+                        </div>
+      @*               <div class="col">
+                        <div class="inspect-box p-2 border-bottom border-error border-5">
+                                <font class="fw-bold fs-7 text-error">NG - RATE</font>
+                                <h1 class="fw-bold text-error">@Model.sum_data.Rows[0][6] - @Model.sum_data.Rows[0][7]</h1>
+                        </div>
+                    </div> *@
+                    
                 </div>
+                    <form method="post" asp-action="IQCDashboardSearch">
+                        <div class="d-flex justify-content-center align-items-center">
+                            <!-- StartDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                @* <label>@translate.GetTranslation("StartDate", languageCode):</label> *@
+                                <input id="startDate" type="date" name="startDate" class="form-control"
+                                        value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <div>
+                                <font class="fs-6 fw-bold"> ~ </font>
+                            </div>
+                            <!-- EndDate -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                @* <label>@translate.GetTranslation("EndDate", languageCode):</label> *@
+                                <input id="endDate" type="date" name="endDate" class="form-control"
+                                        value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            </div>
+                            <button title="Search" class="btn btn-sm btn-info me-2">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-5 d-flex align-items-center justify-content-center">
+                <div class="col-4 d-flex align-items-center justify-content-center">
                     <div class="p-2 px-4 inspect-result d-flex align-items-center justify-content-center mx-5 mb-1" style="height: 200px;">
                         <h5 class="mt-4 mb-0">DISTRIBUTION OF DETECTS</h5>
                         <!-- <h1>0</h1> -->
@@ -80,7 +128,7 @@
         <!-- TABLE -->
         @if (Model.detail_data != null && Model.detail_data.Rows.Count > 0)
         {
-            <div class="row mb-1 overflow-auto" style="height: calc(100vh - 410px)">
+            <div class="row mb-1 overflow-auto" style="height: calc(100vh - 470px)">
                 <div class="col-12">
                     <table class="table">
                         <thead>
@@ -106,6 +154,15 @@
                 </div>
             </div>
         }
+
+    </div>
+</div>
+<!-- Loading Overlay -->
+<div id="loadingOverlay"
+     class="position-fixed top-0 start-0 w-100 h-100 d-none d-flex align-items-center justify-content-center"
+     style="background: rgba(255,255,255,0.7); z-index: 9999;">
+    <div class="spinner-border text-success fw-bold" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
     </div>
 </div>
 
@@ -115,6 +172,22 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+                // Check date and show loading page
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const startDate = document.querySelector('input[name="startDate"]').value;
+            const endDate = document.querySelector('input[name="endDate"]').value;
+
+            if (startDate && endDate && new Date(startDate) > new Date(endDate))
+            {
+                e.preventDefault();
+                toastr.error('Start Date cannot be later than End Date.');
+            }
+            else{
+                document.getElementById("loadingOverlay").classList.remove("d-none");
+            }
+
+        });
+
         //--------------------->> TABLE <<-------------------------------
           $(document).ready(function () {
           $('table thead th').each(function (index) {

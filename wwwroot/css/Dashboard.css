@@ -135,3 +135,15 @@
     box-shadow: inset 0 0 20px rgba(149, 196, 233, 0.8), 0 0 5px rgba(229, 233, 236, 0.4);
     width: 170px;
 }
+
+
+
+.fvalue {
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.flabel {
+    color: #bdf0d7;
+    margin-bottom: 10px;
+}

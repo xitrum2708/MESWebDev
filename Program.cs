@@ -76,6 +76,7 @@ builder.Services.AddScoped<IUVASSY_PPRODUCT_HISTORY, UVASSY_PPRODUCT_HISTORY>();
 builder.Services.AddScoped<IProdPlanService, ProdPlanService>();
 builder.Services.AddScoped<ISMTService, SMTService>();
 builder.Services.AddScoped<IDashboard, Dashboard>();
+builder.Services.AddScoped<IPEService, PEService>();
 
 // Logging is already configured in ASP.NET Core by default, but you can customize it
 builder.Services.AddLogging(logging =>

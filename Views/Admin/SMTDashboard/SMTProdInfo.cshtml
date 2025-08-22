@@ -1,0 +1,473 @@
+﻿@* @using MESWebDev.Models.UVASSY
+@using MESWebDev.Models.VM
+@model List<UVAssyAllOutputResult> *@
+@model DashboardViewModel;
+@using System.Text.Json;
+@using System.Data;
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+}
+@section ContentHeader {
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <ol class="breadcrumb float-sm-end d-flex justify-content-center align-content-center" style="margin-bottom:0px !important">
+                    <li class="breadcrumb-item text-black fw-bold">HOME</li>
+                    <li class="breadcrumb-item active fw-bold" aria-current="page">SMT DASHBOARD</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+}
+<div class="app-content">
+    <div class="container-fluid p-0 px-5">
+        <!-- HEADER -->
+        <div class="row text-center">
+            <div class="col-md-3 d-flex align-items-center justify-content-center">
+                <!-- <h4>Info</h4> -->
+            </div>
+            <div class="col-md-6">
+                <div class="iqc-shape">SMT PRODUCTION INFORMATION</div>
+            </div>
+            <div class="col-md-3 d-flex align-items-center justify-content-center">
+                <h4 id="clock"></h4>
+            </div>
+        </div>
+        <!-- SUMARY -->
+        <div class="row mt-3">
+            @if(Model.detail_data != null && Model.detail_data.Rows.Count > 0)
+            {
+                <!-- LEFT SIDE  -->
+                <div class="col-7 d-flex flex-column">
+                    <!-- COMMON INFO -->
+                    <div class="row">
+                        <div class="col-3">
+                            <div class="row row-col-2 d-flex justify-content-center align-items-center">
+                                <div class="col detail py-3 border border-2 border-info d-flex flex-column justify-content-center align-items-center">
+                                    <font class="flabel">Date</font>
+                                    <font class="fvalue">@DateTime.Now.ToString("yyyy/MM/dd")</font>
+                                </div>
+                                <div class="col detail py-3 border border-2 border-info d-flex flex-column justify-content-center align-items-center">
+                                    <font class="flabel">Line No</font>
+                                    <font class="fvalue" id="line">@Model.line</font>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-7">
+                            <div class="row row-col-4 d-flex justify-content-center align-items-center ms-2">
+                                <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
+                                    <font class="flabel">Model</font>
+                                    <font class="fvalue">@Model.model</font>
+                                </div>
+                                <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
+                                    <font class="flabel">Lot No</font>
+                                    <select class="sl_lot" style="font-size: 9px;" asp-items="@Model.lotList">
+                                    </select>
+                                    <!-- <font class="fvalue">01234883</font> -->
+                                </div>
+                                <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
+                                    <font class="flabel">Lot Size</font>
+                                    <font class="fvalue">@Model.lot_size</font>
+                                </div>
+                                <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
+                                    <font class="flabel">Balance</font>
+                                    <font class="fvalue">@Model.balance</font>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="col detail py-3 border border-2 border-light d-flex flex-column justify-content-center align-items-center">
+                                <font class="flabel">Target/h</font>
+                                <font class="fvalue">@Model.target1H</font>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- TABLE DETAIL -->
+                    <div class="row mt-5 me-2">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        @foreach (DataColumn column in Model.detail_data.Columns)
+                                        {
+                                            <th>@column.Caption</th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (DataRow row in Model.detail_data.Rows)
+                                    {
+                                        <tr>
+                                            @foreach (var item in row.ItemArray)
+                                            {
+                                                <td>@item</td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>                        
+
+                    </div>
+
+                    <!-- LOST TIME ANALYSIS -->
+                    <div class="row mt-5">
+                        <div class="col-5 d-flex flex-column">
+                            <div class="row">
+                                <div class="col-6 text-start">
+                                    Slottime Analysis:
+                                </div>
+                                <div class="col-6 text-end">
+                                    @Model.losttime
+                                </div>
+                            </div>
+                            <div class="row">
+                                @if (Model.detail_data2 != null && Model.detail_data2.Rows.Count > 0)
+                                {
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                @foreach (DataColumn column in Model.detail_data2.Columns)
+                                                {
+                                                    <th>@column.Caption</th>
+                                                }
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (DataRow row in Model.detail_data2.Rows)
+                                            {
+                                                <tr>
+                                                    @foreach (var item in row.ItemArray)
+                                                    {
+                                                        <td>@item</td>
+                                                    }
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+
+                            </div>
+
+                        </div>
+                        <div class="col-7">
+                            <!-- <div class="row">
+                              <font class="text-start fs-6 text-light fw-bold">QUALITY ANOMANY OUTPUT</font>
+                              <hr />
+                            </div> -->
+                            <div style="padding: 0px 17px;">
+                                <canvas class="m-0 p-0" height="200" width="200" id="myPieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT SIDE -->
+                <div class="col-5 bg-light">
+                    <div>
+                        <canvas id="chart_area" style="height: calc(100vh - 280px)"></canvas>
+                    </div>
+                </div>
+            }
+            else
+            {
+               <div class="m-5">
+                   <h3 class="text-error"> No Data </h3>
+               </div>
+                
+            }
+
+        </div>
+    </div>
+</div>
+<!-- Loading Overlay -->
+<div id="loadingOverlay"
+     class="position-fixed top-0 start-0 w-100 h-100 d-none d-flex align-items-center justify-content-center"
+     style="background: rgba(255,255,255,0.7); z-index: 9999;">
+    <div class="spinner-border text-success fw-bold" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="~/css/dashboard.css?@DateTime.Now.Ticks" rel="stylesheet" />
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+    <script>
+
+        //--------- CHANGE COMMBO BOX --------------
+
+          $('.sl_lot').on('change',function() {
+            var lot = $(this).val();
+            var line = $('#line').text().trim();
+            if (line) {
+                // Show overlay
+                document.getElementById("loadingOverlay").classList.remove("d-none");
+
+                // Redirect after short delay to let overlay render
+                setTimeout(function () {
+                    window.location.href = '@Url.Action("SMTProdInfo", "Admin")?line=' + line + '&lot=' + lot;
+                }, 200); // 200ms is enough
+            }
+          });
+
+        //--------------------->> TABLE <<-------------------------------
+            $(document).ready(function () {
+            $('table thead th').each(function (index) {
+                $(this).css({
+                    'background-color': '#00c0ff',
+                    'padding': '10px 0px'
+                });
+                $(this).addClass('p-0 mx-2 py-1 fw-bold text-center');
+                $(this).css({'font-size':'13px'});
+
+            });
+
+            $('table tbody tr').each(function (index) {
+            if ((index + 1) % 2 === 0) {
+                $(this).find('td').addClass('bg-primary text-center text-white py-1');
+                $(this).find('td').css({'font-size':'12px'});
+
+            } else {
+                $(this).find('td').removeClass('bg-primary');// Clear any inline styles
+                $(this).find('td').addClass('text-white text-center py-1')
+                $(this).find('td').css({'background-color':'#1c2b88', 'font-size':'12px'})
+                // $(this).find('td').removeClass('bg-primary text-white');
+            }
+            });
+        });
+          function updateClock() {
+            const now = new Date();
+
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const minute = String(now.getMinutes()).padStart(2, '0');
+            const second = String(now.getSeconds()).padStart(2, '0');
+
+            const formatted = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+
+            document.getElementById('clock').textContent = formatted;
+          }
+
+          // Update immediately and every second
+          updateClock();
+          setInterval(updateClock, 1000);
+
+
+
+        //--------------------->> PIE CHART <<------------------------------
+
+        const pie_data = @Html.Raw(Json.Serialize(Model.chart_data));
+        if(pie_data && pie_data.length > 0) {
+            const pie_labels = pie_data.map(item => item.label);
+            const pie_values = pie_data.map(item => item.value);
+            const ctx2 = document.getElementById('myPieChart').getContext('2d');
+
+            new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: pie_labels,
+                    datasets: [{
+                        label: 'Colors',
+                        data: pie_values,
+                        backgroundColor: [
+                          '#28a745', // green
+                          '#dc3545', // red
+                          '#ffc107', // yellow
+                          '#0dcaf0', // cyan
+                          '#6f42c1', // purple
+                          '#fd7e14', // orange
+                          '#20c997', // teal
+                          '#6610f2', // indigo
+                          '#198754', // dark green
+                          '#e83e8c', // pink
+                          '#17a2b8', // info blue
+                          '#343a40', // dark gray
+                          '#adb5bd', // light gray
+                          '#ff6384', // soft red
+                          '#36a2eb', // soft blue
+                          '#ff9f40', // soft orange
+                          '#4bc0c0', // turquoise
+                          '#9966ff', // violet
+                          '#c9cbcf', // light silver
+                          '#f94144', // coral red
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+
+                            labels:{
+                                boxWidth: 40,
+                                padding: 5,
+                                color: '#ffffff',
+                                font:{
+                                    size:8
+                                }
+                            },
+
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.chart.data.datasets[0].data
+                                        .reduce((a, b) => a + b, 0);
+                                    const percent = ((value / total) * 100).toFixed(1);
+                                    return `${context.label}: ${value} (${percent}%)`;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            formatter: (value, context) => {
+                                const dataArr = context.chart.data.datasets[0].data;
+                                const sum = dataArr.reduce((a, b) => a + b, 0);
+                                const percentage = (value * 100 / sum).toFixed(0) + "%";
+                                return percentage;
+                            },
+                            color: '#fff',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }}
+                       
+                }
+                 ,
+                plugins: [ChartDataLabels]
+            });
+           
+        } 
+       
+
+        //--------------------->> BAR LINE CHART <<------------------------------
+
+          //      const chart_data = @Html.Raw(Json.Serialize(Model.line_chart));
+          // const labels = chart_data.map(item => item.label);
+          // const values = chart_data.map(item => item.value);
+
+        const bar_line = @Html.Raw(Json.Serialize(Model.bar_line_chart));
+        if( bar_line && bar_line.length > 0) {
+            const labels = bar_line.map(item => item.label);
+        const target = bar_line.map(item => item.value1);
+        const output = bar_line.map(item => item.value2);
+        const rate = bar_line.map(item => item.rate);
+        const ctx = document.getElementById('chart_area').getContext('2d');
+        const chart = new Chart(ctx,
+        {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Target',
+                        type:'bar',
+                        data: target,
+                        backgroundColor: 'rgba(71, 211, 89, 0.7)',
+                        datalabels: {
+                            color: 'green',
+                            font: {
+                                weight: 'bold'
+                            },
+                        formatter: Math.round
+                    }}
+                    ,
+                    {
+                        label: 'Output',
+                        type:'bar',
+                        data: output,
+                        backgroundColor: 'rgba(244,177,140,0.7)',
+                        datalabels: {
+                            color: 'red',
+                            font: {
+                                weight: 'bold'
+                            },
+                            formatter: Math.round
+                        },
+
+                    },
+                    {
+                        label: 'Achieve Rate',
+                        type: 'line',
+                        tension: 0.4,
+                        data: rate,
+                        backgroundColor: 'rgba(255, 206, 86, 0.5)',
+                        borderColor: 'rgba(255, 206, 86, 1)',
+                        fill: false,
+                        yAxisID: 'y2'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Target/Output'
+                        }
+                    },
+                    y2: {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Acheive Rate'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                            },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    }
+                },
+
+            plugins: {
+                datalabels: {
+                display: true,
+                color: 'black',
+                anchor: 'end',
+                align: 'top',
+                    formatter: function(value, context) {
+                        if(context.dataset.type === 'bar'){
+                            return typeof value === 'number' ? value.toLocaleString() : value;
+                        } else {
+                            return value.toFixed(2);
+                        }
+                    }
+                },
+                legend: {
+                    display: true
+                },
+                tooltip: {
+                    enabled: true
+                }
+            }
+            },
+        plugins: [ChartDataLabels]
+
+        });
+        }
+        
+    </script>
+}

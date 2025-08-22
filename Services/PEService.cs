@@ -1,0 +1,165 @@
+﻿using AutoMapper;
+using ExcelDataReader;
+using MESWebDev.Common;
+using MESWebDev.Data;
+using MESWebDev.Models.COMMON;
+using MESWebDev.Models.PE;
+using System.Data;
+
+namespace MESWebDev.Services
+{
+    public class PEService : IPEService
+    {
+        private readonly AppDbContext _con;
+        private readonly IMapper _mapper;
+        private readonly Procedure _proc;
+        private readonly IHttpContextAccessor _hca;
+        public PEService(AppDbContext con, IMapper mapper, IHttpContextAccessor hca)
+        {
+            _con = con;
+            _mapper = mapper;
+            _proc = new Procedure(_con);
+            _hca = hca;
+        }
+        public async Task<DataTable> GetManpower(Dictionary<string, object> dic)
+        {
+            DataTable table = new DataTable();
+            table = await _proc.Proc_GetDatatable("PE_GetManpower", dic);
+            return table;
+        }
+        public async Task<PEViewModel> UploadManpower(IFormFile ff)
+        {
+            PEViewModel pev = new();
+            List<ManpowerModel> manpowerList = new List<ManpowerModel>();
+            string file_name = $"{ff.FileName}_{DateTime.Now:yyyyMMddHHmmss}";  
+            try
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await ff.CopyToAsync(stream);
+
+                    // get master upload file information
+                    List<UploadFileMaster> ufm = _con.Master_UploadFile_mst.Where(i => i.file_name.Contains("manpower")).ToList();
+
+                    // build dictionary: db_col_name -> col_index
+                    Dictionary<string,int> colMap = ufm.ToDictionary(i=>i.db_col_name,i=> i.col_index);
+
+                    int header_row = ufm.FirstOrDefault()?.header_row ?? 0;
+                    int has_header = 0;                    
+
+                    //read excel data 
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        while (reader.Read())
+                        {
+                            has_header++;
+                            if (has_header > header_row)
+                            {
+                                DataTable dt = new DataTable();
+                                string[]? headers = null;
+                                DateTime updated_dt = DateTime.Now;
+                                string model = reader.GetValue(colMap.GetValueOrDefault("u_model"))?.ToString() ?? string.Empty;
+                                string company = reader.GetValue(colMap.GetValueOrDefault("company"))?.ToString() ?? string.Empty;
+                                try
+                                {
+                                    updated_dt = Convert.ToDateTime(reader.GetValue(colMap.GetValueOrDefault("updated_dt")));
+                                }
+                                catch (Exception ex)
+                                {
+                                    pev.error_msg = $"Uploaded date is wrong format at row: {has_header.ToString()}";
+                                    return pev;
+                                }
+                                if (string.IsNullOrEmpty(model) || string.IsNullOrEmpty(company))
+                                {
+                                    pev.error_msg = $"Model or Company is empty at row: {has_header.ToString()}";
+                                    return pev;
+                                }
+
+                                var check = _con.PE_Manpower_tbl.Where(i => i.u_model == model && i.company == company && i.updated_dt == updated_dt);
+                                if (check.Any())
+                                {
+                                    _con.PE_Manpower_tbl.RemoveRange(check);
+                                    await _con.SaveChangesAsync();
+                                }
+                                ManpowerModel mm = new ManpowerModel()
+                                {
+                                    company = company
+                                    ,
+                                    u_model = model
+                                    ,
+                                    b_model = reader.GetValue(colMap.GetValueOrDefault("b_model"))?.ToString() ?? string.Empty
+                                    ,
+                                    smt_headcount = reader.GetValue(colMap.GetValueOrDefault("smt_headcount")) != null ?
+                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("smt_headcount"))) : 0
+                                    ,
+                                    insert_headcount = reader.GetValue(colMap.GetValueOrDefault("insert_headcount")) != null ?
+                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("insert_headcount"))) : 0
+                                    ,
+                                    scl_headcount = reader.GetValue(colMap.GetValueOrDefault("scl_headcount")) != null ?
+                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("scl_headcount"))) : 0
+                                    ,
+                                    assy_headcount = reader.GetValue(colMap.GetValueOrDefault("assy_headcount")) != null ?
+                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("assy_headcount"))) : 0
+                                    ,
+                                    smt_cost = reader.GetValue(colMap.GetValueOrDefault("smt_cost")) != null ?
+                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("smt_cost"))) : 0
+                                    ,
+                                    insert_cost = reader.GetValue(colMap.GetValueOrDefault("insert_cost")) != null ?
+                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("insert_cost"))) : 0
+                                    ,
+                                    scl_cost = reader.GetValue(colMap.GetValueOrDefault("scl_cost")) != null ?
+                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("scl_cost"))) : 0
+                                    ,
+                                    assy_cost = reader.GetValue(colMap.GetValueOrDefault("assy_cost")) != null ?
+                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("assy_cost"))) : 0
+                                    ,
+                                    updated_dt = updated_dt
+                                    ,
+                                    upload_file = file_name
+                                    ,
+                                    note = string.Empty
+                                    ,
+                                    upload_by = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty
+                                    ,
+                                    upload_dt = DateTime.Now
+                                };
+                                manpowerList.Add(mm);
+                                
+
+  
+
+                            }
+                        }
+                                             
+                    }
+
+                    if (manpowerList.Count > 0)
+                    {
+                        // insert to database
+                        await _con.PE_Manpower_tbl.AddRangeAsync(manpowerList);
+                        await _con.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        pev.error_msg = "No data found in the uploaded file.";
+                        return pev;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                pev.error_msg = ex.Message;
+            }
+
+           
+            if(manpowerList.Count > 0)
+            {
+                pev.data = await GetManpower(new Dictionary<string, object>
+                {
+                    { "@filename", file_name }
+                });
+            }
+            return pev;
+        }
+    }
+}

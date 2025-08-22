@@ -3,6 +3,7 @@ using MESWebDev.Models;
 using MESWebDev.Repositories;
 using MESWebDev.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Data;
 
 namespace MESWebDev.Controllers
@@ -31,14 +32,33 @@ namespace MESWebDev.Controllers
         //-------------------->> IQC DASHBOARD <<--------------------
         public async Task<IActionResult> IQCDashboard()
         {
-            DashboardViewModel model = await GetIQGDashboard();
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { "@start_dt", DateTime.Now.AddMonths(-1).Date },
+                { "@end_dt", DateTime.Now.Date }
+            };
+            DashboardViewModel model = await GetIQGDashboard(parameters);
+            model.StartDate = DateTime.Now.AddMonths(-1).Date;
+            model.EndDate = DateTime.Now.Date;
             return View("IQCDashboard/IQCDashboard", model);
             //return View("SMTDashboard/SMTDashboard");
         }
-        public async Task<DashboardViewModel> GetIQGDashboard()
+
+        [HttpPost]
+        public async Task<IActionResult> IQCDashboardSearch(DashboardViewModel model)
+        {
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { "@start_dt", model.StartDate },
+                { "@end_dt", model.EndDate }
+            };
+            model = await GetIQGDashboard(parameters);
+            return View("IQCDashboard/IQCDashboard", model);
+        }
+        public async Task<DashboardViewModel> GetIQGDashboard(Dictionary<string, object> parameters)
         {
             var model = new DashboardViewModel();
-            DataSet ds = await _dashboardService.GetIQCDashboard(new());
+            DataSet ds = await _dashboardService.GetIQCDashboard(parameters);
             if(ds!= null&& ds.Tables.Count > 0)
             {
                 model.sum_data = ds.Tables[0];
@@ -107,5 +127,75 @@ namespace MESWebDev.Controllers
             }
             return model;
         }
+
+
+        //-------------------->> SMT PRODUCTION INFO <<--------------------
+        [HttpGet]
+        public async Task<IActionResult> SMTLines()
+        {
+            DashboardViewModel model = new();
+            model.detail_data = await _dashboardService.GetSMTLines();
+            return View("SMTDashboard/SMTLines", model);
+        }
+        public async Task<IActionResult> SMTProdInfo(string line, string lot = "")
+        {
+            DashboardViewModel model = new();
+
+            Dictionary<string, object> parameters = new Dictionary<string, object>
+            {
+                { "@Line", line },
+                { "@LotSMT", lot }
+            };
+
+            DataSet ds = await _dashboardService.GetSMTProdInfo(parameters);
+            if (ds != null && ds.Tables.Count > 3 && ds.Tables[0].Rows.Count >0)
+            {
+                //table 0: Summary data
+                model.line = ds.Tables[0].Rows[0][0].ToString();
+                model.model = ds.Tables[0].Rows[0][1].ToString();
+                model.lot_size = Convert.ToInt32(ds.Tables[0].Rows[0][3]);
+                model.balance = Convert.ToInt32(ds.Tables[0].Rows[0][4]);
+                model.target1H = Convert.ToDecimal(ds.Tables[0].Rows[0][5]);
+                model.losttime = Convert.ToDecimal(ds.Tables[0].Rows[0][6]);
+                //table 1: Lot list
+                List<SelectListItem> lotList = ds.Tables[1].AsEnumerable()
+                    .Select(row => new SelectListItem
+                    {
+                        Value = row.Field<string>("LotSMT"),
+                        Text = row.Field<string>("LotSMT")
+                    }).ToList();
+                model.lotList = lotList;
+
+                //table 2: Detail data
+                model.detail_data = ds.Tables[2];
+
+                //table 3: Detail data2
+                model.detail_data2 = ds.Tables[3];
+
+                model.bar_line_chart = ds.Tables[2].AsEnumerable()
+                 .Select(row => new ChartItem3
+                 {
+                     Label = row.Field<string>(0) ?? "",
+                     Value1 = row.Field<int?>(4) ?? 0,
+                     Value2 = row.Field<int?>(5) ?? 0,
+                     Rate = (row.Field<int?>(4) ?? 0) == 0
+                         ? 0
+                         : Math.Round((row.Field<int>(5) * 100.0) / row.Field<int>(4), 2)
+                 }).ToList();
+
+
+                //Chart data for pie chart
+                model.chart_data = ds.Tables[3].AsEnumerable()
+                    .Select(row => new ChartItem
+                    {
+                        Label = row.Field<string>(0),
+                        Value = row.Field<int>(1)
+                    }).ToList();                
+            }
+            return View("SMTDashboard/SMTProdInfo", model);
+        }
+
+        
+       
     }
 }
