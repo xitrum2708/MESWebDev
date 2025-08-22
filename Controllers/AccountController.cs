@@ -20,7 +20,7 @@ namespace MESWebDev.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login(string languageCode = "vi") // Mặc định là 'vi'
+        public IActionResult Login(string languageCode = "en") // Mặc định là 'vi'
         {
             // Lấy danh sách ngôn ngữ từ database
             var languages = _context.Languages.Where(l => l.IsActive).ToList();
@@ -119,7 +119,7 @@ namespace MESWebDev.Controllers
         // --- GET USER MENU TREE ---
         private async Task<List<MenuViewModel>> GetUserMenuTree(int userId)
         {
-            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
+            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "en";
             var languageId = await _context.Languages
                 .Where(l => l.Code == languageCode)
                 .Select(l => l.LanguageId)

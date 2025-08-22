@@ -2,7 +2,7 @@
 @inject ITranslationService T
 @model dynamic
 @{
-    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "en";
     ViewData["Title"] = T.GetTranslation("Login", languageCode);
     Layout = "~/Views/Shared/_LoginLayout.cshtml";
 }
