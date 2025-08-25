@@ -47,14 +47,16 @@ namespace MESWebDev.Controllers
         [HttpPost]
         public async Task<IActionResult> IQCDashboardSearch(DashboardViewModel model)
         {
+            DateTime start_dt = model.StartDate ?? DateTime.Now.AddMonths(-1).Date;
+            DateTime end_dt = model.EndDate ?? DateTime.Now.Date;
             Dictionary<string, object> parameters = new Dictionary<string, object>
             {
-                { "@start_dt", model.StartDate },
-                { "@end_dt", model.EndDate }
+                { "@start_dt", start_dt },
+                { "@end_dt", end_dt }
             };
             model = await GetIQGDashboard(parameters);
-            model.StartDate = model.StartDate ?? DateTime.Now.AddMonths(-1).Date;
-            model.EndDate = model.EndDate ?? DateTime.Now.Date;
+            model.StartDate = start_dt;
+            model.EndDate = end_dt;
             return View("IQCDashboard/IQCDashboard", model);
         }
         public async Task<DashboardViewModel> GetIQGDashboard(Dictionary<string, object> parameters)
