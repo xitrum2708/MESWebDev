@@ -220,18 +220,23 @@
 
           $('.sl_lot').on('change',function() {
             var lot = $(this).val();
-            //alert(lot);
+            reloagPage(lot);
+          });
+
+          function reloagPage(lot){
+               //alert(lot);
             var line = $('#line').text().trim();
             if (line) {
                 // Show overlay
                 document.getElementById("loadingOverlay").classList.remove("d-none");
-
+                
                 // Redirect after short delay to let overlay render
                 setTimeout(function () {
                     window.location.href = '@Url.Action("SMTProdInfo", "Admin")?line=' + line + '&lot=' + lot;
                 }, 200); // 200ms is enough
             }
-          });
+
+          }
 
         //--------------------->> TABLE <<-------------------------------
             $(document).ready(function () {
@@ -257,11 +262,17 @@
                 // $(this).find('td').removeClass('bg-primary text-white');
             }
 
-                 // ✅ Ensure first column is left-aligned
-                $(this).find('td:first-child')
-                   .removeClass('text-center')  // remove center
-                   .addClass('p-1 text-start');
-                });
+            // ✅ Ensure first column is left-aligned
+            $(this).find('td:first-child')
+                .removeClass('text-center')  // remove center
+                .addClass('p-1 text-start');
+            });
+
+
+            setInterval(function(){
+                var lot = $('.sl_lot').val();
+                reloagPage(lot);
+            },15000);
             });
           function updateClock() {
             const now = new Date();
