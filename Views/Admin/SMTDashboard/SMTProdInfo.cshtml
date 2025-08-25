@@ -27,7 +27,10 @@
     <div class="container-fluid p-0 px-5">
         <!-- HEADER -->
         <div class="row text-center">
-            <div class="col-md-3 d-flex align-items-center justify-content-center">
+            <div class="col-md-3 d-flex justify-content-start align-items-center">
+                <button onclick="history.back()" class="btn btn-sm btn-primary">
+                    <i class="bi bi-arrow-left-square"></i>
+                    Back</button>
                 <!-- <h4>Info</h4> -->
             </div>
             <div class="col-md-6">
@@ -268,11 +271,10 @@
                 .addClass('p-1 text-start');
             });
 
-
             setInterval(function(){
                 var lot = $('.sl_lot').val();
                 reloagPage(lot);
-            },15000);
+            },30000);
             });
           function updateClock() {
             const now = new Date();
