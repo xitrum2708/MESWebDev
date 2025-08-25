@@ -65,7 +65,7 @@
                                 </div>
                                 <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
                                     <font class="flabel">Lot No</font>
-                                    <select class="sl_lot" style="font-size: 9px;" asp-items="@Model.lotList">
+                                    <select class="sl_lot" style="font-size: 9px;" asp-items="@Model.lotList" asp-for="@Model.lot">
                                     </select>
                                     <!-- <font class="fvalue">01234883</font> -->
                                 </div>
@@ -220,6 +220,7 @@
 
           $('.sl_lot').on('change',function() {
             var lot = $(this).val();
+            //alert(lot);
             var line = $('#line').text().trim();
             if (line) {
                 // Show overlay
