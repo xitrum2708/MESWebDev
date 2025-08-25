@@ -71,11 +71,11 @@
                                 </div>
                                 <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
                                     <font class="flabel">Lot Size</font>
-                                    <font class="fvalue">@Model.lot_size</font>
+                                    <font class="fvalue">@Model.lot_size.ToString("#,##0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</font>
                                 </div>
                                 <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
                                     <font class="flabel">Balance</font>
-                                    <font class="fvalue">@Model.balance</font>
+                                    <font class="fvalue">@Model.balance.ToString("#,##0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</font>
                                 </div>
                             </div>
                         </div>
@@ -103,7 +103,22 @@
                                         <tr>
                                             @foreach (var item in row.ItemArray)
                                             {
-                                                <td>@item</td>
+                                                if (item is int intValue)
+                                                {
+                                                <td>@intValue.ToString("#,##0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</td>
+                                                }
+                                                else if (item is long longValue)
+                                                {
+                                                <td>@longValue.ToString("#,##0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</td>
+                                                }
+                                                else if (item is decimal decValue)
+                                                {
+                                                <td>@decValue.ToString("#,##0.##", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</td> <!-- allow decimals -->
+                                                }
+                                                else
+                                                {
+                                                    <td>@item</td>
+                                                }
                                             }
                                         </tr>
                                     }
@@ -240,8 +255,13 @@
                 $(this).find('td').css({'background-color':'#1c2b88', 'font-size':'12px'})
                 // $(this).find('td').removeClass('bg-primary text-white');
             }
+
+                 // ✅ Ensure first column is left-aligned
+                $(this).find('td:first-child')
+                   .removeClass('text-center')  // remove center
+                   .addClass('p-1 text-start');
+                });
             });
-        });
           function updateClock() {
             const now = new Date();
 

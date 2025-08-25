@@ -235,7 +235,8 @@
 
         //-------------------->> CHART <<-----------------------------
         const chartData = @Html.Raw(Json.Serialize(Model.chart_data));
-        const labels = chartData.map(item => item.label);
+        if(chartData && chartData.length >0){
+                    const labels = chartData.map(item => item.label);
         const values = chartData.map(item => item.value);
         const total = values.reduce((sum, val) => sum + val, 0);
 
@@ -295,10 +296,12 @@
                             font:{
                                 size:8
                             }
-                        } 
+                        }
                     }
                 }
             }
         });
+        }
+
     </script>
 }
