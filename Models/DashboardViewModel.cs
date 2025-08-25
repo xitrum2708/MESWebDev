@@ -17,6 +17,7 @@ namespace MESWebDev.Models
 
         public string? line { get; set; } = "";
         public string? model { get; set; } = "";
+        public string? lot { get; set; } = "";
         public List<SelectListItem>? lotList { get; set; }
         public int lot_size { get; set; } = 0;
         public int balance { get; set; } = 0;

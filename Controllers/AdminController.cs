@@ -157,6 +157,7 @@ namespace MESWebDev.Controllers
                 //table 0: Summary data
                 model.line = ds.Tables[0].Rows[0][0].ToString();
                 model.model = ds.Tables[0].Rows[0][1].ToString();
+                model.lot = ds.Tables[0].Rows[0][2].ToString();
                 model.lot_size = Convert.ToInt32(ds.Tables[0].Rows[0][3]);
                 model.balance = Convert.ToInt32(ds.Tables[0].Rows[0][4]);
                 model.target1H = Convert.ToDecimal(ds.Tables[0].Rows[0][5]);
