@@ -1,9 +1,13 @@
-﻿using MESWebDev.Common;
+﻿using DocumentFormat.OpenXml.Vml;
+using ExcelDataReader.Log;
+using MESWebDev.Common;
 using MESWebDev.Models;
 using MESWebDev.Repositories;
 using MESWebDev.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using System.Data;
 
 namespace MESWebDev.Controllers
@@ -141,7 +145,66 @@ namespace MESWebDev.Controllers
             model.detail_data = await _dashboardService.GetSMTLines();
             return View("SMTDashboard/SMTLines", model);
         }
+        [HttpGet]
         public async Task<IActionResult> SMTProdInfo(string line, string lot = "")
+        {
+            DashboardViewModel model = new();
+            model = await GetSMTProdInfo(line, lot);
+            return View("SMTDashboard/SMTProdInfo", model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SMTProdInfoSearch(string line, string lot = "")
+        {
+            DashboardViewModel model = new();
+            model = await GetSMTProdInfo(line, lot);
+
+            // Render partial view (table part) into HTML string
+            string html = await this.RenderViewAsync("SMTDashboard/_SMTProdInfoResult", model, true);
+
+            return Json(new
+            {
+                html = html,
+                charts = new
+                {
+                    bar_line_chart = model.bar_line_chart,
+                    chart_data = model.chart_data
+                }
+            });
+            //return PartialView("SMTDashboard/_SMTProdInfoResult", model);
+        }
+
+        public async Task<string> RenderViewAsync<TModel>(string viewName, TModel model, bool partial = false)
+        {
+            if (string.IsNullOrEmpty(viewName))
+                viewName = ControllerContext.ActionDescriptor.ActionName;
+
+            ViewData.Model = model;
+
+            using (var writer = new StringWriter())
+            {
+                var viewEngine = HttpContext.RequestServices.GetService(typeof(ICompositeViewEngine)) as ICompositeViewEngine;
+                var viewResult = viewEngine.FindView(ControllerContext, viewName, !partial);
+
+                if (viewResult.Success == false)
+                    throw new FileNotFoundException($"View {viewName} not found.");
+
+                var viewContext = new ViewContext(
+                    ControllerContext,
+                    viewResult.View,
+                    ViewData,
+                    TempData,
+                    writer,
+                    new HtmlHelperOptions()
+                );
+
+                await viewResult.View.RenderAsync(viewContext);
+                return writer.GetStringBuilder().ToString();
+            }
+        }
+
+
+        public async Task<DashboardViewModel> GetSMTProdInfo(string line, string lot = "")
         {
             DashboardViewModel model = new();
 
@@ -152,7 +215,7 @@ namespace MESWebDev.Controllers
             };
 
             DataSet ds = await _dashboardService.GetSMTProdInfo(parameters);
-            if (ds != null && ds.Tables.Count > 3 && ds.Tables[0].Rows.Count >0)
+            if (ds != null && ds.Tables.Count > 3 && ds.Tables[0].Rows.Count > 0)
             {
                 //table 0: Summary data
                 model.line = ds.Tables[0].Rows[0][0].ToString();
@@ -177,6 +240,11 @@ namespace MESWebDev.Controllers
                 //table 3: Detail data2
                 model.detail_data2 = ds.Tables[3];
 
+
+
+                // this will save to http session
+                
+
                 model.bar_line_chart = ds.Tables[2].AsEnumerable()
                  .Select(row => new ChartItem3
                  {
@@ -195,12 +263,12 @@ namespace MESWebDev.Controllers
                     {
                         Label = row.Field<string>(0),
                         Value = row.Field<int>(1)
-                    }).ToList();                
+                    }).ToList();
             }
-            return View("SMTDashboard/SMTProdInfo", model);
+            return model;
         }
 
-        
-       
+
+
     }
 }

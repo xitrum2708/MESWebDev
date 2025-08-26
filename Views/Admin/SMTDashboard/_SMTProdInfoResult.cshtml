@@ -1,0 +1,166 @@
+﻿@model DashboardViewModel;
+@using System.Text.Json;
+@using System.Data;
+
+@if (Model.detail_data != null && Model.detail_data.Rows.Count > 0)
+{
+    <!-- LEFT SIDE  -->
+    <div class="col-7 d-flex flex-column">
+        <!-- COMMON INFO -->
+        <div class="row">
+            <div class="col-3">
+                <div class="row row-col-2 d-flex justify-content-center align-items-center">
+                    <div class="col detail py-3 border border-2 border-info d-flex flex-column justify-content-center align-items-center">
+                        <font class="flabel">Date</font>
+                        <font class="fvalue">@DateTime.Now.ToString("yyyy/MM/dd")</font>
+                    </div>
+                    <div class="col detail py-3 border border-2 border-info d-flex flex-column justify-content-center align-items-center">
+                        <font class="flabel">Line No</font>
+                        <font class="fvalue" id="line">@Model.line</font>
+                    </div>
+                </div>
+            </div>
+            <div class="col-7">
+                <div class="row row-col-4 d-flex justify-content-center align-items-center ms-2">
+                    <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
+                        <font class="flabel">Model</font>
+                        <font class="fvalue">@Model.model</font>
+                    </div>
+                    <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
+                        <font class="flabel">Lot No</font>
+                        <select class="sl_lot" style="font-size: 9px;" asp-items="@Model.lotList" asp-for="@Model.lot">
+                        </select>
+                        <!-- <font class="fvalue">01234883</font> -->
+                    </div>
+                    <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
+                        <font class="flabel">Lot Size</font>
+                        <font class="fvalue">@Model.lot_size.ToString("#,##0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</font>
+                    </div>
+                    <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
+                        <font class="flabel">Balance</font>
+                        <font class="fvalue">@Model.balance.ToString("#,##0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</font>
+                    </div>
+                </div>
+            </div>
+            <div class="col-2">
+                <div class="col detail py-3 border border-2 border-light d-flex flex-column justify-content-center align-items-center">
+                    <font class="flabel">Target/h</font>
+                    <font class="fvalue">@Model.target1H</font>
+                </div>
+            </div>
+        </div>
+        <!-- TABLE DETAIL -->
+        <div class="row mt-5 me-2">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        @foreach (DataColumn column in Model.detail_data.Columns)
+                        {
+                            <th>@column.Caption</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (DataRow row in Model.detail_data.Rows)
+                    {
+                        <tr>
+                            @foreach (var item in row.ItemArray)
+                            {
+                                if (item is int intValue)
+                                {
+                                    <td>@intValue.ToString("#,##0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</td>
+                                }
+                                else if (item is long longValue)
+                                {
+                                    <td>@longValue.ToString("#,##0", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</td>
+                                }
+                                else if (item is decimal decValue)
+                                {
+                                    <td>@decValue.ToString("#,##0.##", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</td> <!-- allow decimals -->
+                                }
+                                else
+                                {
+                                    <td>@item</td>
+                                }
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </div>
+
+        <!-- LOST TIME ANALYSIS -->
+        <div class="row mt-2">
+            <div class="col-5 d-flex flex-column">
+                <div class="row">
+                    <div class="col-6 text-start">
+                        Slottime Analysis:
+                    </div>
+                    <div class="col-6 text-end">
+                        @Model.losttime
+                    </div>
+                </div>
+                <div class="row">
+                    @if (Model.detail_data2 != null && Model.detail_data2.Rows.Count > 0)
+                    {
+                        <table>
+                            <thead>
+                                <tr>
+                                    @foreach (DataColumn column in Model.detail_data2.Columns)
+                                    {
+                                        <th>@column.Caption</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (DataRow row in Model.detail_data2.Rows)
+                                {
+                                    <tr>
+                                        @foreach (var item in row.ItemArray)
+                                        {
+                                            <td>@item</td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+
+                </div>
+
+            </div>
+            <div class="col-7">
+                <!-- <div class="row">
+                  <font class="text-start fs-6 text-light fw-bold">QUALITY ANOMANY OUTPUT</font>
+                  <hr />
+                </div> -->
+                <div style="padding: 0px 17px;">
+                    <canvas class="m-0 p-0" height="200" width="200" id="myPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="col-5" style="background-color:rgb(0, 32, 70)">
+        <div>
+            <canvas id="chart_area" style="height: calc(100vh - 350px)"></canvas>
+        </div>
+    </div>
+}
+else
+{
+    <div class="m-5">
+        <h3 class="text-error"> No Data </h3>
+    </div>
+
+}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script>
+
+   
+</script>
