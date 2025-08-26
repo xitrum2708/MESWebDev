@@ -4,10 +4,26 @@
 @model DashboardViewModel;
 @using System.Text.Json;
 @using System.Data;
+@using System.Globalization
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
+@{
+    var culture = CultureInfo.GetCultureInfo("en-US");
+    bool IsNumeric(Type t) => t == typeof(byte) || t == typeof(sbyte) || t == typeof(short) || t == typeof(ushort)
+                           || t == typeof(int) || t == typeof(uint) || t == typeof(long) || t == typeof(ulong)
+                           || t == typeof(float) || t == typeof(double) || t == typeof(decimal);
+    string FormatCell(object v, Type t)
+    {
+        if (v == null || v is DBNull) return "";
+        if (IsNumeric(t) && v is IFormattable f) return f.ToString("#,0.##########", culture);
+        if (t == typeof(DateTime)) return ((DateTime)v).ToString("yyyy/MM/dd HH:mm:ss", culture);
+        return v.ToString();
+    }
+    string baseTd = "bg-primary text-white py-1 fs-8"; // KHÔNG có text-center
+}
+
 @section ContentHeader {
 <div class="app-content-header">
     <div class="container-fluid">
@@ -140,12 +156,26 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (DataRow row in Model.detail_data.Rows)
+                           @*  @foreach (DataRow row in Model.detail_data.Rows)
                             {
                                 <tr>
                                     @foreach (var f in row.ItemArray)
                                     {
                                         <td>@f?.ToString()</td>
+                                    }
+                                </tr>
+                            } *@
+                            @foreach (DataRow row in Model.detail_data.Rows)
+                            {
+                                <tr>
+                                    @for (int c = 0; c < Model.detail_data.Columns.Count; c++)
+                                    {
+                                        var col = Model.detail_data.Columns[c];
+                                        var v = row[c];
+                                        bool isNum = !(v is DBNull || v == null) && IsNumeric(col.DataType);
+                                        <td class="@($"{baseTd} {(isNum ? "text-end" : "text-start")}")">
+                                            @FormatCell(v, col.DataType)
+                                        </td>
                                     }
                                 </tr>
                             }
@@ -199,14 +229,21 @@
           });
 
           $('table tbody tr').each(function (index) {
+              const $tds = $(this).find('td');
             if ((index + 1) % 2 === 0) {
-              $(this).find('td').addClass('bg-primary text-center text-white py-1 fs-8');
+              //$(this).find('td').addClass('bg-primary text-center text-white py-1 fs-8');
+               $tds.removeClass('text-center')                  // quan trọng: bỏ center
+              .addClass('bg-primary text-white py-1 fs-8') // chỉ màu + style
+              .css('background-color', '');
 
             } else {
-              $(this).find('td').removeClass('bg-primary');// Clear any inline styles
-              $(this).find('td').addClass('text-white text-center py-1 fs-8')
-              $(this).find('td').css({'background-color':'#1c2b88'})
+              // $(this).find('td').removeClass('bg-primary');// Clear any inline styles
+              // $(this).find('td').addClass('text-white text-center py-1 fs-8')
+              // $(this).find('td').css({'background-color':'#1c2b88'})
               // $(this).find('td').removeClass('bg-primary text-white');
+               $tds.removeClass('bg-primary text-center')       // bỏ center
+                .addClass('text-white py-1 fs-8')
+                .css('background-color', '#1c2b88');
             }
           });
         });

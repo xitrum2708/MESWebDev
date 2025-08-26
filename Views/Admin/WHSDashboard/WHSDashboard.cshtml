@@ -4,10 +4,104 @@
 @model DashboardViewModel;
 @using System.Text.Json;
 @using System.Data;
+@using System.Globalization
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     int i = 0;
+}
+
+@{
+    var vi = CultureInfo.GetCultureInfo("en-US");
+
+    bool IsNumericType(Type t) => t == typeof(byte) || t == typeof(sbyte) || t == typeof(short) || t == typeof(ushort)
+        || t == typeof(int) || t == typeof(uint) || t == typeof(long) || t == typeof(ulong)
+        || t == typeof(float) || t == typeof(double) || t == typeof(decimal);
+
+    bool TryParseDecimal(object v, out decimal d)
+    {
+        d = 0;
+        if (v == null || v is DBNull) return false;
+        if (v is IConvertible && !(v is string)) { try { d = Convert.ToDecimal(v, vi); return true; } catch { } }
+        if (v is string s)
+        {
+            s = s.Trim();
+            if (decimal.TryParse(s, NumberStyles.Any, vi, out d)) return true;                 // 1.459 hoặc 1,459
+            if (decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out d)) return true; // 1459.25
+            // Chuẩn hoá: bỏ dấu ngăn nhóm, dùng . là decimal
+            var s2 = s.Replace(".", "").Replace(",", ".");
+            if (decimal.TryParse(s2, NumberStyles.Any, CultureInfo.InvariantCulture, out d)) return true;
+        }
+        return false;
+    }
+
+    bool TryParsePercent(object v, out decimal p)
+    {
+        p = 0;
+        if (v is string s && s.Trim().EndsWith("%"))
+        {
+            s = s.Trim().TrimEnd('%').Trim();
+            return TryParseDecimal(s, out p);
+        }
+        return false;
+    }
+
+    bool IsTimeLike(object v)
+    {
+        if (v == null || v is DBNull) return false;
+        if (v is TimeSpan || v is DateTime) return true;
+        if (v is string s)
+        {
+            s = s.Trim();
+            // Nhận dạng hh:mm hoặc hh:mm:ss (không bắt buộc hợp lệ tuyệt đối — chỉ để căn phải)
+            return System.Text.RegularExpressions.Regex.IsMatch(s, @"^\d{1,2}:\d{2}(:\d{2})?$");
+        }
+        return false;
+    }
+
+    string FormatCell(object v, Type colType)
+    {
+        if (v == null || v is DBNull) return "";
+
+        // %: giữ dấu % và phân tách nghìn phần số
+        if (TryParsePercent(v, out var pct))
+            return pct.ToString("#,0.##' %'", vi);
+
+        // số: nếu cột là numeric -> format luôn
+        if (IsNumericType(colType))
+        {
+            var dec = Convert.ToDecimal(v, vi);
+            return dec.ToString("#,0.##########", vi);
+        }
+
+        // số lưu dạng chuỗi
+        if (TryParseDecimal(v, out var num))
+            return num.ToString("#,0.##########", vi);
+
+        // thời gian/thời lượng
+        if (v is TimeSpan ts) return ts.ToString(ts.Hours > 0 ? @"h\:mm" : @"m\:ss");
+        if (v is DateTime dt) return dt.ToString("yyyy/MM/dd HH:mm:ss", vi);
+        if (IsTimeLike(v)) return v.ToString(); // "01:08", "07:45", ...
+
+        // còn lại: text
+        return v.ToString();
+    }
+
+    bool AlignRight(object v, Type colType, string colName)
+    {
+        // căn phải nếu là số, %, hoặc thời lượng/thời gian
+        if (TryParsePercent(v, out _)) return true;
+        if (IsNumericType(colType)) return true;
+        if (TryParseDecimal(v, out _)) return true;
+        if (IsTimeLike(v)) return true;
+
+        // có thể ép theo tên cột (nếu muốn)
+        // if (colName.Equals("WorkingTime", StringComparison.OrdinalIgnoreCase)) return true;
+
+        return false;
+    }
+
+    string baseTd = "text-white py-1 fs-8"; // KHÔNG thêm text-center ở đây!
 }
 @section ContentHeader {
 <div class="app-content-header">
@@ -137,12 +231,24 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach(DataRow row in Model.detail_data.Rows)
+                               @*  @foreach(DataRow row in Model.detail_data.Rows)
                                 {
                                     <tr>
                                         @foreach (var item in row.ItemArray)
                                         {
                                             <td class="text-center">@item</td>
+                                        }
+                                    </tr>
+                                } *@
+                                @foreach (DataRow row in Model.detail_data.Rows)
+                                {
+                                    <tr>
+                                        @for (int c = 0; c < Model.detail_data.Columns.Count; c++)
+                                        {
+                                            var col = Model.detail_data.Columns[c];
+                                            var val = row[c];
+                                            var cls = AlignRight(val, col.DataType, col.ColumnName) ? "text-end" : "text-start";
+                                            <td class="@($"{baseTd} {cls}")">@FormatCell(val, col.DataType)</td>
                                         }
                                     </tr>
                                 }
@@ -175,14 +281,21 @@
             });
 
             $('table tbody tr').each(function (index) {
+                  const $tds = $(this).find('td');
             if ((index + 1) % 2 === 0) {
-                $(this).find('td').addClass('bg-primary text-center text-white py-2');
-                $(this).find('td').css({'font-size':'14px'});
+                // $(this).find('td').addClass('bg-primary text-center text-white py-2');
+                // $(this).find('td').css({'font-size':'14px'});
+                 $tds.removeClass('text-center')                  // quan trọng: bỏ center
+                    .addClass('bg-primary text-white py-1 fs-8') // chỉ màu + style
+                    .css('background-color', '');
 
             } else {
-                $(this).find('td').removeClass('bg-primary');// Clear any inline styles
-                $(this).find('td').addClass('text-white text-center py-2')
-                $(this).find('td').css({'background-color':'#1c2b88', 'font-size':'14px'})
+                // $(this).find('td').removeClass('bg-primary');// Clear any inline styles
+                // $(this).find('td').addClass('text-white text-center py-2')
+                // $(this).find('td').css({'background-color':'#1c2b88', 'font-size':'14px'})
+                 $tds.removeClass('bg-primary text-center')       // bỏ center
+                .addClass('text-white py-1 fs-8')
+                .css('background-color', '#1c2b88');
                 // $(this).find('td').removeClass('bg-primary text-white');
             }
             });
