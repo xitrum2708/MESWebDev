@@ -95,7 +95,15 @@ namespace MESWebDev.Controllers
                 {
                     for (int c = 0; c < request.Rows[r].Count; c++)
                     {
-                        worksheet.Cells[r + 2, c + 1].Value = request.Rows[r][c];
+                        if (double.TryParse(request.Rows[r][c]?.ToString(), out var num))
+                        {
+                            worksheet.Cells[r + 2, c + 1].Value = num;
+                            worksheet.Cells[r + 2, c + 1].Style.Numberformat.Format = "0.0000"; // 2 decimals
+                        }
+                        else
+                        {
+                            worksheet.Cells[r + 2, c + 1].Value = request.Rows[r][c]?.ToString();
+                        }
                     }
                 }
 

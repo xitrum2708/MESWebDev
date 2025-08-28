@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using OfficeOpenXml;
 using System.Data;
 
 namespace MESWebDev.Controllers
@@ -269,6 +270,46 @@ namespace MESWebDev.Controllers
         }
 
 
+        [HttpPost]
+        public IActionResult ExportToExcel([FromBody] TableFilterRequest request)
+        {
+            // request contains the filtered rows sent from client (AJAX)
+            // Example: request.Rows is a List<string[]> of visible rows
 
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Data");
+
+                // Header
+                for (int c = 0; c < request.Headers.Count; c++)
+                {
+                    worksheet.Cells[1, c + 1].Value = request.Headers[c];
+                }
+
+                // Data
+                for (int r = 0; r < request.Rows.Count; r++)
+                {
+                    for (int c = 0; c < request.Rows[r].Count; c++)
+                    {
+                        if (double.TryParse(request.Rows[r][c]?.ToString(), out var num))
+                        {
+                            worksheet.Cells[r + 2, c + 1].Value = num;
+                            worksheet.Cells[r + 2, c + 1].Style.Numberformat.Format = "0"; // 2 decimals
+                        }
+                        else
+                        {
+                            worksheet.Cells[r + 2, c + 1].Value = request.Rows[r][c]?.ToString();
+                        }
+                    }
+                }
+
+                var stream = new MemoryStream();
+                package.SaveAs(stream);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Data.xlsx");
+            }
+        }
     }
+
+
 }
