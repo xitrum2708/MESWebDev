@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 
 namespace MESWebDev.Common
 {
@@ -165,6 +167,51 @@ namespace MESWebDev.Common
 
 
         //public void FormatExcel()
+
+        // Export to excel from Ajax Jquery
+        public class TableFilterRequest
+        {
+            public List<string> Headers { get; set; }
+            public List<List<string>> Rows { get; set; }
+        }
+
+        public async Task<byte[]> AjaxExcelExport(TableFilterRequest request, string numberFormat)
+        {
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("FilteredData");
+
+                // Header
+                for (int c = 0; c < request.Headers.Count; c++)
+                {
+                    worksheet.Cells[1, c + 1].Value = request.Headers[c];
+                }
+
+                //@decValue.ToString("#,##0.0000", System.Globalization.CultureInfo.InvariantCulture)
+                //Data 
+                for (int r = 0; r < request.Rows.Count; r++)
+                {
+                    for (int c = 0; c < request.Rows[r].Count; c++)
+                    {
+                        string value = request.Rows[r][c].ToString().Replace(",", "");
+                        // double.TryParse(value, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"), out var num)
+                        if (double.TryParse(value, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"), out var num))
+                        {
+                            worksheet.Cells[r + 2, c + 1].Value = num;
+                            worksheet.Cells[r + 2, c + 1].Style.Numberformat.Format = numberFormat; // 2 decimals
+                        }
+                        else
+                        {
+                            worksheet.Cells[r + 2, c + 1].Value = request.Rows[r][c]?.ToString();
+                        }
+                    }
+                }
+                //var stream = new MemoryStream();
+                //package.SaveAs(stream);
+                //stream.Position = 0;
+                return package.GetAsByteArray();
+            }   
+        }
     }
 }
 

@@ -6,34 +6,38 @@ namespace MESWebDev.Models.PE
     public class ManpowerModel
     {
         [Key]
-        public int id { get; set; }
-        public string company { get; set; }
-        public string u_model { get; set; }
-        public string b_model { get; set; }
+        public int Id { get; set; }
+        public string Company { get; set; }
+        public string UModel { get; set; }
+        public string BModel { get; set; }
 
         
-        public int smt_headcount { get; set; } // SMT headcount
-        public int insert_headcount { get; set; } // Insert headcount
-        public int assy_headcount { get; set; } // Assembly headcount
-        public int scl_headcount { get; set; } // SCL headcount
+        public int SmtHeadcount { get; set; } // SMT headcount
+        public int InsertHeadcount { get; set; } // Insert headcount
+        public int AssyHeadcount { get; set; } // Assembly headcount
+        public int SclHeadcount { get; set; } // SCL headcount
         [Precision(18, 4)]
-        public decimal smt_cost { get; set; } // SMT cost
+        public decimal SmtCost { get; set; } // SMT cost
         [Precision(18, 4)]
-        public decimal insert_cost { get; set; } // Insert cost
+        public decimal InsertCost { get; set; } // Insert cost
         [Precision(18, 4)]
-        public decimal scl_cost { get; set; } // SCL cost
+        public decimal SclCost { get; set; } // SCL cost
         [Precision(18, 4)]
-        public decimal assy_cost { get; set; } // Assembly cost
+        public decimal AssyCost { get; set; } // Assembly cost
         [Precision(18, 4)]
-        public decimal average_cost { get; set; } // average
+        public decimal AverageCost { get; set; } // average
 
-        public string? upload_file { get; set; } // Total cost
-        public DateTime updated_dt { get; set; } // Total cost
+        public string? UploadFile { get; set; } // Total cost
+        public DateTime UpdatedModelDt { get; set; } // Total cost
 
-        public string? note { get; set; } // 
+        public string? Note { get; set; } // 
 
-        public DateTime upload_dt { get; set; } //
-        public string upload_by { get; set; } //
+        public bool IsActive { get; set; } = true;
+
+        public DateTime CreatedDt { get; set; } //
+        public string CreatedBy { get; set; } //
+        public DateTime? UpdatedDt { get; set; } //
+        public string? UpdatedBy { get; set; } //
 
     }
 }

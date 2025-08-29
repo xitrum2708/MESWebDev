@@ -78,7 +78,7 @@ namespace MESWebDev.Data
         public DbSet<CalendarModel> PP_Calendar_tbl { get; set; }
 
         //--------------+ PE - manpower +-------------------
-        public DbSet<ManpowerModel> PE_Manpower_tbl { get; set; }
+        public DbSet<ManpowerModel> UV_PE_Manpower_tbl { get; set; }
 
         public DbSet<UploadFileMaster> Master_UploadFile_mst { get; set; }
 

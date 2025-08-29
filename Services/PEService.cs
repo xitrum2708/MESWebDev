@@ -21,6 +21,33 @@ namespace MESWebDev.Services
             _proc = new Procedure(_con);
             _hca = hca;
         }
+
+        public async Task<string> DeleteManpower(List<int> ids)
+        {
+            string msg = string.Empty;
+            try
+            {
+                foreach (var item in ids)
+                {
+                    ManpowerModel? data = _con.UV_PE_Manpower_tbl.FirstOrDefault(x => x.Id == item);
+                    if (data != null)
+                    {
+                        data.IsActive = false;
+                        data.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                        data.UpdatedDt = DateTime.Now;
+                        _con.UV_PE_Manpower_tbl.Update(data);
+                    }
+                }
+                await _con.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message;
+            }
+
+            return msg;
+        }
+
         public async Task<DataTable> GetManpower(Dictionary<string, object> dic)
         {
             DataTable table = new DataTable();
@@ -58,11 +85,11 @@ namespace MESWebDev.Services
                                 DataTable dt = new DataTable();
                                 string[]? headers = null;
                                 DateTime updated_dt = DateTime.Now;
-                                string model = reader.GetValue(colMap.GetValueOrDefault("u_model"))?.ToString() ?? string.Empty;
-                                string company = reader.GetValue(colMap.GetValueOrDefault("company"))?.ToString() ?? string.Empty;
+                                string model = reader.GetValue(colMap.GetValueOrDefault("UModel"))?.ToString() ?? string.Empty;
+                                string company = reader.GetValue(colMap.GetValueOrDefault("Company"))?.ToString() ?? string.Empty;
                                 try
                                 {
-                                    updated_dt = Convert.ToDateTime(reader.GetValue(colMap.GetValueOrDefault("updated_dt")));
+                                    updated_dt = Convert.ToDateTime(reader.GetValue(colMap.GetValueOrDefault("UpdatedModelDt")));
                                 }
                                 catch (Exception ex)
                                 {
@@ -75,56 +102,57 @@ namespace MESWebDev.Services
                                     return pev;
                                 }
 
-                                var check = _con.PE_Manpower_tbl.Where(i => i.u_model == model && i.company == company && i.updated_dt == updated_dt);
+                                var check = _con.UV_PE_Manpower_tbl.Where(i => i.UModel == model && i.Company == company && i.UpdatedModelDt == updated_dt && i.IsActive);
                                 if (check.Any())
                                 {
-                                    _con.PE_Manpower_tbl.RemoveRange(check);
+                                    _con.UV_PE_Manpower_tbl.RemoveRange(check);
                                     await _con.SaveChangesAsync();
                                 }
                                 ManpowerModel mm = new ManpowerModel()
                                 {
-                                    company = company
+                                    Company = company
                                     ,
-                                    u_model = model
+                                    UModel = model
                                     ,
-                                    b_model = reader.GetValue(colMap.GetValueOrDefault("b_model"))?.ToString() ?? string.Empty
+                                    BModel = reader.GetValue(colMap.GetValueOrDefault("BModel"))?.ToString() ?? string.Empty
                                     ,
-                                    smt_headcount = reader.GetValue(colMap.GetValueOrDefault("smt_headcount")) != null ?
-                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("smt_headcount"))) : 0
+                                    SmtHeadcount = reader.GetValue(colMap.GetValueOrDefault("SmtHeadcount")) != null ?
+                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("SmtHeadcount"))) : 0
                                     ,
-                                    insert_headcount = reader.GetValue(colMap.GetValueOrDefault("insert_headcount")) != null ?
-                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("insert_headcount"))) : 0
+                                    InsertHeadcount = reader.GetValue(colMap.GetValueOrDefault("InsertHeadcount")) != null ?
+                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("InsertHeadcount"))) : 0
                                     ,
-                                    scl_headcount = reader.GetValue(colMap.GetValueOrDefault("scl_headcount")) != null ?
-                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("scl_headcount"))) : 0
+                                    SclHeadcount = reader.GetValue(colMap.GetValueOrDefault("SclHeadcount")) != null ?
+                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("SclHeadcount"))) : 0
                                     ,
-                                    assy_headcount = reader.GetValue(colMap.GetValueOrDefault("assy_headcount")) != null ?
-                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("assy_headcount"))) : 0
+                                    AssyHeadcount = reader.GetValue(colMap.GetValueOrDefault("AssyHeadcount")) != null ?
+                                                    Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("AssyHeadcount"))) : 0
                                     ,
-                                    smt_cost = reader.GetValue(colMap.GetValueOrDefault("smt_cost")) != null ?
-                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("smt_cost"))) : 0
+                                    SmtCost = reader.GetValue(colMap.GetValueOrDefault("SmtCost")) != null ?
+                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("SmtCost"))) : 0
                                     ,
-                                    insert_cost = reader.GetValue(colMap.GetValueOrDefault("insert_cost")) != null ?
-                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("insert_cost"))) : 0
+                                    InsertCost = reader.GetValue(colMap.GetValueOrDefault("InsertCost")) != null ?
+                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("InsertCost"))) : 0
                                     ,
-                                    scl_cost = reader.GetValue(colMap.GetValueOrDefault("scl_cost")) != null ?
-                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("scl_cost"))) : 0
+                                    SclCost = reader.GetValue(colMap.GetValueOrDefault("SclCost")) != null ?
+                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("SclCost"))) : 0
                                     ,
-                                    assy_cost = reader.GetValue(colMap.GetValueOrDefault("assy_cost")) != null ?
-                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("assy_cost"))) : 0
+                                    AssyCost = reader.GetValue(colMap.GetValueOrDefault("AssyCost")) != null ?
+                                                    Convert.ToDecimal(reader.GetValue(colMap.GetValueOrDefault("AssyCost"))) : 0
                                     ,
-                                    updated_dt = updated_dt
+                                    UpdatedModelDt = updated_dt
                                     ,
-                                    upload_file = file_name
+                                    UploadFile = file_name
                                     ,
-                                    note = string.Empty
+                                    Note = string.Empty
                                     ,
-                                    upload_by = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty
+                                    IsActive = true
                                     ,
-                                    upload_dt = DateTime.Now
+                                    CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty
+                                    ,
+                                    CreatedDt = DateTime.Now
                                 };
-                                manpowerList.Add(mm);
-                                
+                                manpowerList.Add(mm);                              
 
   
 
@@ -136,7 +164,7 @@ namespace MESWebDev.Services
                     if (manpowerList.Count > 0)
                     {
                         // insert to database
-                        await _con.PE_Manpower_tbl.AddRangeAsync(manpowerList);
+                        await _con.UV_PE_Manpower_tbl.AddRangeAsync(manpowerList);
                         await _con.SaveChangesAsync();
                     }
                     else
