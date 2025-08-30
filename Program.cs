@@ -39,7 +39,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     {
         var langCode = context.Request.Query["lang"].ToString();
         //var langCode = context.Request.HttpContext.Session.GetString("LanguageCode") ?? "vi";
-        if (string.IsNullOrEmpty(langCode)) langCode = "vi";
+        if (string.IsNullOrEmpty(langCode)) langCode = "en";
         return Task.FromResult(new ProviderCultureResult(langCode));
     }));
 });
@@ -118,10 +118,7 @@ builder.Services.AddAutoMapper(typeof(MappingConfig));
 //        options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // Set the expiration time for the cookie
 //    });
 
-
-
 var app = builder.Build();
-
 app.UseMiddleware<RequestLoggingMiddleware>();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

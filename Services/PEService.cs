@@ -48,12 +48,52 @@ namespace MESWebDev.Services
             return msg;
         }
 
+        public async Task<string> EditManpower(ManpowerModel mm)
+        {
+            string msg = string.Empty; 
+            
+            try
+            {
+                var m = await _con.UV_PE_Manpower_tbl.FindAsync(mm.Id);
+                m.Description = mm.Description;
+                m.AssyCost = mm.AssyCost;
+                m.SmtCost = mm.SmtCost;
+                m.SclCost = mm.SclCost;
+                m.InsertCost = mm.InsertCost;
+                m.AssyHeadcount = mm.AssyHeadcount;
+                m.SmtHeadcount = mm.SmtHeadcount;
+                m.SclHeadcount = mm.SclHeadcount;
+                m.InsertHeadcount = mm.InsertHeadcount;
+                m.AverageCost = mm.AssyCost / mm.AssyHeadcount;
+                m.UpdatedModelDt = mm.UpdatedModelDt;
+
+                m.UpdatedDt = DateTime.Now;
+                m.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+
+                await _con.SaveChangesAsync();
+
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message;
+                return msg;
+            }
+
+            return msg;
+        }
+
         public async Task<DataTable> GetManpower(Dictionary<string, object> dic)
         {
             DataTable table = new DataTable();
-            table = await _proc.Proc_GetDatatable("PE_GetManpower", dic);
+            table = await _proc.Proc_GetDatatable("spweb_UV_PE_GetManpower", dic);
             return table;
         }
+
+        public async Task<ManpowerModel> GetManpowerDetail(int id)
+        {
+            return await _con.UV_PE_Manpower_tbl.FindAsync(id) ?? new ManpowerModel();
+        }
+
         public async Task<PEViewModel> UploadManpower(IFormFile ff)
         {
             PEViewModel pev = new();
@@ -115,6 +155,8 @@ namespace MESWebDev.Services
                                     UModel = model
                                     ,
                                     BModel = reader.GetValue(colMap.GetValueOrDefault("BModel"))?.ToString() ?? string.Empty
+                                    ,
+                                    Description = reader.GetValue(colMap.GetValueOrDefault("Description"))?.ToString() ?? string.Empty
                                     ,
                                     SmtHeadcount = reader.GetValue(colMap.GetValueOrDefault("SmtHeadcount")) != null ?
                                                     Convert.ToInt32(reader.GetValue(colMap.GetValueOrDefault("SmtHeadcount"))) : 0

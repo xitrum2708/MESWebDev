@@ -11,7 +11,7 @@ namespace MESWebDev.Models.PE
         public string UModel { get; set; }
         public string BModel { get; set; }
 
-        
+        public string Description { get; set; }
         public int SmtHeadcount { get; set; } // SMT headcount
         public int InsertHeadcount { get; set; } // Insert headcount
         public int AssyHeadcount { get; set; } // Assembly headcount

@@ -97,6 +97,32 @@ namespace MESWebDev.Controllers
             }
             return Json(new { success = true });
         }
+
+        // GET Manpower detail
+        [HttpGet]
+        public async Task<IActionResult> GetManpowerDetail(int id)
+        {
+            ManpowerModel mm = new();
+            mm = await _peService.GetManpowerDetail(id);
+            return PartialView("Manpower/_Edit", mm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditManpower(ManpowerModel mm)
+        {
+            string msg = string.Empty;
+            PEViewModel pev = new();
+            msg = await _peService.EditManpower(mm);
+            if (!string.IsNullOrEmpty(msg)) {
+                pev.error_msg = msg;
+            }
+            else
+            {
+                DataTable dt = await _peService.GetManpower(new());
+                pev.data = dt;
+            }            
+            return View("Manpower/Index", pev);
+        }
     }
 
 }
