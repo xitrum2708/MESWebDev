@@ -22,6 +22,30 @@ namespace MESWebDev.Services
             _hca = hca;
         }
 
+        public async Task<string> AddManpower(ManpowerModel mm)
+        {
+            string msg = string.Empty;
+            try
+            {
+                var check = _con.UV_PE_Manpower_tbl.Where(i => i.UModel == mm.UModel && i.Company == mm.Company && i.UpdatedModelDt == mm.UpdatedModelDt && i.IsActive);
+                if (check.Any()) { 
+                    _con.RemoveRange(check);
+                    await _con.SaveChangesAsync();
+                }
+                mm.CreatedDt = DateTime.Now;
+                mm.CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                await _con.UV_PE_Manpower_tbl.AddAsync(mm);
+                await _con.SaveChangesAsync();
+
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message;
+                return msg;
+            }
+            return msg;
+        }
+
         public async Task<string> DeleteManpower(List<int> ids)
         {
             string msg = string.Empty;
@@ -64,7 +88,7 @@ namespace MESWebDev.Services
                 m.SmtHeadcount = mm.SmtHeadcount;
                 m.SclHeadcount = mm.SclHeadcount;
                 m.InsertHeadcount = mm.InsertHeadcount;
-                m.AverageCost = mm.AssyCost / mm.AssyHeadcount;
+                m.AverageCost = mm.AssyHeadcount == 0 ? 0 : mm.AssyCost / mm.AssyHeadcount;
                 m.UpdatedModelDt = mm.UpdatedModelDt;
 
                 m.UpdatedDt = DateTime.Now;

@@ -7,7 +7,9 @@ namespace MESWebDev.Models.PE
     {
         [Key]
         public int Id { get; set; }
+        [Required(ErrorMessage = "This field is required")]
         public string Company { get; set; }
+        [Required(ErrorMessage = "This field is required")]
         public string UModel { get; set; }
         public string BModel { get; set; }
 
@@ -28,6 +30,7 @@ namespace MESWebDev.Models.PE
         public decimal AverageCost { get; set; } // average
 
         public string? UploadFile { get; set; } // Total cost
+        [Required(ErrorMessage = "This field is required")]
         public DateTime UpdatedModelDt { get; set; } // Total cost
 
         public string? Note { get; set; } // 

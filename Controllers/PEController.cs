@@ -41,6 +41,7 @@ namespace MESWebDev.Controllers
             DataTable dt = await _peService.GetManpower(new());
             PEViewModel pev = new();
             pev.data = dt;
+            pev.manpower = new();
             return View("Manpower/Index", pev);
         }
 
@@ -62,9 +63,9 @@ namespace MESWebDev.Controllers
             {
                 ViewBag.Error = $"An error occurred while processing the files: {ex.Message}";
             }
+            pev.manpower = new();
             return View("Manpower/Index", pev);
         }
-
 
 
         [HttpPost]
@@ -83,7 +84,6 @@ namespace MESWebDev.Controllers
             var fileBytes = await _ee.AjaxExcelExport(request, "#,##0.0000");    
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "FilteredData.xlsx");            
         }
-
 
         // Delete
         [HttpPost]
@@ -120,7 +120,26 @@ namespace MESWebDev.Controllers
             {
                 DataTable dt = await _peService.GetManpower(new());
                 pev.data = dt;
-            }            
+            }
+            pev.manpower = new();
+            return View("Manpower/Index", pev);
+        }
+        [HttpPost]
+        public async Task<IActionResult> AddManpower(ManpowerModel mm)
+        {
+            string msg = string.Empty;
+            PEViewModel pev = new();
+            msg = await _peService.AddManpower(mm);
+            if (!string.IsNullOrEmpty(msg))
+            {
+                pev.error_msg = msg;
+            }
+            else
+            {
+                DataTable dt = await _peService.GetManpower(new());
+                pev.data = dt;
+            }
+            pev.manpower = new();
             return View("Manpower/Index", pev);
         }
     }

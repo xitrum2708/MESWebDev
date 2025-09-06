@@ -12,6 +12,7 @@ namespace MESWebDev.Services
 
         Task<string> DeleteManpower(List<int> ids);
         Task<string> EditManpower(ManpowerModel mm);
+        Task<string> AddManpower(ManpowerModel mm);
         Task<ManpowerModel> GetManpowerDetail(int id);
     }
 }
