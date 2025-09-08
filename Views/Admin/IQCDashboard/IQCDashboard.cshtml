@@ -112,20 +112,21 @@
                     <form method="post" asp-action="IQCDashboardSearch">
                         <div class="d-flex justify-content-center align-items-center">
                             <!-- StartDate -->
-                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
-                                @* <label>@translate.GetTranslation("StartDate", languageCode):</label> *@
-                                <input id="startDate" type="date" name="startDate" class="form-control"
-                                        value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            <div class="input-group mx-2 py-1" style="max-width: 180px;">
+                                <input class="form-control" type="text" id="startDate" placeholder="Start Date" asp-for="@Model.StartDate"
+                                       value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy/MM/dd") : "")" />
+                                <span class="input-group-text"><i class="bi bi-calendar-week-fill"></i></span>
                             </div>
                             <div>
                                 <font class="fs-6 fw-bold"> ~ </font>
                             </div>
                             <!-- EndDate -->
-                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
-                                @* <label>@translate.GetTranslation("EndDate", languageCode):</label> *@
-                                <input id="endDate" type="date" name="endDate" class="form-control"
-                                        value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")" />
+                            <div class="input-group mx-2 py-1" style="max-width: 180px;">
+                                <input class="form-control" type="text" id="endDate" placeholder="End Date" asp-for="@Model.EndDate"
+                                       value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy/MM/dd") : "")" />
+                                <span class="input-group-text"><i class="bi bi-calendar-week-fill"></i></span>
                             </div>
+
                             <button title="Search" class="btn btn-sm btn-info fw-bold me-5">
                                 <i class="bi bi-search"></i>
                             </button>
@@ -151,12 +152,18 @@
         {
             <div class="row mb-1 overflow-auto" style="height: calc(100vh - 470px)">
                 <div class="col-12">
-                    <table class="table">
+                    <table class="table table-bordered">
                         <thead>
                             <tr class="table sticky-top" style="background-color: #00c0ff; padding: 0 3px;">
                                 @foreach(DataColumn col in Model.detail_data.Columns)
                                 {
-                                    <th>@col.Caption</th>
+                                    var alignClass = col.DataType == typeof(int)
+                                    || col.DataType == typeof(decimal)
+                                    || col.DataType == typeof(double)
+                                    || col.DataType == typeof(float)
+                                    ? "text-end"
+                                    : "text-start";
+                                    <th class="px-1 @alignClass">@col.Caption</th>
                                 }
                             </tr>
                         </thead>
@@ -178,7 +185,7 @@
                                         var col = Model.detail_data.Columns[c];
                                         var v = row[c];
                                         bool isNum = !(v is DBNull || v == null) && IsNumeric(col.DataType);
-                                        <td class="@($"{baseTd} {(isNum ? "text-end" : "text-start")}")">
+                                        <td class="px-1 @($"{baseTd} {(isNum ? "text-end" : "text-start")}")">
                                             @FormatCell(v, col.DataType)
                                         </td>
                                     }
@@ -206,21 +213,16 @@
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    @* -- DATE TIME PICKER -- *@
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="~/js/DatetimePicker.js?@DateTime.Now.Ticks"></script> 
+
     <script>
                 // Check date and show loading page
         document.querySelector('form').addEventListener('submit', function(e) {
-            const startDate = document.querySelector('input[name="startDate"]').value;
-            const endDate = document.querySelector('input[name="endDate"]').value;
-
-            if (startDate && endDate && new Date(startDate) > new Date(endDate))
-            {
-                e.preventDefault();
-                toastr.error('Start Date cannot be later than End Date.');
-            }
-            else{
-                document.getElementById("loadingOverlay").classList.remove("d-none");
-            }
-
+            document.getElementById("loadingOverlay").classList.remove("d-none");
         });
 
         //--------------------->> TABLE <<-------------------------------
@@ -230,7 +232,7 @@
                   'background-color': '#00c0ff',
                   'padding': '25px 0px'
               });
-              $(this).addClass('fs-6 p-0 mx-2 fw-bold text-center');
+              $(this).addClass('fs-6 p-0 mx-2 fw-bold');
           });
 
           $('table tbody tr').each(function (index) {
