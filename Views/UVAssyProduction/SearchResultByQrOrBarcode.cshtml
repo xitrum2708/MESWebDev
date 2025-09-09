@@ -32,6 +32,16 @@
         return ""; // ví dụ Timestamp là rowversion (binary) thì để trống/đổi cách hiển thị tùy bạn
     };
 }
+<style>
+/* thêm vào site.css hoặc <style> ở view */
+    #tbl thead th {
+        position: sticky;
+        top: 0;
+        background: #fff; /* giữ nền trắng khi cuộn */
+        z-index: 2;
+}
+</style>
+
 <div class="app-content">
     <div class="container-fluid">
         <div class="row">
@@ -41,23 +51,45 @@
                         <div class="d-flex flex-wrap align-items-end">
                             @Html.AntiForgeryToken()
                             <!-- SearchTerm -->
-                            <div class="form-group mx-2 py-1" style="min-width: 200px;">
+                            <div class="form-group mx-2 py-1" style="min-width: 220px;">
                                 <label>@T.GetTranslation("SearchTerm", languageCode):</label>
-                                <input type="text" name="key" placeholder="@T.GetTranslation("Searchtext",languageCode)"
-                                       value="@ViewBag.Key" class="form-control form-control-sm" />
-                            </div>                           
+                                <input type="text" name="key" 
+                                       placeholder="@T.GetTranslation("QR / Barcode / Unitcode",languageCode)"
+                                       value="@(ViewBag.Key ?? "")"
+                                       class="form-control form-control-sm" />
+                            </div>
+                            <!-- LotNo -->
+                            <div class="form-group mx-2 py-1" style="min-width: 180px;">
+                                <label>LotNo:</label>
+                                <input type="text" name="lotno"
+                                       placeholder="VD6796..."
+                                       value="@(ViewBag.LotNo ?? "")"
+                                       class="form-control form-control-sm" />
+                            </div>
+                            <!-- CategoryName (LIKE) -->
+                            <div class="form-group mx-2 py-1" style="min-width: 200px;">
+                                <label>Category Name:</label>
+                                <input type="text" name="categoryName"
+                                       placeholder="FCT SCL..."
+                                       value="@(ViewBag.CategoryName ?? "")"
+                                       class="form-control form-control-sm" />
+                            </div>
                             <!-- Filter Button -->
                             <div class="form-group mx-2 py-1">
                                 <button type="submit" class="btn btn-primary">@T.GetTranslation("Filter", languageCode)</button>
-                            </div>                            
+                            </div>  
+                            <div class="form-group mx-2 py-1">
+                                <button type="button" class="btn btn-success ms-2" id="btnExport">Download Excel</button>
+                            </div>
                         </div>
                     </form>
                    
                     <div style="max-height:auto; overflow-y:auto;">
-                        <table class="table table-sm table-striped" id="tbl">
+                        <table class="table table-sm table-striped table-bordered" id="tbl">
                             <thead class="table-light sticky-top">
                                 <tr>
                                     <th style="width:42px"></th>
+                                    <th class="text-center">Result</th>   <!-- ✅ thêm cột tiêu đề mới -->
                                     @foreach (var c in cols)
                                     {
                                         <th>@c</th>
@@ -74,7 +106,7 @@
                                     var hasQR = Model.Columns.Contains("HasAttachByQR") && Get(r, "HasAttachByQR") == "1";
                                     var hasBC = Model.Columns.Contains("HasAttachByBC") && Get(r, "HasAttachByBC") == "1";
                                     var show = hasQR || (!hasQR && hasBC); // ưu tiên QR, nếu không có thì dùng BC
-
+                                    var hasNG = Model.Columns.Contains("HasNG") && Get(r, "HasNG") == "1";
                                     <tr data-proc="@proc"
                                         data-qr="@qr"
                                         data-bc="@bc"
@@ -83,53 +115,24 @@
                                         <td class="text-center">
                                             @if (show)
                                             {
-                                                <button type="button" class="btn btn-outline-primary btn-sm btn-expand" title="Xem file đính kèm">+</button>
+                                                <button type="button" class="btn btn-outline-primary btn-sm btn-expand" title="Check attached file">+</button>
                                             }
                                             else
                                             {
                                                 <span class="text-muted">—</span>
                                             }
                                         </td>
-
-                                        @foreach (var c in cols)
-                                        {
-                                            if (c == "CreatedDate" || c == "Timestamp")
-                                            {
-                                                <td class="text-nowrap">@GetDate(r, c)</td>
-                                            }
-                                            else if (c == "QRCode" || c == "Barcode")
-                                            {
-                                                <td class="font-monospace">@Get(r, c)</td>
-                                            }
-                                            else
-                                            {
-                                                <td>@Get(r, c)</td>
-                                            }
-                                        }
-                                    </tr>
-
-                                    <tr class="child d-none">
-                                        <td colspan="@(cols.Length + 1)"><div class="att-box">—</div></td>
-                                    </tr>
-                                }
-                                @* @foreach (DataRow r in Model.Rows)
-                                {
-                                    var has = Model.Columns.Contains("HasAttachment")
-                                    && r["HasAttachment"] != DBNull.Value
-                                    && Convert.ToInt32(r["HasAttachment"]) == 1;
-
-                                    <tr data-proc="@Get(r, "ProcessID")" data-qr="@Get(r, "QRCode")">
+                                        <!-- Cột NG báo hiệu -->
                                         <td class="text-center">
-                                            @if (has)
-                                            {
-                                                <button type="button" class="btn btn-outline-primary btn-sm btn-expand">+</button>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">—</span>
-                                            }
+                                                @if (hasNG)
+                                                {
+                                                <span class="badge bg-danger">NG</span>
+                                                }
+                                                else
+                                                {
+                                                <span class="badge bg-success">OK</span>
+                                                }
                                         </td>
-
                                         @foreach (var c in cols)
                                         {
                                             if (c == "CreatedDate" || c == "Timestamp")
@@ -139,7 +142,7 @@
                                             else if (c == "QRCode" || c == "Barcode")
                                             {
                                                 <td class="font-monospace">@Get(r, c)</td>
-                                            }                                          
+                                            }
                                             else
                                             {
                                                 <td>@Get(r, c)</td>
@@ -151,30 +154,7 @@
                                         <td colspan="@(cols.Length + 1)"><div class="att-box">—</div></td>
                                     </tr>
                                 }
-   *@                          
-                            </tbody>
-                           @*  <tbody>
-                                @foreach (System.Data.DataRow r in Model.Rows)
-                                {
-                                    var has = 0;
-                                    if (Model.Columns.Contains("HasAttachment"))
-                                        has = Convert.ToInt32(r["HasAttachment"]);
-
-                                    <tr data-proc="@r["ProcessID"]" data-qr="@r["QRCode"]">
-                                        <td>
-                                            @if (has == 1)
-                                            {
-                                                <button type="button" class="btn btn-outline-primary btn-sm btn-expand">+</button>
-                                            }
-                                        </td>
-                                        @foreach (System.Data.DataColumn c in Model.Columns)
-                                        {
-                                            <td>@r[c.ColumnName]</td>
-                                        }
-                                    </tr>
-                                    <tr class="child d-none"><td colspan="@((Model.Columns.Count)+1)"><div class="att-box">—</div></td></tr>
-                                }
-                            </tbody> *@
+                               </tbody>
                         </table>
                     </div>
                 </div>
@@ -182,23 +162,6 @@
         </div>
     </div>
 </div>
-@* @section Scripts {
-    <script>
-        document.querySelectorAll(".btn-expand").forEach(btn=>{
-          btn.addEventListener("click", async (e)=>{
-            const tr = e.target.closest("tr");
-            const url = '@Url.Action("Attachments", "UVAssyProduction")'
-              + `?processId=${tr.dataset.proc}&qrcode=${encodeURIComponent(tr.dataset.qr)}`;
-            const child = tr.nextElementSibling, box = child.querySelector(".att-box");
-            if (!child.classList.contains("d-none")) { child.classList.add("d-none"); return; }
-            box.textContent = "Đang tải...";
-            const html = await (await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }})).text();
-            box.innerHTML = html;
-            child.classList.remove("d-none");
-          });
-        });
-    </script>
-} *@
 
 @section Scripts {
     <script>
@@ -240,5 +203,17 @@
             child.classList.remove("d-none");
           });
         });
+
+        document.getElementById("btnExport").addEventListener("click", function () {
+            var table = document.getElementById("tbl");
+            var html = table.outerHTML.replace(/ /g, '%20');
+
+            // Tạo link download
+            var a = document.createElement('a');
+            a.href = 'data:application/vnd.ms-excel,' + html;
+            a.download = 'UVASSY_Search_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'') + '.xls';
+            a.click();
+        });
+
     </script>
 }

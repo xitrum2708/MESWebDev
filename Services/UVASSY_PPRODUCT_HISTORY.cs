@@ -1,5 +1,6 @@
 ﻿using MESWebDev.Common;
 using MESWebDev.Data;
+using MESWebDev.DTO;
 using System.Data;
 
 namespace MESWebDev.Services
@@ -33,14 +34,21 @@ namespace MESWebDev.Services
             });
         }
 
-        public Task<DataTable> SearchResult(string search)
+        public Task<DataTable> SearchResult(ProductHistoryDto search)
         {
-            return _proc.Proc_GetDatatable("sp_UVASSY_PPRODUCT_HISTORY_SearchCascade_edit", new Dictionary<string, object>
-            {
-                { "@key", search }
-            });
-        }
+            object DbNullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? DBNull.Value : s.Trim();
+            object DbNullIfNull<T>(T? v) where T : struct => v.HasValue ? v.Value : (object)DBNull.Value;
 
+            return _proc.Proc_GetDatatable(
+                "sp_UVASSY_PPRODUCT_HISTORY_SearchCascade_edit3",
+                new Dictionary<string, object>
+                {
+                    { "@key",          DbNullIfEmpty(search.Key) },
+                    { "@lotno",        DbNullIfEmpty(search.LotNo) },            
+                    { "@categoryName", DbNullIfEmpty(search.CategoryName) }
+                }
+            );
+        }
 
     }
 }

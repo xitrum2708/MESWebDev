@@ -1,5 +1,6 @@
 ﻿using MESWebDev.Common;
 using MESWebDev.Data;
+using MESWebDev.DTO;
 using MESWebDev.Extensions;
 using MESWebDev.Models.UVASSY;
 using MESWebDev.Models.VMProcedure;
@@ -228,9 +229,17 @@ namespace MESWebDev.Controllers
             return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
         [HttpGet]
-        public async Task<IActionResult> SearchResultByQrOrBarcode(string key)
+        public async Task<IActionResult> SearchResultByQrOrBarcode(string? key, string? lotno, string? categoryName)
         {
-            var dt = await _uvassyPProductHistoryService.SearchResult(key);
+            var filter = new ProductHistoryDto
+            {
+                Key = key,
+                LotNo = lotno,                
+                CategoryName = categoryName
+            };
+            var dt = await _uvassyPProductHistoryService.SearchResult(filter);
+            ViewBag.LotNo = lotno;            
+            ViewBag.CategoryName = categoryName;
             ViewBag.Key = key;
             //if (dt == null) return View(dt);
 
