@@ -8,6 +8,7 @@
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    int k = 0;
 }
 @{
     var culture = CultureInfo.GetCultureInfo("en-US");
@@ -40,7 +41,7 @@
 }
 
 <div class="app-content">
-   
+
     <div class="container-fluid p-0 m-0 px-5">
         <!-- HEADER -->
         <div class="row text-center sticky-top p-0 m-0">
@@ -59,39 +60,39 @@
         {
             <div class="row my-2">
                 <div class="col-8 d-flex flex-column justify-content-end pb-5">
-                <div class="row g-2 align-items-center  mx-2 mb-2" >
-                    <div class="col">
-                        <div class="inspect-box p-2 border-bottom border-light border-5">
-                            <font class="fs-7 fw-bold">INSPECTING</font>
-                            <h1 class="fw-bold">@Model.sum_data.Rows[0][0]</h1>
+                    <div class="row g-2 align-items-center  mx-2 mb-2" >
+                        <div class="col">
+                            <div class="inspect-box p-2 border-bottom border-light border-5">
+                                <font class="fs-7 fw-bold">INSPECTING</font>
+                                <h1 class="fw-bold">@Model.sum_data.Rows[0][0]</h1>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col">
-                        <div class="inspect-box p-2 border-bottom border-warning border-5">
-                            <font class="text-warning fs-7 fw-bold">WAITING INSPECT</font>
-                            <h1 class="text-warning fw-bold">@Model.sum_data.Rows[0][1]</h1>
+                        <div class="col">
+                            <div class="inspect-box p-2 border-bottom border-warning border-5">
+                                <font class="text-warning fs-7 fw-bold">WAITING INSPECT</font>
+                                <h1 class="text-warning fw-bold">@Model.sum_data.Rows[0][1]</h1>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col">
-                        <div class="inspect-box p-2 border-bottom border-primary border-5">
-                            <font class="text-primary fs-7 fw-bold">INSPECTED TOTAL</font>
-                            <h1 class="text-primary fw-bold">@Model.sum_data.Rows[0][2]</h1>
+                        <div class="col">
+                            <div class="inspect-box p-2 border-bottom border-primary border-5">
+                                <font class="text-primary fs-7 fw-bold">INSPECTED TOTAL</font>
+                                <h1 class="text-primary fw-bold">@Model.sum_data.Rows[0][2]</h1>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col">
-                        <div class="inspect-box p-2 border-bottom border-info border-5">
+                        <div class="col">
+                            <div class="inspect-box p-2 border-bottom border-info border-5">
                                 <font class="fw-bold fs-7 text-info">STOCK IN TOTAL</font>
-                            <h1 class="fw-bold text-info">@Model.sum_data.Rows[0][3]</h1>
+                                <h1 class="fw-bold text-info">@Model.sum_data.Rows[0][3]</h1>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col">
-                           <div class="inspect-box p-2 border-bottom border-success border-5">
+                        <div class="col">
+                            <div class="inspect-box p-2 border-bottom border-success border-5">
                                 <font class="fw-bold fs-6 text-success">OK</font>
                                 <h4 class="fw-bold text-success">@Model.sum_data.Rows[0][4]</h4>
                                 <h4 class="fw-bold text-success">@Model.sum_data.Rows[0][5]</h4>
-                            @* <h1 class="fw-bold text-success"> - </h1> *@
+                                @* <h1 class="fw-bold text-success"> - </h1> *@
+                            </div>
                         </div>
-                    </div>
                         <div class="col">
                             <div class="inspect-box p-2 border-bottom border-danger border-5">
                                 <font class="fw-bold fs-6 text-danger">NG</font>
@@ -101,20 +102,20 @@
                                 @* <h1 class="fw-bold text-success"> - </h1> *@
                             </div>
                         </div>
-      @*               <div class="col">
+                        @*<div class="col">
                         <div class="inspect-box p-2 border-bottom border-error border-5">
                                 <font class="fw-bold fs-7 text-error">NG - RATE</font>
                                 <h1 class="fw-bold text-error">@Model.sum_data.Rows[0][6] - @Model.sum_data.Rows[0][7]</h1>
                         </div>
-                    </div> *@
-                    
-                </div>
+                        </div> *@
+
+                    </div>
                     <form method="post" asp-action="IQCDashboardSearch">
                         <div class="d-flex justify-content-center align-items-center">
                             <!-- StartDate -->
                             <div class="input-group mx-2 py-1" style="max-width: 180px;">
                                 <input class="form-control" type="text" id="startDate" placeholder="Start Date" asp-for="@Model.StartDate"
-                                       value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy/MM/dd") : "")" />
+                                value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy/MM/dd") : "")" />
                                 <span class="input-group-text"><i class="bi bi-calendar-week-fill"></i></span>
                             </div>
                             <div>
@@ -123,7 +124,7 @@
                             <!-- EndDate -->
                             <div class="input-group mx-2 py-1" style="max-width: 180px;">
                                 <input class="form-control" type="text" id="endDate" placeholder="End Date" asp-for="@Model.EndDate"
-                                       value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy/MM/dd") : "")" />
+                                value="@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy/MM/dd") : "")" />
                                 <span class="input-group-text"><i class="bi bi-calendar-week-fill"></i></span>
                             </div>
 
@@ -157,36 +158,19 @@
                             <tr class="table sticky-top" style="background-color: #00c0ff; padding: 0 3px;">
                                 @foreach(DataColumn col in Model.detail_data.Columns)
                                 {
-                                    var alignClass = col.DataType == typeof(int)
-                                    || col.DataType == typeof(decimal)
-                                    || col.DataType == typeof(double)
-                                    || col.DataType == typeof(float)
-                                    ? "text-end"
-                                    : "text-start";
-                                    <th class="px-1 @alignClass">@col.Caption</th>
+                                    <th class="px-1 @(IsNumeric(col.DataType) ? "text-end" : "text-left")">@col.Caption</th>
                                 }
                             </tr>
                         </thead>
                         <tbody>
-                           @*  @foreach (DataRow row in Model.detail_data.Rows)
-                            {
-                                <tr>
-                                    @foreach (var f in row.ItemArray)
-                                    {
-                                        <td>@f?.ToString()</td>
-                                    }
-                                </tr>
-                            } *@
                             @foreach (DataRow row in Model.detail_data.Rows)
                             {
-                                <tr>
-                                    @for (int c = 0; c < Model.detail_data.Columns.Count; c++)
+                                k++;
+                                <tr class="@(k%2 == 0 ? " row-even":"row-odd")">
+                                    @foreach(DataColumn col in Model.detail_data.Columns)
                                     {
-                                        var col = Model.detail_data.Columns[c];
-                                        var v = row[c];
-                                        bool isNum = !(v is DBNull || v == null) && IsNumeric(col.DataType);
-                                        <td class="px-1 @($"{baseTd} {(isNum ? "text-end" : "text-start")}")">
-                                            @FormatCell(v, col.DataType)
+                                        <td class="@($"px-1 py-1 fs-8 text-white   {(IsNumeric(col.DataType)? "text-end" : "text-start")}")">
+                                            @FormatCell(row[col.ColumnName], col.DataType)
                                         </td>
                                     }
                                 </tr>
@@ -235,24 +219,24 @@
               $(this).addClass('fs-6 p-0 mx-2 fw-bold');
           });
 
-          $('table tbody tr').each(function (index) {
-              const $tds = $(this).find('td');
-            if ((index + 1) % 2 === 0) {
-              //$(this).find('td').addClass('bg-primary text-center text-white py-1 fs-8');
-               $tds.removeClass('text-center')                  // quan trọng: bỏ center
-              .addClass('bg-primary text-white py-1 fs-8') // chỉ màu + style
-              .css('background-color', '');
+          // $('table tbody tr').each(function (index) {
+          //     const $tds = $(this).find('td');
+          //   if ((index + 1) % 2 === 0) {
+          //     //$(this).find('td').addClass('bg-primary text-center text-white py-1 fs-8');
+          //      $tds.removeClass('text-center')                  // quan trọng: bỏ center
+          //     .addClass('bg-primary text-white py-1 fs-8') // chỉ màu + style
+          //     .css('background-color', '');
 
-            } else {
-              // $(this).find('td').removeClass('bg-primary');// Clear any inline styles
-              // $(this).find('td').addClass('text-white text-center py-1 fs-8')
-              // $(this).find('td').css({'background-color':'#1c2b88'})
-              // $(this).find('td').removeClass('bg-primary text-white');
-               $tds.removeClass('bg-primary text-center')       // bỏ center
-                .addClass('text-white py-1 fs-8')
-                .css('background-color', '#1c2b88');
-            }
-          });
+          //   } else {
+          //     // $(this).find('td').removeClass('bg-primary');// Clear any inline styles
+          //     // $(this).find('td').addClass('text-white text-center py-1 fs-8')
+          //     // $(this).find('td').css({'background-color':'#1c2b88'})
+          //     // $(this).find('td').removeClass('bg-primary text-white');
+          //      $tds.removeClass('bg-primary text-center')       // bỏ center
+          //       .addClass('text-white py-1 fs-8')
+          //       .css('background-color', '#1c2b88');
+          //   }
+          // });
         });
 
         //--------------------->> LOCK <<-------------------------------

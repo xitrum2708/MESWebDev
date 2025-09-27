@@ -1,0 +1,71 @@
+﻿@model ManpowerModel
+<form asp-action="EditManpower" asp-controller="PE" method="post">
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">@* " modal-lg"> *@
+        <div class="modal-content">
+            <div class="modal-header table-success">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil-square"></i>
+                    Edit
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-warning">
+                
+                    <input type="hidden" asp-for="Id" />
+                    <div class="mb-3">
+                        <label>Company: <strong class="ms-2">@Model.Company</strong></label>
+                    </div>
+                    <div class="mb-3">
+                        <label>U Model: <strong class="ms-2">@Model.UModel</strong></label>
+                    </div>
+                    <div class="mb-3">
+                        <label>B Model: <strong class="ms-2">@Model.BModel</strong></label>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4">Description</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="Description" /></div>
+
+                        <div class="col-4">SMT Headcount</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="SmtHeadcount" required /></div>
+
+                        <div class="col-4">SMT Cost</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="SmtCost" /></div>
+
+                        <div class="col-4">Insert Headcount</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="InsertHeadcount" /></div>
+
+                        <div class="col-4">Insert Cost</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="InsertCost" /></div>
+
+                        <div class="col-4">SCL Headcount</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="SclHeadcount" /></div>
+
+                        <div class="col-4">SCL Cost</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="SclCost" /></div>
+
+                        <div class="col-4">Assy Headcount</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="AssyHeadcount" /></div>
+
+                        <div class="col-4">Assy Cost</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="AssyCost" /></div>
+
+                        <div class="col-4">Updated Date</div>
+                        <div class="col-8"><input type="date" class="form-control" asp-for="UpdatedModelDt" /></div>
+                    </div>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="fa-regular fa-floppy-disk"></i>
+                    Confirm
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                    <i class="fa-regular fa-circle-xmark"></i>
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</form>

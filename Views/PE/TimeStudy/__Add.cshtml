@@ -1,0 +1,198 @@
+﻿@model PEViewModel
+
+ @* <form asp-action="AddTimeStudy" asp-controller="PE" method="post">  *@
+ <form id="fAdd" method="post"> 
+    <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header table-success">
+                        <h5 class="modal-title">
+                            <i class="bi bi-plus-circle"></i>
+                            Add
+                        </h5>
+                        <a class="btn-close" onclick="LoadPageAgain()"></a>
+                    </div>
+                    <div class="modal-body ">
+                        <div class="m-2">
+                            @* COMMON INFORMATION  *@
+                            <div class="d-flex align-items-center text-center">
+                                <hr class="border-2 border-black" style="width:25px" />
+                                <h6 class="mx-2">COMMON INFORMATION</h6>
+                                <hr class="flex-grow-1 border-2 border-black" />
+                            </div>
+
+                            <div class="row">
+                                <div class="col">
+                                    <h5>Customer</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_customer" asp-for="@Model.TimeStudyHdr.Customer" placeholder="Select customer...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        @if (Model.customers != null && Model.customers.Count > 0)
+                                        {
+                                            <ul id="l_customer">
+                                                @foreach (var customer in Model.customers)
+                                                {
+                                                    <li>@customer</li>
+                                                }
+                                            </ul>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <h5>Section</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_section" asp-for="@Model.TimeStudyHdr.Section" placeholder="Select section...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        @if (Model.sections != null && Model.sections.Count > 0)
+                                        {
+                                            <ul id="l_section">
+                                                @foreach (var sec in Model.sections)
+                                                {
+                                                    <li>@sec</li>
+                                                }
+                                            </ul>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <h5>Unit</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_unit" asp-for="@Model.TimeStudyHdr.Unit" placeholder="Select unit...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        @if (Model.units != null && Model.units.Count > 0)
+                                        {
+                                            <ul id="l_unit">
+                                                @foreach (var unit in Model.units)
+                                                {
+                                                    <li>@unit</li>
+                                                }
+                                            </ul>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <h5> Model </h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_model" asp-for="@Model.TimeStudyHdr.Model" placeholder="Input or select value...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        <span asp-validation-for="@Model.TimeStudyHdr.Model" class="text-danger"></span>
+                                        <ul id="l_model"></ul>
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <h5>B Model</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_bModel" asp-for="@Model.TimeStudyHdr.BModel" placeholder="Input or select value...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        <span asp-validation-for="@Model.TimeStudyHdr.BModel" class="text-danger"></span>
+                                        <ul id="l_bModel"></ul>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <h5>Lot No</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_lotNo" asp-for="@Model.TimeStudyHdr.LotNo" placeholder="Input or select value...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        <span asp-validation-for="@Model.TimeStudyHdr.LotNo" class="text-danger"></span>
+                                        <ul id="l_lotNo"></ul>
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <h5>PCB Name</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_pcbName" asp-for="@Model.TimeStudyHdr.PcbName" placeholder="Input or select value...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        <ul id="l_pcbName"></ul>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <h5>PCB No</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_pcbNo" asp-for="@Model.TimeStudyHdr.PcbNo" class="form-control" placeholder="Input or select value...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+
+                                        <ul id="l_pcbNo"></ul>
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+
+                            @* OPERATION DETAIL *@
+                            <div class="d-flex align-items-center text-center mt-4">
+                                <hr class="border-2 border-black" style="width:25px" />
+                                <h6 class="mx-2">OPERATION DETAIL</h6>
+                                <hr class="flex-grow-1 border-2 border-black" />
+                                <a class="btn btn-sm btn-primary mx-3" onclick="ClickAddDetail()"> Add Detail </a>
+                            </div>
+                            <div id="detailBody">
+                                <partial name="TimeStudy/___DetailBody" model="Model" />
+                            </div>                           
+
+                        </div>
+
+
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <button type="reset" class="btn  btn-warning">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            Clear All
+                        </button>
+                        <div>
+                            <a onclick="BtnSave()" class="btn btn-sm btn-primary">
+                                <i class="bi bi-floppy"></i>
+                                Save
+                            </a>
+                            <a onclick="LoadPageAgain()" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                                <i class="fa-regular fa-circle-xmark"></i>
+                                Close
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>    
+</form> 
+<div id="detailModalArea">
+
+</div>
+@* <partial name="TimeStudy/___AddDetail" model="Model" />  *@
+

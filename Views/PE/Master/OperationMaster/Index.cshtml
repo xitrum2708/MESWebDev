@@ -1,0 +1,277 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.PE
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Services
+@using System.Data
+@using System.Globalization
+@inject ITranslationService TranslationService
+@model PEViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="float-start d-flex justify-content-between align-items-center w-50">
+                                <h3 class="card-title fw-bold fs-5">
+                                    <i class="bi bi-box"></i>
+                                    Operation Master
+                                </h3>
+                                <input class="form-control w-50 ms-3" placeholder="🔍 Quick Search..." id="quickSearch" onkeyup="QuickSearch()" />
+                            </div>
+                            <div class="float-end d-flex justify-content-center align-items-center">
+                                <button class="btn btn-sm btn-primary me-2" onclick="AddOperation()">
+                                    <i class="bi bi-plus-circle"></i>
+                                    Add
+                                </button>
+                                <a class="btn btn-sm btn-secondary me-2" id="DownloadData" asp-action="DownloadDataList" asp-controller="PE">
+                                    <i class="bi bi-download"></i>
+                                    Download
+                                </a>
+                                <a class="btn btn-sm btn-light" href="#">
+                                    <i class="bi bi-question-circle"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="ResultArea">
+                                @if (Model.operationList == null)
+                                {
+                                    <h5 class="m-3">No data available.</h5>
+                                }
+                                else
+                                {
+                                    <partial name="Master/OperationMaster/_Result" model="@Model" />
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @* <partial name="Master/OperationMaster/_Edit" /> *@
+            <Partial name="_LoadingPartial" />
+            <partial name="Master/OperationMaster/__Delete" />
+            @* <partial name="Master/OperationMaster/__Add" model="@Model"/> *@
+            <div id="modalArea">
+            </div>
+        </div>
+    </div>
+
+}
+catch (Exception ex)
+{
+    string t = ex.Message;
+}
+
+@section Scripts {
+    <link href="~/css/pecss.css" rel="stylesheet" />
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        // Click Add Use off before on to prevent double click
+        function AddOperation(){
+            $.ajax({
+                url: '/PE/AddOperationMaster',
+                type: 'Get',
+                success: function (html) {
+                    $('#modalArea').html(html);
+                    $('#addModal').modal('show');
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the add form.');
+                }
+            });
+        }           
+        
+
+        // Click Edit
+        function editItem(id) {
+            $.ajax({
+                url: '/PE/EditOperationMaster',
+                type: 'Get',
+                data: { id: id },
+                success: function (html) {
+                    $('#modalArea').html(html);
+                    $('#editModal').modal('show');
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the edit form.');
+                }
+            });
+        }
+
+
+
+        $(document).on("click","#BtnAddDetail", function () {
+            const tbody = $("#tbodyDtlResult");
+            let row_count = tbody.find("tr").length;
+            tbody.append(`
+                <tr class="newRow">
+                    <td>${row_count +1}</td>
+                    <td></td>
+                    <td>
+                        <input type="text" class="form-control"
+                               name="operationDtlList[${row_count}].Name"
+                               id="operationDtlList[${row_count}].Name" />
+                    </td>
+                    <td>
+                        <input type="text" class="form-control"
+                               name="operationDtlList[${row_count}].Description"
+                               id="operationDtlList[${row_count}].Description" />
+                    </td>
+                    <td>
+                        <button class="btn btn-secondary btn-sm" onclick="cancelNewItem(this)">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </button>
+                    </td>
+                </tr>
+            `);
+
+        });
+
+        function Add() {
+            if($('#fAdd').valid()){
+                var data = $('#fAdd').serialize();
+                $.ajax({
+                    url: '/PE/AddOperationMaster',
+                    type: 'Post',
+                    data: data,
+                    success: function (html) {
+                        $('#addModal').modal('hide');
+                        $('#ResultArea').html(html);
+                        
+                        //Get error message if existed
+                        var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                        if (errorMsg) {
+                            toastr.error(errorMsg, "Error");
+                        }
+                        toastr.success('Add successfully !','Success')
+                    },
+                    error: function () {
+                        toastr.error('An error occurred while loading the edit form.');
+                    }
+                });
+            }
+            else{
+                toastr.error("Please fill all fields.","Error");
+                return;
+            }           
+        }
+        function Edit() {
+            if($('#fEdit').valid()){
+                var data = $('#fEdit').serialize();
+                $.ajax({
+                    url: '/PE/EditOperationMaster',
+                    type: 'Post',
+                    data: data,
+                    success: function (html) {
+                        $('#editModal').modal('hide');
+                        $('#ResultArea').html(html);
+                        //Get error message if existed
+                        var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                        if (errorMsg) {
+                            toastr.error(errorMsg, "Error");
+                        }
+                        else{
+                            toastr.success('Edit successfully !','Success')
+                        }
+                    },
+                    error: function () {
+                        toastr.error('An error occurred while loading the edit form.');
+                    }
+
+                });
+            }
+            else{
+                toastr.error("Please fill all fields.","Error");
+                return;
+            }
+        }
+
+        function cancelNewItem(btn) {
+            $(btn).closest(".newRow").remove();
+        }
+
+        function deleteItem(index) {
+            if (confirm("Delete this Operation Master?")) {
+                $.ajax({
+                    url: '/PE/DeleteOperationMaster',
+                    type: 'Post',
+                    data: {id: index},
+                    success: function (html) {
+                        $('#ResultArea').html(html);
+
+                        //Get error message if existed
+                        var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                        if (errorMsg) {
+                            toastr.error(errorMsg, "Error");
+                        }
+                        else{
+                            toastr.success('Delete successfully !','Success')
+                        }
+                    },
+                    error: function () {
+                        toastr.error('An error occurred while loading the edit form.');
+                    }
+                });
+            }
+        }
+
+        function deleteItemDetail(id,index) {
+            if (confirm("Delete this Operation Master Detail?")) {
+                $.ajax({
+                    url: '/PE/DeleteOperationMasterDtl',
+                    type: 'Post',
+                    data: { id: id, idDetail: index},
+                    success: function (response) {
+                        $('#tbodyDtlResult').html(response);
+                        toastr.success('Delete successfully !','Success')
+                    },
+                    error: function (xhr) {
+                        elert(xhr.responseText);
+                        // Show full error in modal or alert
+                        toastr.error(`Error ${xhr.status}: ${xhr.statusText}<br>${xhr.responseText}`);
+                    },
+                    complete: function () {
+                        console.log("Request completed");
+                    }
+                });
+            }
+        }
+
+        // Quick Search
+        function QuickSearch(){
+            var query = $('#quickSearch').val().toUpperCase();
+            $('#mytable tbody tr').each(function(){
+                var row = $(this);
+                row.find('td').each(function(){
+                    var tdText = $(this).text().toUpperCase();
+                    if(tdText.indexOf(query) > -1){
+                        row.show(); return false;
+                    }
+                    else{
+                        row.hide();
+                    }
+                });
+            });
+        }
+
+    </script>
+
+}

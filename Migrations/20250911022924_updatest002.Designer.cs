@@ -4,6 +4,7 @@ using MESWebDev.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MESWebDev.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250911022924_updatest002")]
+    partial class updatest002
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1245,7 +1248,7 @@ namespace MESWebDev.Migrations
                     b.ToTable("Master_Operation_Hdr");
                 });
 
-            modelBuilder.Entity("MESWebDev.Models.PE.TimeStudyDtlModel", b =>
+            modelBuilder.Entity("MESWebDev.Models.PE.TimeStudyModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1253,62 +1256,10 @@ namespace MESWebDev.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AllocatedOpr")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
+                    b.Property<string>("BcpName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedDt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("OperationKind")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ParentId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("StepContent")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("StepNo")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Sumary")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("UnitQty")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedDt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentId");
-
-                    b.ToTable("UV_PE_TimeStudy_Dtl");
-                });
-
-            modelBuilder.Entity("MESWebDev.Models.PE.TimeStudyHdrModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BModel")
+                    b.Property<string>("BcpNumber")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
@@ -1322,6 +1273,9 @@ namespace MESWebDev.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LotNo")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1330,63 +1284,17 @@ namespace MESWebDev.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PcbName")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("OperationDetailId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("PcbNo")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("OperationId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Section")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Unit")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedDt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UploadFile")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UV_PE_TimeStudy_Hdr");
-                });
-
-            modelBuilder.Entity("MESWebDev.Models.PE.TimeStudyStepDtlModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("OperationDetailName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OperationName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Remark")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SeqNo")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StepId")
+                    b.Property<int>("StepNumber")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Time01")
@@ -1409,15 +1317,26 @@ namespace MESWebDev.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<decimal>("TimeAvg")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
+                    b.Property<string>("Unit")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UnitQty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadFile")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StepId");
+                    b.HasIndex("OperationId");
 
-                    b.ToTable("UV_PE_TimeStudyStep_Dtl");
+                    b.ToTable("UV_PE_OperationTimeStudy");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.Permission", b =>
@@ -3011,26 +2930,15 @@ namespace MESWebDev.Migrations
                     b.Navigation("OperationMaster");
                 });
 
-            modelBuilder.Entity("MESWebDev.Models.PE.TimeStudyDtlModel", b =>
+            modelBuilder.Entity("MESWebDev.Models.PE.TimeStudyModel", b =>
                 {
-                    b.HasOne("MESWebDev.Models.PE.TimeStudyHdrModel", "TimeStudyHdr")
+                    b.HasOne("MESWebDev.Models.PE.OperationModel", "OperationMaster")
                         .WithMany()
-                        .HasForeignKey("ParentId")
+                        .HasForeignKey("OperationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("TimeStudyHdr");
-                });
-
-            modelBuilder.Entity("MESWebDev.Models.PE.TimeStudyStepDtlModel", b =>
-                {
-                    b.HasOne("MESWebDev.Models.PE.TimeStudyDtlModel", "TimeStudyDtl")
-                        .WithMany()
-                        .HasForeignKey("StepId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TimeStudyDtl");
+                    b.Navigation("OperationMaster");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.RolePermission", b =>

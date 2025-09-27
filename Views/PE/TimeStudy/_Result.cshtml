@@ -1,0 +1,103 @@
+﻿@* <h2>Product Schedule (Resource Timeline View)</h2> *@
+@using System.Data
+@model PEViewModel
+
+@{
+    int i = 0;
+}
+
+@if (String.IsNullOrEmpty(Model.error_msg))
+{
+    @if (Model.data != null && Model.data.Rows.Count > 0)
+    {
+        <div style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative">
+            <table class="table table-bordered table-striped table-hover" id="tb_TimeStudy">
+                <thead class="sticky-top">
+                    <!-- Header Row -->
+                    <tr>
+                        <th></th>
+                        <th>No.</th>
+                        @foreach (DataColumn column in Model.data.Columns)
+                        {
+                            if (column.ColumnName.ToLower() == "id")
+                            {
+                                <th>
+                                    <div class="d-flex justify-content-center align-content-center">
+                                        <input class="_cbAll form-check form-check-input" type="checkbox" />
+                                    </div>
+                                </th>
+                            }
+                            else
+                            {
+                                <th class="text-center table-info">
+                                    <span class="d-block p-0 header-text">@column.Caption</span>
+                                </th>
+                            }
+
+                        }
+                        
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (DataRow row in Model.data.Rows)
+                    {
+                        i++;
+                        <tr>
+                            <td class="d-flex justify-content-center align-items-center">
+                                <a class="btn btn-sm btn-warning btn_edit me-3">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a class="btn btn-sm btn-danger btn_delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                            <td>@i</td>
+                            @foreach (DataColumn col in Model.data.Columns)
+                            // @foreach (var item in row.ItemArray)
+                            {
+                                
+                                var item = row[col];
+                                if (col.ColumnName.ToLower() == "id")
+                                {
+                                    <td>
+                                        <div class="d-flex justify-content-center align-content-center">
+                                            <input class="_cb form-check form-check-input" type="checkbox" />
+                                            <input hidden class="_id" value="@item" />
+                                        </div>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td class="body-text  @(CommonFormat.IsNumeric(col.DataType) ? "text-end" : "text-start")">
+                                        @* @{
+                                            CommonFormat.FormatCell(item, col.DataType);
+                                        } *@
+                                        @item.ToString()
+                                    </td>
+                                }
+                            }
+              
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.error_msg))
+        {
+            <div id="errorMsg" data-msg="@Model.error_msg"></div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-warning text-center">
+            No data available for the TimeStudy.
+        </div>
+    }
+}
+else
+{
+    <div class="alert alert-warning text-center">
+        @Model.error_msg
+    </div>
+}

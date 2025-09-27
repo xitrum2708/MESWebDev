@@ -1,0 +1,349 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.PE
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Services
+@using System.Data
+@using System.Globalization
+@inject ITranslationService TranslationService
+@model PEViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";  
+
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header  d-flex justify-content-between align-items-center">
+                            <h3 class="card-title fw-bold fs-5">
+                                <i class="bi bi-box"></i>
+                                Operation Master
+                            </h3>
+
+                            <button class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-circle"></i>
+                                Add
+                            </button>
+                           
+                        </div>
+                        <div class="card-body">
+                            <div id="ResultArea">
+                                @if (Model.customers == null)
+                                {
+                                    <h5 class="m-3">Click to <a class="btn btn-warning btn-sm" href="#">Search</a> button to show data.</h5>
+                                }
+                                else
+                                {
+                                    <partial name="TimeStudy/_Result" model="@Model" />
+                                }
+                            </div>                            
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <Partial name="TimeStudy/__Upload" />
+            @* <partial name="TimeStudy/_Edit" /> *@
+            <Partial name="_LoadingPartial" />
+            <partial name="TimeStudy/__Delete" />
+            @* <partial name="TimeStudy/__Add" model="@Model"/> *@
+            <div id="modalArea">
+            </div>
+        </div>
+    </div>
+
+}
+catch(Exception ex)
+{
+    string t = ex.Message;
+}
+
+@section Scripts {
+    <link href="~/css/pecss.css" rel="stylesheet" />
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        // -------- COMBOBOX --------- \\
+        function refreshAllCombos(){
+            $.getJSON("/PE/CbTimeStudy"
+                ,{
+                    customer: $("#ip_customer").val(),
+                    section: $("#ip_section").val(),
+                    model: $("#ip_model").val(),
+                    b_model: $("#ip_bModel").val(),
+                    lot_no: $("#ip_lotNo").val(),
+                    pcb_name: $("#ip_pcbName").val(),
+                    pcb_no: $("#ip_pcbNo").val(),
+                    operation_name: $("#ip_operationName").val()
+                }
+                ,function(data){
+                    updateList($("#l_customer"), data.customers);
+                    updateList($("#l_section"), data.sections);
+                    updateList($("#l_unit"), data.units);
+                    updateList($("#l_model"), data.models);
+                    updateList($("#l_bModel"), data.bModels);
+                    updateList($("#l_lotNo"), data.lotNos);
+                    updateList($("#l_pcbNo"), data.pcbNos);
+                    updateList($("#l_pcbName"), data.pcbNames);
+                    updateList($("#l_operationName"), data.operationNames);
+                });
+        }
+
+        function updateList($list, items) {
+            $list.empty();
+            $.each(items, function (i, item) {
+                $list.append(`<li>${item}</li>`);
+            });
+        }
+
+        function bindInputAndList($input, $list){
+
+            // Filter list
+            function filterList(){
+                let filter = $input.val().toLowerCase();
+                $list.show();
+                $list.children("li").each(function(){
+                    let text = $(this).text().toLowerCase();
+                    $(this).toggle(text.includes(filter));
+                });
+            }
+
+            // Typing
+            $input.on("input", debounce(function(){
+                //filterList();
+                refreshAllCombos();
+            }, 300));
+
+            // Focus: show and filter
+            $input.on("focus", function(){
+                filterList();
+            });
+
+            // Blur: hide after short delay to allow click
+            $input.on("blur", function(){
+                setTimeout(function(){
+                    $list.hide();
+                }, 200);
+            });
+
+            // Selecting from list
+            $list.on("click", "li", function () {
+                $input.val($(this).text());
+                $list.hide();
+                refreshAllCombos();
+            });
+        }
+
+        function debounce(fn, delay) {
+            let timer = null;
+            return function () {
+                clearTimeout(timer);
+                timer = setTimeout(fn, delay);
+            };
+        }
+
+        function InitCombo(){
+            bindInputAndList($("#ip_customer"), $("#l_customer"));
+            bindInputAndList($("#ip_section"), $("#l_section"));
+            bindInputAndList($("#ip_unit"), $("#l_unit"));
+            bindInputAndList($("#ip_model"), $("#l_model"));
+            bindInputAndList($("#ip_bModel"), $("#l_bModel"));
+            bindInputAndList($("#ip_lotNo"), $("#l_lotNo"));
+            bindInputAndList($("#ip_pcbName"), $("#l_pcbName"));
+            bindInputAndList($("#ip_pcbNo"), $("#l_pcbNo"));
+            bindInputAndList($("#ip_operationName"), $("#l_operationName"));
+            bindInputAndList($("#ip_stepNo"), $("#l_stepNo"));
+            // Initial load
+            refreshAllCombos();
+        }
+
+
+        //END COMBOBOX ----------------------------------
+
+
+
+        // --- Show Upload Windows --- \\
+        $('.bt_upload').click( function(){
+             $('#uploadModal').modal('show');
+        });
+
+
+        $('#DownloadData').on('click', function () {
+            const headers = [];
+            $('table thead tr:first th .header-text').each(function () {
+                //alert($(this).text().trim());
+                headers.push($(this).text().trim());
+            });
+
+            const rows = [];
+            $('table tbody tr:visible').each(function () {
+                const rowData = [];
+                $(this).find('td.body-text').each(function () {
+                    rowData.push($(this).text().trim());
+                });
+                rows.push(rowData);
+            });
+
+            const payload = { headers: headers, rows: rows };
+
+            $.ajax({
+                url: '/PE/ExportToExcel',
+                type: 'POST',
+                data: JSON.stringify(payload),
+                contentType: 'application/json',
+                xhrFields: { responseType: 'blob' }, // important to download file'
+                success: function (data) {
+                const blob = new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                //a.download = "FilteredData.xlsx";
+
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                const fileName = `TimeStudy_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            }
+            });
+        });       
+
+        // Delete data 
+        $('#DeleteData').click(function(){
+            if($('._cb:checked').length > 0){
+                $('#deleteModal').modal('show');
+            }
+            else{
+                toastr.error('Please select at least one record to delete.');
+            }
+        });
+
+        $(document).on('click', '._cbAll', function () {
+            const isChecked = $(this).is(':checked');
+            $('._cb').prop('checked', isChecked);
+
+            if(isChecked) {
+                $('._cb').closest('tr').css('text-decoration','line-through');
+            } else {
+                $('._cb').closest('tr').css('text-decoration','none');
+            }
+            });
+
+        $(document).on('click', '._cb', function () {
+            const isChecked = $(this).is(':checked');
+            if(isChecked) {
+                $(this).closest('tr').css('text-decoration','line-through');
+            } else {
+                $(this).closest('tr').css('text-decoration','none');
+            }
+        });
+
+        function Delete()
+        {
+            const ids = [];
+            $('._cb:checked').each(function () {
+                const id = parseInt($(this).siblings('._id').val());
+                ids.push(id);
+            });
+
+            if (ids.length === 0) {
+                toastr.error('Please select at least one record to delete.');
+                return;
+            }
+
+            $.ajax({
+                url: '/PE/DeleteTimeStudy',
+                type: 'POST',
+                data: JSON.stringify(ids),
+                contentType: 'application/json',
+                success: function (response) {
+                    if (response.success) {
+                        toastr.success('Selected records deleted successfully.');
+                        // Optionally, refresh the table or remove deleted rows from the DOM
+                        window.location.href = '@Url.Action("TimeStudy", "PE")';
+                    } else {
+                        toastr.error(response.message || 'An error occurred while deleting records.');
+                    }
+                },
+                error: function () {
+                    toastr.error('An error occurred while deleting records.');
+                }
+            });
+        }
+
+        $('.btn_edit').click(function(){
+        const row = $(this).closest('tr');
+        const id = row.find('._id').val();
+        $.ajax({
+                url: '/PE/GetTimeStudyDetail',
+                type: 'GET',
+                data: { id: id },
+                success: function (html) {
+                    $('#modalArea').html(html);
+                    $('#editModal').modal('show');
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the edit form.');
+                }
+            });
+        });
+
+        $('.bt_add').click(function(){
+            $.ajax({
+                url: '/PE/IniTimeStudy',
+                type: 'GET',
+                success: function (html) {
+                    $('#modalArea').html(html);
+                    $('#addModal').modal('show');
+                    InitCombo();    
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the edit form.');
+                }
+            });
+        });
+
+        function Add(){
+
+        }
+
+        function LoadPageAgain(){
+            $.ajax({
+                url: '/PE/GetTimeStudy',
+                type: 'GET',
+                success: function (html) {
+                    $('#addModal').modal('hide');
+                    $('#editModal').modal('hide');
+                    $('#ResultArea').html(html);
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the edit form.');
+                }
+            });
+        }
+
+        // clear content of input
+        $(document).on('click','.btn-clear',function(){
+            var $ip = $(this).closest('.input-group').find('input');
+            $ip.val('');
+        })
+
+    </script>
+    
+}

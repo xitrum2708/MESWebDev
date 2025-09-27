@@ -1,0 +1,102 @@
+﻿@model PEViewModel
+@try
+{
+    <div class="table-responsive overflow-auto mt-3">
+        <table class="table table-bordered table-hover" id="detailTable">
+            <thead class="table-success">
+                <tr class="text-center">
+                    <th>No</th>
+                    <th>Kind</th>
+                    <th>StepNo</th>
+                    <th>StepContent</th>
+                    <th>Seq No</th>
+                    <th>Operation</th>
+                    <th>Operation Detail</th>
+                    <th>Time01</th>
+                    <th>Time02</th>
+                    <th>Time03</th>
+                    <th>Time04</th>
+                    <th>Time05</th>
+                    <th>Time Average</th>
+                    <th>Unit Qty</th>
+                    <th>Time Total</th>
+                </tr>
+            </thead>
+            <tbody >
+                @* Detail rows will be added here dynamically *@
+                @if (Model.timeStudyList != null && Model.timeStudyList.Count > 0)
+                {
+                    for (int i = 0; i < Model.timeStudyList.Count; i++)
+                    {
+                        <tr>
+                            <td class="text-center">@(i + 1)</td>
+                            <td>
+                                @Model.timeStudyList[i].OperationKind
+                                <input hidden asp-for="@Model.timeStudyList[i].OperationKind" />
+                            </td>
+                            <td class="text-center">
+                                @Model.timeStudyList[i].StepNo
+                                <input hidden asp-for="@Model.timeStudyList[i].StepNo" />
+                            </td>
+                            <td>
+                                @Model.timeStudyList[i].StepContent
+                                <input hidden asp-for="@Model.timeStudyList[i].StepContent" />
+                            </td>
+                            <td>
+                                @Model.timeStudyList[i].SeqNo
+                                <input hidden asp-for="@Model.timeStudyList[i].SeqNo" />
+                            </td>
+                            <td>
+                                @Model.timeStudyList[i].OperationName
+                                <input hidden asp-for="@Model.timeStudyList[i].OperationName" />
+                            </td>
+                            <td>
+                                @Model.timeStudyList[i].OperationDetailName
+                                <input hidden asp-for="@Model.timeStudyList[i].OperationDetailName" />
+                            </td>
+                            <td class="text-end">
+                                @Model.timeStudyList[i].Time01
+                                <input hidden asp-for="@Model.timeStudyList[i].Time01" />
+                            </td>
+                            <td class="text-end">
+                                @Model.timeStudyList[i].Time02
+                                <input hidden asp-for="@Model.timeStudyList[i].Time02" />
+                            </td>
+                            <td class="text-end">
+                                @Model.timeStudyList[i].Time03
+                                <input hidden asp-for="@Model.timeStudyList[i].Time03" />
+                            </td>
+                            <td class="text-end">
+                                @Model.timeStudyList[i].Time04
+                                <input hidden asp-for="@Model.timeStudyList[i].Time04" />
+                            </td>
+                            <td class="text-end">
+                                @Model.timeStudyList[i].Time05
+                                <input hidden asp-for="@Model.timeStudyList[i].Time05" />
+                            </td>
+                            <td class="text-end">
+                                @Model.timeStudyList[i].TimeAvg
+                                <input hidden asp-for="@Model.timeStudyList[i].TimeAvg" />
+                            </td>
+                            <td class="text-end">
+                                @Model.timeStudyList[i].UnitQty
+                                <input hidden asp-for="@Model.timeStudyList[i].UnitQty" />
+                            </td>
+                            <td class="text-end">
+                                @Model.timeStudyList[i].TimeTotal
+                                <input hidden asp-for="@Model.timeStudyList[i].TimeTotal" />
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+    </div>
+}
+catch (Exception ex)
+{
+    <div class="alert alert-danger">
+        Error: @ex.Message
+    </div>
+}

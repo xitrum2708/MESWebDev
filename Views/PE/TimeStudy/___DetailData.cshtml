@@ -1,0 +1,54 @@
+﻿@model PEViewModel
+
+@if (Model.timeStudyStepDtlList != null && Model.timeStudyStepDtlList.Count > 0)
+{
+    for (int j = 0; j < Model.timeStudyStepDtlList.Count; j++)
+    {
+        <tr>
+            <td>@(j + 1)
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].SeqNo" value="@(j + 1)" />
+            </td>
+            <td>
+                @Model.timeStudyStepDtlList[j].OperationName
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].OperationName" />
+            </td>
+            <td>
+                @Model.timeStudyStepDtlList[j].OperationDetailName
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].OperationDetailName" />
+            </td>
+            <td>
+                @Model.timeStudyStepDtlList[j].Remark
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Remark" />
+            </td>
+            <td class="text-end">
+                @Model.timeStudyStepDtlList[j].Time01
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time01" />
+            </td>
+            <td class="text-end">
+                @Model.timeStudyStepDtlList[j].Time02
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time02" />
+            </td>
+            <td class="text-end">
+                @Model.timeStudyStepDtlList[j].Time03
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time03" />
+            </td>
+            <td class="text-end">
+                @Model.timeStudyStepDtlList[j].Time04
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time04" />
+            </td>
+            <td class="text-end">
+                @Model.timeStudyStepDtlList[j].Time05
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time05" />
+            </td>
+            <td class="text-end">
+                @Model.timeStudyStepDtlList[j].TimeAvg
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].TimeAvg" />
+            </td>
+            <td class="d-flex justify-content-center align-items-center">
+                <a class="btn btn-sm btn-danger" id="removeStepDtl">
+                    <i class="bi bi-trash"></i> Delete
+                </a>
+            </td>
+        </tr>
+    }
+}

@@ -82,6 +82,13 @@ namespace MESWebDev.Data
 
         public DbSet<UploadFileMaster> Master_UploadFile_mst { get; set; }
 
+        public DbSet<OperationModel> Master_Operation_Hdr { get; set; }
+        public DbSet<OperationDetailModel> Master_Operation_Dtl{ get; set; }
+        public DbSet<TimeStudyHdrModel> UV_PE_TimeStudy_Hdr{ get; set; }
+        public DbSet<TimeStudyDtlModel> UV_PE_TimeStudy_Dtl { get; set; }
+        public DbSet<TimeStudyStepDtlModel> UV_PE_TimeStudyStep_Dtl { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<UV_LOTCONTROL_MASTER>(entity =>

@@ -1,0 +1,38 @@
+﻿@* <form asp-action="DeleteUser" asp-controller="User" method="post"> *@
+<form >
+    <input hidden id="flowList" name="flowList" />
+    <div class="modal" id="deleteModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title">DELETE</h5>
+                    <button type="button" class="btn btn-sm btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <div class="row m-3">
+                        <h5>
+                            Delete data ?
+                        </h5>
+                    </div>
+                </div>
+
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <a onclick="Delete()" class="btn btn-sm btn-primary">
+                        <i class="fa-regular fa-floppy-disk"></i>
+                        Confirm
+                    </a>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa-regular fa-circle-xmark"></i>
+                        Cancel
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</form>

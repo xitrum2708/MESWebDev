@@ -5,6 +5,7 @@ using OfficeOpenXml.Style;
 using System.Data;
 using System.Drawing;
 using System.Globalization;
+using System.Reflection;
 
 namespace MESWebDev.Common
 {
@@ -195,10 +196,15 @@ namespace MESWebDev.Common
                     {
                         string value = request.Rows[r][c].ToString().Replace(",", "");
                         // double.TryParse(value, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"), out var num)
-                        if (double.TryParse(value, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"), out var num))
+                        if (int.TryParse(value, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"), out var num))
                         {
                             worksheet.Cells[r + 2, c + 1].Value = num;
-                            worksheet.Cells[r + 2, c + 1].Style.Numberformat.Format = numberFormat; // 2 decimals
+                            worksheet.Cells[r + 2, c + 1].Style.Numberformat.Format = "0"; // 2 decimals
+                        }
+                        else if(decimal.TryParse(value, NumberStyles.Any, CultureInfo.GetCultureInfo("en-US"), out var decValue))
+                        {
+                            worksheet.Cells[r + 2, c + 1].Value = decValue;
+                            worksheet.Cells[r + 2, c + 1].Style.Numberformat.Format = numberFormat; // 4 decimals
                         }
                         else
                         {
@@ -211,6 +217,34 @@ namespace MESWebDev.Common
                 //stream.Position = 0;
                 return package.GetAsByteArray();
             }   
+        }
+
+
+
+        public async Task<byte[]> DownloadList<T>(IEnumerable<T> data, string sheetName = "Data")
+        {
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add(sheetName);
+
+                PropertyInfo[] properties = typeof(T).GetProperties();
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    worksheet.Cells[1, i + 1].Value = properties[i].Name;
+                }
+                int row = 2;
+                foreach (var item in data)
+                {
+                    for (int col = 0; col < properties.Length; col++)
+                    {
+                        var value = properties[col].GetValue(item);
+                        worksheet.Cells[row, col + 1].Value = value;
+                    }
+                    row++;
+                }
+
+                return package.GetAsByteArray();
+            }
         }
     }
 }

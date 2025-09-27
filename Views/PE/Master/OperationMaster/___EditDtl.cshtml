@@ -1,0 +1,40 @@
+﻿@model PEViewModel
+@{
+    int i = 0;
+}
+@try{
+    @if (Model.operationDtlList != null && Model.operationDtlList.Count > 0)
+    {
+        for (int j = 0; j < Model.operationDtlList.Count; j++)
+        @* @foreach (OperationDetailModel row in Model.operationDtlList) *@
+        {
+            i++;
+            <tr>
+                <td class="body-text">@i</td>
+                <td>
+                    @Model.operationDtlList[j].Id
+                    <input hidden asp-for="@Model.operationDtlList[j].Id" />
+                </td>
+                <td>
+                    <input class="form-control" asp-for="@Model.operationDtlList[j].Name" />
+                </td>
+                <td>
+                    <input class="form-control" asp-for="@Model.operationDtlList[j].Description" />
+                </td>
+                <td>
+                    <a class="btn btn-sm btn-danger" onclick="deleteItemDetail(@Model.operation.Id,@Model.operationDtlList[j].Id)">
+                        <i class="bi bi-trash"></i> Delete
+                    </a>
+                </td>
+            </tr>
+   
+        }
+
+    }
+
+}
+catch(Exception ex)
+{
+    string t = string.Empty;
+}
+

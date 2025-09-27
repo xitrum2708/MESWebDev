@@ -34,15 +34,15 @@ namespace MESWebDev.Middleware
             var additionalDetails = $"IP: {context.Connection.RemoteIpAddress} | UserAgent: {context.Request.Headers["User-Agent"]}";
 
             await loggingService.LogActionAsync<object>(
-             actionName: actionName,
-             actionType: "ControllerAction",
-             action: async () =>
-             {
-                 await _next(context);
-                 return null; // Return a dummy value since the middleware doesn't need a return value
-             },
-             createdBy: createdBy,
-             additionalDetails: additionalDetails
+                actionName: actionName,
+                actionType: "ControllerAction",
+                action: async () =>
+                {
+                    await _next(context);
+                    return null; // Return a dummy value since the middleware doesn't need a return value
+                },
+                createdBy: createdBy,
+                additionalDetails: additionalDetails
          );
         }
     }

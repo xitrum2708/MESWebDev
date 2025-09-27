@@ -1,0 +1,206 @@
+﻿@model PEViewModel
+
+@* <form asp-action="AddTimeStudy" asp-controller="PE" method="post"> *@
+@try
+{
+    <form id="fAddDetail" method="post">
+        <div class="modal fade" id="addDetailModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header table-success">
+                        <h5 class="modal-title">
+                            <i class="bi bi-plus-circle"></i>
+                            Add
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="m-2">
+                            <div class="bg-light">
+                                <div class="row mb-2">
+                                    <div class="col">
+                                        <h5>Operation Kind</h5>
+                                        <select class="form-select" id="Kind" asp-for="TimeStudyDtl.OperationKind" required>
+                                            <option>PROCESS</option>
+                                            <option>ALIGNMENT</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col">
+                                        <h5>Step No</h5>
+                                        <input class="form-control" id="StepNo" asp-for="TimeStudyDtl.StepNo" value="@(Model.StepNo ?? 1)" required />
+                                    </div>
+
+                                    <div class="col">
+                                        <h5>Step Content</h5>
+                                        <input class="form-control" id="StepContent" asp-for="TimeStudyDtl.StepContent" />
+                                    </div>
+                                    <div class="col">
+                                        <h5>Unit Qty</h5>
+                                        <input class="form-control" type="number" id="UnitQty" asp-for="TimeStudyDtl.UnitQty" required />
+                                    </div>
+                                    <div class="col">
+                                        <h5>Allocated Opr</h5>
+                                        <input class="form-control" type="number" id="AllocatedOpr" asp-for="TimeStudyDtl.AllocatedOpr" />
+                                    </div>
+                                </div>
+                                <div class="row stepDetail">
+                                    <div class="col-10">
+                                        <div class="row">
+                                            <div class="col">
+                                                <h5>Operation Name</h5>
+                                                <div class="combobox">
+                                                    <div class="input-group">
+                                                        <input class="form-control" type="text" id="ip_operationName" asp-for="@Model.TimeStudyStepDtl.OperationName" placeholder="Input or select value...">
+                                                        <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                            <i class="bi bi-x-lg"></i>
+                                                        </button>
+                                                    </div>
+                                                    <span asp-validation-for="@Model.TimeStudyStepDtl.OperationName" class="text-danger"></span>
+                                                    <ul id="l_operationName"></ul>
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                <h5>Operation Detail</h5>
+                                                <div class="combobox">
+                                                    <div class="input-group">
+                                                        <input class="form-control" type="text" id="ip_operationDtlName" asp-for="@Model.TimeStudyStepDtl.OperationDetailName" placeholder="Input or select value...">
+                                                        <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                            <i class="bi bi-x-lg"></i>
+                                                        </button>
+                                                    </div>
+                                                    <span asp-validation-for="@Model.TimeStudyStepDtl.OperationDetailName" class="text-danger"></span>
+                                                    <ul id="l_operationDtlName"></ul>
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                <h5>Remark</h5>
+                                                <input class="form-control" asp-for="TimeStudyStepDtl.Remark" style="width:200px" />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+
+                                            <div class="col">
+                                                <h5>Time01</h5>
+                                                <div class="d-flex justify-content-center align-content-center">
+                                                    <input id="ip_time01" class="form-control me-2" asp-for="TimeStudyStepDtl.Time01" required />
+                                                    <a class="btn btn-sm btn-success bt_timer" data-input="#ip_time01">
+                                                        <i class="bi bi-play-circle"></i>
+                                                        Start
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                <h5>Time02</h5>
+                                                <div class="d-flex justify-content-center align-content-center">
+                                                    <input id="ip_time02" class="form-control me-2" asp-for="TimeStudyStepDtl.Time02" />
+                                                    <a class="btn btn-sm btn-success bt_timer" data-input="#ip_time02">
+                                                        <i class="bi bi-play-circle"></i>
+                                                        Start
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                <h5>Time03</h5>
+                                                <div class="d-flex justify-content-center align-content-center">
+                                                    <input id="ip_time03" class="form-control me-2" asp-for="TimeStudyStepDtl.Time03" />
+                                                    <a class="btn btn-sm btn-success bt_timer" data-input="#ip_time03">
+                                                        <i class="bi bi-play-circle"></i>
+                                                        Start
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                <h5>Time04</h5>
+                                                <div class="d-flex justify-content-center align-content-center">
+                                                    <input id="ip_time04" class="form-control me-2" asp-for="TimeStudyStepDtl.Time04" />
+                                                    <a class="btn btn-sm btn-success bt_timer" data-input="#ip_time04">
+                                                        <i class="bi bi-play-circle"></i>
+                                                        Start
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                <h5>Time05</h5>
+                                                <div class="d-flex justify-content-center align-content-center">
+                                                    <input id="ip_time05" class="form-control me-2" asp-for="TimeStudyStepDtl.Time05" />
+                                                    <a class="btn btn-sm btn-success bt_timer" data-input="#ip_time05">
+                                                        <i class="bi bi-play-circle"></i> 
+                                                        Start
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="col-2 d-flex flex-column justify-content-center align-items-center">
+                                        <a class="btn btn-lg btn-info mb-3" id="bt_AddOperation">Add</a>
+                                        <button type="reset" class="btn btn-sm btn-warning">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <hr />
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped table-hover" id="tb_TimeStudyStepDtl">
+                                    <thead>
+                                    @* <thead class="sticky-top"> *@
+                                        <!-- Header Row -->
+                                        <tr>
+                                            <th class="text-center table-info">No.</th>
+                                            <th class="text-center table-info">Operation Name</th>
+                                            <th class="text-center table-info">Operation Detail</th>
+                                            <th class="text-center table-info">Remark</th>
+                                            <th class="text-center table-info">Time01</th>
+                                            <th class="text-center table-info">Time02</th>
+                                            <th class="text-center table-info">Time03</th>
+                                            <th class="text-center table-info">Time04</th>
+                                            <th class="text-center table-info">Time05</th>
+                                            <th class="text-center table-info">Time Avg</th>
+                                            <th class="text-center table-info">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyTimeStudyStepDtlResult">
+                                        <partial name="TimeStudy/___DetailData" model="Model" />
+                                    </tbody>
+                                </table>
+                            </div>
+
+
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between">
+                            <button type="reset" class="btn  btn-warning">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                                Clear All
+                            </button>
+                            <div>
+                                <a id="btnAddDtl" class="btn btn-sm btn-info">
+                                    <i class="bi bi-floppy"></i>
+                                    Save
+                                </a>
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fa-regular fa-circle-xmark"></i>
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+}
+catch(Exception ex)
+{
+    string t = ex.Message;
+}
+
+

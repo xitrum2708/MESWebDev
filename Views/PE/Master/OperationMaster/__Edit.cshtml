@@ -1,0 +1,71 @@
+﻿@model PEViewModel
+@{
+    int i = 0;
+}
+
+<form id="fEdit" method="post">
+    @Html.AntiForgeryToken()
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">@* " modal-lg"> *@
+            <div class="modal-content">
+                <div class="modal-header table-success">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil-square"></i>
+                        Edit
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-warning">
+
+                <input type="hidden" asp-for="@Model.operation.Id"  />
+                <div class="row g-2">
+                    <div class="col-4">Operation Name</div>
+                    <div class="col-8"><input type="text" class="form-control" asp-for="@Model.operation.Name" required /></div>
+
+                    <div class="col-4">Description</div>
+                    <div class="col-8"><input type="text" class="form-control" asp-for="@Model.operation.Description" /></div>
+
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4>Operation Detail Master</h4>
+                        <a class="btn btn-sm btn-primary" id="BtnAddDetail">
+                            <i class="bi bi-plus-circle"></i>
+                            Add
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+
+                        <table class="table table-bordered table-striped table-hover" id="tb_OperationDtl">
+                            <thead class="sticky-top">
+                                <!-- Header Row -->
+                                <tr>
+                                    <th class="text-center table-info">No.</th>
+                                    <th class="text-center table-info">ID</th>
+                                    <th class="text-center table-info">Item Name</th>
+                                    <th class="text-center table-info">Description</th>
+                                    <th class="text-center table-info">Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tbodyDtlResult">
+                                <partial name="Master/OperationMaster/___EditDtl" model="Model" />
+                            </tbody>
+                        </table>
+                    </div>                        
+                </div>
+                
+            </div>
+            <div class="modal-footer">
+                <a id="btnEdit" onclick="Edit()" class="btn btn-sm btn-info">
+                    <i class="bi bi-floppy"></i>
+                    Save
+                </a>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                    <i class="fa-regular fa-circle-xmark"></i>
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</form>
