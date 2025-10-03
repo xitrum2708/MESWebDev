@@ -123,5 +123,24 @@ namespace MESWebDev.Common
             return value;
         }
 
+        public async Task Proc_ExcecuteNonQuery(string proc_name, Dictionary<string, object> dic)
+        {
+            string value = string.Empty;
+            using (var command = _con.Database.GetDbConnection().CreateCommand())
+            {
+                command.CommandText = proc_name;
+                command.CommandType = CommandType.StoredProcedure;
+                command.CommandTimeout = 0;
+                foreach (var d in dic)
+                {
+                    command.Parameters.Add(new SqlParameter(d.Key, d.Value));
+                }
+
+                _con.Database.OpenConnection();
+                await command.ExecuteNonQueryAsync();
+                _con.Database.CloseConnection();                
+            }
+        }
+
     }
 }

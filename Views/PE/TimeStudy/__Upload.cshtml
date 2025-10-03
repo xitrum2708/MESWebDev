@@ -3,7 +3,7 @@
     For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 *@
 
-<form id="UploadForm" enctype="multipart/form-data" asp-action="UploadFiles" asp-controller="PE" method="post">
+<form id="UploadForm" enctype="multipart/form-data"  method="post">
     <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             @* <div class="modal-dialog"> *@
@@ -18,7 +18,7 @@
                 <div class="modal-body p-2">
                     <div class="row">
                         <div class="col-10 my-2">
-                            <a href="~/UploadTemplate/PE/MainpowerUploadTemplate.xlsx">[Download Template]</a>
+                            <a href="~/UploadTemplate/PE/TimeStudyUploadTemplate.xlsx">[Download Template]</a>
                         </div>
                         <div class="col-10 mb-2">
                             <input class="form-control form-control-sm" accept=".xls*,.csv" type="file" name="file1" required/>
@@ -28,10 +28,10 @@
                     <font id="result" class="text-danger fw-bold"></font>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary btn-sm">
+                    <a class="btn btn-primary btn-sm" id="btnUpload">
                         <i class='bx bx-upload'></i>
                         Upload
-                    </button>
+                    </a>
                     <button type="button" class="btn btn-warning btn-sm" data-bs-dismiss="modal">
                         <i class='bx bx-no-entry'></i>
                         Cancel

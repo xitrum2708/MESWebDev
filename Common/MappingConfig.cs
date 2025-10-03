@@ -23,11 +23,14 @@ namespace MESWebDev.Common
             CreateMap<TimeStudyHdrDTO, TimeStudyHdrModel>().ReverseMap();
             CreateMap<TimeStudyStepDtlDTO, TimeStudyStepDtlModel>().ReverseMap();
 
-            CreateMap<TimeStudyDtlDTO, TimeStudyDTO>();  // tells AutoMapper how to map TimeStudyDtlDTO
-            CreateMap<TimeStudyStepDtlDTO, TimeStudyDTO>(); // tells AutoMapper how to map TimeStudyStepDtlDTO
+            CreateMap<TimeStudyDtlDTO, TimeStudyDTO>().ReverseMap();  // tells AutoMapper how to map TimeStudyDtlDTO
+            CreateMap<TimeStudyStepDtlDTO, TimeStudyDTO>().ReverseMap(); // tells AutoMapper how to map TimeStudyStepDtlDTO
             CreateMap<TimeStudyOtherDTO, TimeStudyDTO>().IncludeMembers(src => src.TimeStudyDtl,src => src.TimeStudyStepDtl); // tells AutoMapper how to map TimeStudyOtherDTO
                                                                                                                               // 
 
+            CreateMap<TimeStudyUploadDTO, TimeStudyStepDtlModel>().ReverseMap();
+            CreateMap<TimeStudyUploadDTO, TimeStudyHdrModel>().ReverseMap();
+            CreateMap<TimeStudyUploadDTO, TimeStudyDtlModel>().ReverseMap();
         }
     }
 }

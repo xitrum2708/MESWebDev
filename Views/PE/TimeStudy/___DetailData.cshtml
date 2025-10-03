@@ -5,50 +5,58 @@
     for (int j = 0; j < Model.timeStudyStepDtlList.Count; j++)
     {
         <tr>
+            <td class="d-flex justify-content-center align-items-center">
+
+                <a class="btn btn-sm btn-warning me-3" id="editStepDtl">
+                    <i class="bi bi-pencil-square"></i>
+                </a>
+
+                <a class="btn btn-sm btn-danger" id="removeStepDtl">
+                    <i class="bi bi-trash"></i>
+                </a>
+
+            </td>
             <td>@(j + 1)
                 <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].SeqNo" value="@(j + 1)" />
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].StepId" />
             </td>
             <td>
                 @Model.timeStudyStepDtlList[j].OperationName
-                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].OperationName" />
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].OperationName" value="@Model.timeStudyStepDtlList[j].OperationName" />
             </td>
             <td>
                 @Model.timeStudyStepDtlList[j].OperationDetailName
-                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].OperationDetailName" />
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].OperationDetailName" value="@Model.timeStudyStepDtlList[j].OperationDetailName" />
             </td>
             <td>
                 @Model.timeStudyStepDtlList[j].Remark
-                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Remark" />
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Remark" value="@Model.timeStudyStepDtlList[j].Remark" />
             </td>
             <td class="text-end">
                 @Model.timeStudyStepDtlList[j].Time01
-                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time01" />
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time01" value="@Model.timeStudyStepDtlList[j].Time01" />
             </td>
             <td class="text-end">
                 @Model.timeStudyStepDtlList[j].Time02
-                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time02" />
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time02" value="@Model.timeStudyStepDtlList[j].Time02" />
             </td>
             <td class="text-end">
                 @Model.timeStudyStepDtlList[j].Time03
-                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time03" />
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time03" value="@Model.timeStudyStepDtlList[j].Time03" />
             </td>
             <td class="text-end">
                 @Model.timeStudyStepDtlList[j].Time04
-                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time04" />
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time04" value="@Model.timeStudyStepDtlList[j].Time04" />
             </td>
             <td class="text-end">
                 @Model.timeStudyStepDtlList[j].Time05
-                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time05" />
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].Time05" value="@Model.timeStudyStepDtlList[j].Time05" />
             </td>
             <td class="text-end">
                 @Model.timeStudyStepDtlList[j].TimeAvg
-                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].TimeAvg" />
+                <input type="hidden" asp-for="@Model.timeStudyStepDtlList[j].TimeAvg" value="@Model.timeStudyStepDtlList[j].TimeAvg" />
             </td>
-            <td class="d-flex justify-content-center align-items-center">
-                <a class="btn btn-sm btn-danger" id="removeStepDtl">
-                    <i class="bi bi-trash"></i> Delete
-                </a>
-            </td>
+
         </tr>
     }
 }

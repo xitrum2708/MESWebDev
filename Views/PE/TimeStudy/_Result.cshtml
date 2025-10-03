@@ -15,17 +15,17 @@
                 <thead class="sticky-top">
                     <!-- Header Row -->
                     <tr>
-                        <th></th>
-                        <th>No.</th>
+                        <th class="text-center table-info"></th>
+                        <th class="text-center table-info">No.</th>
                         @foreach (DataColumn column in Model.data.Columns)
                         {
-                            if (column.ColumnName.ToLower() == "id")
+                            if (column.ColumnName.ToLower() == "idd")
                             {
-                                <th>
+@*                                 <th>
                                     <div class="d-flex justify-content-center align-content-center">
                                         <input class="_cbAll form-check form-check-input" type="checkbox" />
                                     </div>
-                                </th>
+                                </th> *@
                             }
                             else
                             {
@@ -44,28 +44,25 @@
                     {
                         i++;
                         <tr>
-                            <td class="d-flex justify-content-center align-items-center">
-                                <a class="btn btn-sm btn-warning btn_edit me-3">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                                <a class="btn btn-sm btn-danger btn_delete">
-                                    <i class="bi bi-trash"></i>
+                            <td class="d-flex align-items-center p-3">
+                                <a class="btn btn-sm btn-warning" onclick="btnEdit(@row["Id"])">
+                                    <i class="bi bi-pencil-square"></i>                                    
                                 </a>
                             </td>
-                            <td>@i</td>
+                            <td >@i</td>
                             @foreach (DataColumn col in Model.data.Columns)
                             // @foreach (var item in row.ItemArray)
                             {
                                 
                                 var item = row[col];
-                                if (col.ColumnName.ToLower() == "id")
+                                if (col.ColumnName.ToLower() == "idd")
                                 {
-                                    <td>
+@*                                     <td>
                                         <div class="d-flex justify-content-center align-content-center">
                                             <input class="_cb form-check form-check-input" type="checkbox" />
                                             <input hidden class="_id" value="@item" />
                                         </div>
-                                    </td>
+                                    </td> *@
                                 }
                                 else
                                 {

@@ -5,6 +5,7 @@
         <table class="table table-bordered table-hover" id="detailTable">
             <thead class="table-success">
                 <tr class="text-center">
+                    <td>Action</td>
                     <th>No</th>
                     <th>Kind</th>
                     <th>StepNo</th>
@@ -29,6 +30,16 @@
                     for (int i = 0; i < Model.timeStudyList.Count; i++)
                     {
                         <tr>
+                            <td class="d-flex justify-content-center align-items-center">
+                                <a class="btn btn-sm btn-warning me-3" onclick="btnEditDtl(@Model.timeStudyList[i].StepNo)">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+
+       @*                          <a class="btn btn-sm btn-danger" id="removeDtl">
+                                    <i class="bi bi-trash"></i>
+                                </a> *@
+
+                            </td>
                             <td class="text-center">@(i + 1)</td>
                             <td>
                                 @Model.timeStudyList[i].OperationKind

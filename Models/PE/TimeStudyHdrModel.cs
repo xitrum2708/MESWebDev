@@ -23,11 +23,14 @@ namespace MESWebDev.Models.PE
         public string? PcbNo { get; set; }
         public string? UploadFile { get; set; }
 
+        public bool Active { get; set; } = true;
+
         public DateTime CreatedDt { get; set; }
         public string CreatedBy { get; set; }
         public DateTime? UpdatedDt { get; set; }
         public string? UpdatedBy { get; set; }
 
-
+        // Navigation
+        public ICollection<TimeStudyDtlModel> TimeStudyDtl { get; set; } = new List<TimeStudyDtlModel>();
     }
 }

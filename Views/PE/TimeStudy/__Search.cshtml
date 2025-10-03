@@ -1,0 +1,51 @@
+﻿@model TimeStudyHdrDTO
+@* <form asp-action="EditManpower" asp-controller="PE" method="post"> *@
+ <form id="fSearch" method="post">
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">@* " modal-lg"> *@
+        <div class="modal-content">
+            <div class="modal-header table-success">
+                <h5 class="modal-title">
+                    <i class="bi bi-search"></i>
+                    Search
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-warning">
+                <div class="row g-2">
+                    <div class="col-4">Customer</div>
+                    <div class="col-8"><input type="text" class="form-control" asp-for="Customer" /></div>
+
+                    <div class="col-4">Section</div>
+                    <div class="col-8"><input type="text" class="form-control" asp-for="Section" required /></div>
+
+                    <div class="col-4">Model</div>
+                    <div class="col-8"><input type="text" class="form-control" asp-for="Model" /></div>
+
+                    <div class="col-4">BModel</div>
+                    <div class="col-8"><input type="text" class="form-control" asp-for="BModel" /></div>
+
+                    <div class="col-4">Lot No</div>
+                    <div class="col-8"><input type="text" class="form-control" asp-for="LotNo" /></div>
+
+                    <div class="col-4">PCB Name</div>
+                    <div class="col-8"><input type="text" class="form-control" asp-for="PcbName" /></div>
+
+                    <div class="col-4">PCB No</div>
+                    <div class="col-8"><input type="text" class="form-control" asp-for="PcbNo" /></div>
+                </div>                
+            </div>
+            <div class="modal-footer">
+                <a id="btnSearch" class="btn btn-sm btn-primary">
+                    <i class="bi bi-search"></i>
+                    Search
+                </a>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                    <i class="fa-regular fa-circle-xmark"></i>
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</form>

@@ -31,5 +31,8 @@ namespace MESWebDev.Models.PE
         public DateTime? UpdatedDt { get; set; }
         public string? UpdatedBy { get; set; }
 
+        // Navigation
+        public ICollection<TimeStudyStepDtlModel> TimeStudyStepDtl { get; set; } = new List<TimeStudyStepDtlModel>();
+
     }
 }

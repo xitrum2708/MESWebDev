@@ -1,71 +1,166 @@
-﻿@model ManpowerModel
-<form asp-action="EditManpower" asp-controller="PE" method="post">
-<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">@* " modal-lg"> *@
-        <div class="modal-content">
-            <div class="modal-header table-success">
-                <h5 class="modal-title">
-                    <i class="bi bi-pencil-square"></i>
-                    Edit
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+﻿@model PEViewModel
+
+ @* <form asp-action="AddTimeStudy" asp-controller="PE" method="post">  *@
+ <form id="fData" method="post"> 
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header table-success">
+                        <h5 class="modal-title">
+                            <i class="bi bi-pencil-square"></i>
+                            Edit
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+                    </div>
+                    <div class="modal-body ">
+                        <div class="m-2">
+                            @* COMMON INFORMATION  *@
+                            <div class="d-flex align-items-center text-center">
+                                <hr class="border-2 border-black" style="width:25px" />
+                                <h6 class="mx-2">COMMON INFORMATION</h6>
+                                <hr class="flex-grow-1 border-2 border-black" />
+                            </div>
+
+                            <div class="row">
+                                <div class="col">
+                                    <h5>Customer</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_customer" asp-for="@Model.TimeStudyHdr.Customer" placeholder="Select customer...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                            <ul id="l_customer">
+                                            </ul>
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <h5>Section</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_section" asp-for="@Model.TimeStudyHdr.Section" placeholder="Select section...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                            <ul id="l_section"></ul>
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <h5>Unit</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_unit" asp-for="@Model.TimeStudyHdr.Unit" placeholder="Select unit...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        <ul id="l_unit"></ul>
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <h5> Model </h5>
+                                    <div>
+                                        <input type="hidden" asp-for="@Model.TimeStudyHdr.Id" />
+                                        <input hidden asp-for="@Model.TimeStudyHdr.Model">
+                                        <h5 class="fw-bold text-success">@Model.TimeStudyHdr.Model</h5>
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <h5>B Model</h5>
+                                    <div>
+                                        <input hidden asp-for="@Model.TimeStudyHdr.BModel">
+                                        <h5 class="fw-bold text-success">@Model.TimeStudyHdr.BModel</h5>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <h5>Lot No</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_lotNo" asp-for="@Model.TimeStudyHdr.LotNo" placeholder="Input or select value...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        <span asp-validation-for="@Model.TimeStudyHdr.LotNo" class="text-danger"></span>
+                                        <ul id="l_lotNo"></ul>
+                                    </div>
+                                </div>
+
+                                <div class="col">
+                                    <h5>PCB Name</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_pcbName" asp-for="@Model.TimeStudyHdr.PcbName" placeholder="Input or select value...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        <ul id="l_pcbName"></ul>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <h5>PCB No</h5>
+                                    <div class="combobox">
+                                        <div class="input-group">
+                                            <input class="form-control" type="text" id="ip_pcbNo" asp-for="@Model.TimeStudyHdr.PcbNo" class="form-control" placeholder="Input or select value...">
+                                            <button type="button" class="btn btn-outline-danger btn-clear" aria-label="Clear">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+
+                                        <ul id="l_pcbNo"></ul>
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+
+                            @* OPERATION DETAIL *@
+                            <div class="d-flex align-items-center text-center mt-4">
+                                <hr class="border-2 border-black" style="width:25px" />
+                                <h6 class="mx-2">OPERATION DETAIL</h6>
+                                <hr class="flex-grow-1 border-2 border-black" />
+                                <a class="btn btn-sm btn-primary mx-3" onclick="ClickAddDetail()"> Add Detail </a>
+                            </div>
+
+                            <div id="detailBody">
+                                <partial name="TimeStudy/___DetailBody" model="Model" />
+                            </div>                           
+
+                        </div>
+
+
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <button type="reset" class="btn  btn-warning">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            Clear All
+                        </button>
+                        <div>
+                            <a onclick="BtnEditSave()" class="btn btn-sm btn-primary">
+                                <i class="bi bi-floppy"></i>
+                                Save
+                            </a>
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                                <i class="fa-regular fa-circle-xmark"></i>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body bg-warning">
-                
-                    <input type="hidden" asp-for="Id" />
-                    <div class="mb-3">
-                        <label>Company: <strong class="ms-2">@Model.Company</strong></label>
-                    </div>
-                    <div class="mb-3">
-                        <label>U Model: <strong class="ms-2">@Model.UModel</strong></label>
-                    </div>
-                    <div class="mb-3">
-                        <label>B Model: <strong class="ms-2">@Model.BModel</strong></label>
-                    </div>
-                    <div class="row g-2">
-                        <div class="col-4">Description</div>
-                        <div class="col-8"><input type="text" class="form-control" asp-for="Description" /></div>
+    </div>    
+</form> 
+<div id="detailModalArea">
 
-                        <div class="col-4">SMT Headcount</div>
-                        <div class="col-8"><input type="text" class="form-control" asp-for="SmtHeadcount" required /></div>
-
-                        <div class="col-4">SMT Cost</div>
-                        <div class="col-8"><input type="text" class="form-control" asp-for="SmtCost" /></div>
-
-                        <div class="col-4">Insert Headcount</div>
-                        <div class="col-8"><input type="text" class="form-control" asp-for="InsertHeadcount" /></div>
-
-                        <div class="col-4">Insert Cost</div>
-                        <div class="col-8"><input type="text" class="form-control" asp-for="InsertCost" /></div>
-
-                        <div class="col-4">SCL Headcount</div>
-                        <div class="col-8"><input type="text" class="form-control" asp-for="SclHeadcount" /></div>
-
-                        <div class="col-4">SCL Cost</div>
-                        <div class="col-8"><input type="text" class="form-control" asp-for="SclCost" /></div>
-
-                        <div class="col-4">Assy Headcount</div>
-                        <div class="col-8"><input type="text" class="form-control" asp-for="AssyHeadcount" /></div>
-
-                        <div class="col-4">Assy Cost</div>
-                        <div class="col-8"><input type="text" class="form-control" asp-for="AssyCost" /></div>
-
-                        <div class="col-4">Updated Date</div>
-                        <div class="col-8"><input type="date" class="form-control" asp-for="UpdatedModelDt" /></div>
-                    </div>
-                
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-sm btn-primary">
-                    <i class="fa-regular fa-floppy-disk"></i>
-                    Confirm
-                </button>
-                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
-                    <i class="fa-regular fa-circle-xmark"></i>
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
 </div>
-</form>
+@* <partial name="TimeStudy/___AddDetail" model="Model" />  *@
+

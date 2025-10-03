@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelDataReader;
 using MESWebDev.Common;
 using MESWebDev.Data;
@@ -6,8 +7,10 @@ using MESWebDev.Models.COMMON;
 using MESWebDev.Models.PE;
 using MESWebDev.Models.PE.DTO;
 using MESWebDev.Services.IService;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.Diagnostics;
 
 namespace MESWebDev.Services
 {
@@ -538,6 +541,7 @@ namespace MESWebDev.Services
                         Time04 = i.Time04,
                         Time05 = i.Time05,
                         TimeAvg = i.TimeAvg,
+                        Remark = i.Remark,
                         CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty,
                         CreatedDt = DateTime.Now,
                     })
@@ -556,10 +560,6 @@ namespace MESWebDev.Services
         {
             throw new NotImplementedException();
         }
-        public Task<PEViewModel> UploadTimeStudy(IFormFile f)
-        {
-            throw new NotImplementedException();
-        }
         public async Task<DataTable> GetTimeStudy(Dictionary<string, object> dic)
         {
             DataTable dt = new();
@@ -570,9 +570,95 @@ namespace MESWebDev.Services
         {
             throw new NotImplementedException();
         }
-        public Task<string> EditTimeStudy(OperationDetailModel odm)
+        public async Task<string> EditTimeStudy(PEViewModel pev)
         {
-            throw new NotImplementedException();
+            try
+            {
+                if (pev.timeStudyList != null && pev.timeStudyList.Count > 0)
+                {
+     
+
+                    // Delete Time Study Detail and Time Study Step Detail and re-add
+                    var detailToDelete = await _con.UV_PE_TimeStudy_Dtl.Where(i => i.ParentId == pev.TimeStudyHdr.Id).ToListAsync();
+                    if (detailToDelete.Any())
+                    {
+                        await _proc.Proc_ExcecuteNonQuery("spweb_UV_PE_InputTimeStudy_DelDetail", new Dictionary<string, object>
+                        {
+                            { "@id", pev.TimeStudyHdr.Id },
+                            { "@user_id", _hca.HttpContext?.User?.Identity?.Name ?? string.Empty }
+                        });
+                    }
+                   
+                    // Change Time Study Header
+                    var data = await _con.UV_PE_TimeStudy_Hdr.FindAsync(pev.TimeStudyHdr.Id);
+                    data.Customer = pev.TimeStudyHdr.Customer;
+                    data.Section = pev.TimeStudyHdr.Section;
+                    //data.Model = pev.TimeStudyHdr.Model;
+                    //data.BModel = pev.TimeStudyHdr.BModel;
+                    data.LotNo = pev.TimeStudyHdr.LotNo;
+                    data.Unit = pev.TimeStudyHdr.Unit;
+                    data.Active = true;
+                    data.PcbName = pev.TimeStudyHdr.PcbName;
+                    data.PcbNo = pev.TimeStudyHdr.PcbNo;
+                    data.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                    data.UpdatedDt = DateTime.Now;
+                    await _con.SaveChangesAsync();
+
+                    // Re-add Time Study Detail
+                    List<TimeStudyDtlModel> tdm = pev.timeStudyList
+                        .GroupBy(i => new { i.OperationKind, i.StepNo, i.StepContent, i.UnitQty, i.AllocatedOpr })
+                        .Select(g => new TimeStudyDtlModel
+                        {
+                            ParentId = pev.TimeStudyHdr.Id,  // Now this has a valid value
+                            OperationKind = g.Key.OperationKind,
+                            StepNo = g.Key.StepNo,
+                            StepContent = g.Key.StepContent,
+                            UnitQty = g.Key.UnitQty,
+                            AllocatedOpr = g.Key.AllocatedOpr,
+                            Sumary = g.Sum(i => i.TimeAvg),
+                            CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty,
+                            CreatedDt = DateTime.Now,
+                        })
+                        .ToList();
+                    await _con.UV_PE_TimeStudy_Dtl.AddRangeAsync(tdm);
+                    await _con.SaveChangesAsync();
+                    // Re-add Time Study Step Detail
+                    List<TimeStudyStepDtlModel> tsdm = pev.timeStudyList
+                        .Select(i => new TimeStudyStepDtlModel
+                        {
+                            StepId = tdm.FirstOrDefault(t => t.ParentId == pev.TimeStudyHdr.Id && t.StepNo == i.StepNo).Id,
+                            SeqNo = i.SeqNo,
+                            OperationName = i.OperationName,
+                            OperationDetailName = i.OperationDetailName,
+                            Time01 = i.Time01,
+                            Time02 = i.Time02,
+                            Time03 = i.Time03,
+                            Time04 = i.Time04,
+                            Time05 = i.Time05,
+                            TimeAvg = i.TimeAvg,
+                            Remark = i.Remark,
+                            CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty,
+                            CreatedDt = DateTime.Now,
+                        })
+                        .ToList();
+                    await _con.UV_PE_TimeStudyStep_Dtl.AddRangeAsync(tsdm);
+                    await _con.SaveChangesAsync();
+                }
+                else
+                {
+                    // Delete Time Study Detail and Time Study Step Detail and re-add
+                    await _proc.Proc_ExcecuteNonQuery("spweb_UV_PE_InputTimeStudy_Del", new Dictionary<string, object>
+                        {
+                            { "@id", pev.TimeStudyHdr.Id },
+                            { "@user_id", _hca.HttpContext?.User?.Identity?.Name ?? string.Empty }
+                        });
+                }
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
         }
 
         public async Task<DataSet> IniTimeStudy(Dictionary<string, object> dic)
@@ -584,7 +670,7 @@ namespace MESWebDev.Services
         public async Task<PEViewModel> IniTimeStudyDetail(string? operationName)
         {
             PEViewModel pvm = new PEViewModel();
-            var opr = _con.Master_Operation_Hdr.Where(i => i.Name.Contains(operationName??string.Empty));
+            var opr = _con.Master_Operation_Hdr.Where(i => i.Name.Contains(operationName??string.Empty) && i.IsActive);
             if (opr.Any()) {
                 pvm.operationNames = opr.Select(i => i.Name).ToList();
                 if (!string.IsNullOrEmpty(operationName))
@@ -594,11 +680,291 @@ namespace MESWebDev.Services
                     {
                         pvm.operationDtlNames = oprd.Select(i => i.Name).ToList();
                     }
-                }
-                
+                }                
             } 
             pvm.operationDtlNames = pvm.operationDtlNames ?? new();
             return pvm;
+        }
+
+        public async Task<PEViewModel> GetTimeStudyEdit(int id)
+        {
+            PEViewModel pvm = new PEViewModel();
+
+            try
+            {
+                var data = await _con.UV_PE_TimeStudy_Hdr.FindAsync(id);
+                if (data == null) return new PEViewModel { error_msg = "Data not found." };
+                var detail = await _con.UV_PE_TimeStudy_Dtl.Where(i => i.ParentId == id).ToListAsync();
+                if (!detail.Any()) return new PEViewModel { error_msg = "Detail data not found." };
+
+                List<TimeStudyStepDtlModel> stepList = new List<TimeStudyStepDtlModel>();
+                foreach (var t in detail)
+                {
+                    var step = await _con.UV_PE_TimeStudyStep_Dtl.Where(i => i.StepId == t.Id).ToListAsync();
+                    if (step.Any())
+                    {
+                        stepList.AddRange(step);
+                    }
+                }
+                if (!stepList.Any()) return new PEViewModel { error_msg = "Step detail data not found." };
+
+                TimeStudyHdrDTO thd = _mapper.Map<TimeStudyHdrDTO>(data);
+                List<TimeStudyDtlDTO> tdd = _mapper.Map<List<TimeStudyDtlDTO>>(detail.ToList());
+                List<TimeStudyStepDtlDTO> tsdd = _mapper.Map<List<TimeStudyStepDtlDTO>>(stepList);
+
+                //var otherList = tdd.Zip(tsdd, (detail, step) => new TimeStudyOtherDTO
+                //{
+                //    TimeStudyDtl = detail,
+                //    TimeStudyStepDtl = step
+                //}).ToList();
+
+                var otherList = (from dtl in tdd
+                                 join step in tsdd
+                                 on dtl.Id equals step.StepId   // 🔑 adjust key here
+                                 select new TimeStudyOtherDTO
+                                 {
+                                     TimeStudyDtl = dtl,
+                                     TimeStudyStepDtl = step
+                                 }).ToList();
+
+
+
+                List<TimeStudyDTO> tsd = _mapper.Map<List<TimeStudyDTO>>(otherList);
+
+                pvm.TimeStudyHdr = thd;
+                tsd.ForEach(i => i.TimeTotal = i.TimeAvg * i.UnitQty);
+                pvm.timeStudyList = tsd;
+            }
+            catch(Exception ex)
+            {
+                pvm.error_msg = ex.Message;
+            }
+            
+
+            return pvm;
+        }
+
+        public async Task<PEViewModel> GetTimeStudyDtlEdit(int stepID)
+        {
+            PEViewModel pvm = new PEViewModel();
+            try {
+                var data = await _con.UV_PE_TimeStudy_Dtl.FindAsync(stepID);
+                if (data == null) return new PEViewModel { error_msg = "Data not found." };
+                var detail = await _con.UV_PE_TimeStudyStep_Dtl.Where(i => i.StepId == stepID).ToListAsync();
+                if (!detail.Any()) return new PEViewModel { error_msg = "Detail data not found." };
+                TimeStudyDtlDTO tdd = _mapper.Map<TimeStudyDtlDTO>(data);
+                List<TimeStudyStepDtlDTO> tsdd = _mapper.Map<List<TimeStudyStepDtlDTO>>(detail);
+                pvm.TimeStudyDtl = tdd;
+                pvm.timeStudyStepDtlList = tsdd;
+            }
+            catch (Exception ex) {
+                pvm.error_msg = ex.Message;
+            }
+            return pvm;
+        }
+
+
+        public async Task<T> GetValueOrDefault<T>(IDataReader reader, Dictionary<string, int> colMap, string colName, T defaultValue = default)
+        {
+            if (!colMap.TryGetValue(colName, out int idx))
+                return defaultValue;
+
+            object val = reader.GetValue(idx);
+            if (val == DBNull.Value || val == null)
+                return defaultValue;
+
+            return (T)Convert.ChangeType(val, typeof(T));
+        }
+
+
+        public async Task<List<TimeStudyUploadDTO>> UploadTimeStudyData(IFormFile ff)
+        {
+            List<TimeStudyUploadDTO> list = new();
+            try
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await ff.CopyToAsync(stream);
+                    // get master upload file information
+                    List<UploadFileMaster> ufm = _con.Master_UploadFile_mst.Where(i => i.file_name.ToLower().Contains("timestudy")).ToList();
+                    // build dictionary: db_col_name -> col_index
+                    Dictionary<string, int> colMap = ufm.ToDictionary(i => i.db_col_name, i => i.col_index);
+                    int header_row = ufm.FirstOrDefault()?.header_row ?? 0;
+                    int has_header = 0;
+                    //read excel data 
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        while (reader.Read())
+                        {
+                            has_header++;
+                            if (has_header > header_row)
+                            {
+                                decimal t1 = CommonFormat.GetValueOrDefault<decimal>(reader, colMap, "Time01", 0m);
+                                decimal t2 = CommonFormat.GetValueOrDefault<decimal>(reader, colMap, "Time02", 0m);
+
+                                decimal t3 = CommonFormat.GetValueOrDefault<decimal>(reader, colMap, "Time03", 0m);
+                                decimal t4 = CommonFormat.GetValueOrDefault<decimal>(reader, colMap, "Time04", 0m);
+                                decimal t5 = CommonFormat.GetValueOrDefault<decimal>(reader, colMap, "Time05", 0m);
+
+                                string model = CommonFormat.GetValueOrDefault<string>(reader, colMap, "Model", string.Empty);
+                                string bModel = CommonFormat.GetValueOrDefault<string>(reader, colMap, "BModel", string.Empty);
+
+                                int stepNo = CommonFormat.GetValueOrDefault<int>(reader, colMap, "StepNo", 0);
+                                int unitQty = CommonFormat.GetValueOrDefault<int>(reader, colMap, "UnitQty", 0);
+
+                                decimal[] col = new[] { t1, t2, t3, t4, t5 };
+
+                                
+                                if(col.Sum()==0 || string.IsNullOrEmpty(model) || stepNo == 0
+                                        || unitQty == 0) return list;
+
+                                TimeStudyUploadDTO tsu = new TimeStudyUploadDTO()
+                                {
+                                    Customer = CommonFormat.GetValueOrDefault<string>(reader, colMap, "Customer", string.Empty),
+                                    Section = CommonFormat.GetValueOrDefault<string>(reader, colMap, "Section", string.Empty),
+                                    Model = model,
+                                    BModel = bModel,
+                                    LotNo = CommonFormat.GetValueOrDefault<string>(reader, colMap, "LotNo", string.Empty),
+                                    Unit = CommonFormat.GetValueOrDefault<string>(reader, colMap, "Unit", string.Empty),
+                                    PcbName = CommonFormat.GetValueOrDefault<string>(reader, colMap, "PcbName", string.Empty),
+                                    PcbNo = CommonFormat.GetValueOrDefault(reader, colMap, "PcbNo", string.Empty),
+                                    OperationKind = CommonFormat.GetValueOrDefault<string>(reader, colMap, "OperationKind", string.Empty),
+                                    StepNo = stepNo,
+                                    StepContent = CommonFormat.GetValueOrDefault<string>(reader, colMap, "StepContent", string.Empty),
+                                    UnitQty = unitQty,
+                                    AllocatedOpr = CommonFormat.GetValueOrDefault<int>(reader, colMap, "AllocatedOpr", 0),
+                                    //SeqNo = CommonFormat.GetValueOrDefault<int>(reader, colMap, "SeqNo", 0),
+                                    OperationName = CommonFormat.GetValueOrDefault<string>(reader, colMap, "OperationName", string.Empty),
+                                    OperationDetailName = CommonFormat.GetValueOrDefault<string>(reader, colMap, "OperationDetailName", string.Empty),
+                                    Time01 = t1,
+                                    Time02 = t2,
+                                    Time03 = t3,
+                                    Time04 = t4,
+                                    Time05 = t5,
+                                    TimeAvg = col.Where(i => i > 0).Any() ? Math.Round(col.Where(i => i > 0).Average(), 2) : 0m
+                                };
+                                list.Add(tsu);
+                            }
+                        }
+                    }
+                }
+                return list;
+            }
+            catch (Exception ex)
+            {
+                return list;
+            }
+            
+        }
+        public async Task<PEViewModel> UploadTimeStudy(IFormFile ff)
+        {
+            PEViewModel pev = new();
+            List<TimeStudyHdrModel> tshList = new();
+            List<TimeStudyDtlModel> tsdList = new();
+            List<TimeStudyStepDtlModel> tssdList = new();
+            string file_name = $"{ff.FileName}_{DateTime.Now:yyyyMMddHHmmss}";
+            List<TimeStudyUploadDTO> uploadList = new();
+            uploadList = await UploadTimeStudyData(ff);
+            if (uploadList.Count == 0)
+            {
+                pev.error_msg = "Wrong format data or No data found in the uploaded file.";
+                return pev;
+            }
+            try
+            {
+                var groups = uploadList.GroupBy(r => new { r.Customer, r.Section, r.Model, r.BModel, r.LotNo, r.Unit, r.PcbName, r.PcbNo });
+                foreach (var g in groups)
+                {
+                    var existingHdr = _con.UV_PE_TimeStudy_Hdr
+                        .Where(h =>
+                            h.Customer == g.Key.Customer &&
+                            h.Section == g.Key.Section &&
+                            h.Model == g.Key.Model &&
+                            h.BModel == g.Key.BModel &&
+                            h.LotNo == g.Key.LotNo &&
+                            h.Unit == g.Key.Unit &&
+                            h.PcbName == g.Key.PcbName &&
+                            h.PcbNo == g.Key.PcbNo);
+                    if (existingHdr.Any()) {
+                        existingHdr.ToList().ForEach(i => {
+                            i.Active = false; 
+                            i.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                            i.UpdatedDt = DateTime.Now;
+                        });
+                        await _con.SaveChangesAsync();
+                    }
+                    var hdr = new TimeStudyHdrModel
+                    {
+                        Customer = g.Key.Customer,
+                        Section = g.Key.Section,
+                        Model = g.Key.Model,
+                        BModel = g.Key.BModel,
+                        LotNo = g.Key.LotNo,
+                        Unit = g.Key.Unit,
+                        PcbName = g.Key.PcbName,
+                        PcbNo = g.Key.PcbNo,
+                        UploadFile = file_name,
+                        CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty,
+                        CreatedDt = DateTime.Now
+                    };
+                    // Group by Dtl-level fields
+                    var dtlGroups = g.GroupBy(r => new { r.OperationKind, r.StepNo, r.StepContent, r.UnitQty, r.AllocatedOpr});
+                    foreach (var d in dtlGroups)
+                    {
+                        var dtl = new TimeStudyDtlModel
+                        {
+                            OperationKind = d.Key.OperationKind,
+                            StepNo = d.Key.StepNo,
+                            StepContent = d.Key.StepContent,
+                            UnitQty = d.Key.UnitQty,
+                            AllocatedOpr = d.Key.AllocatedOpr,
+                            Sumary = d.Sum(x => x.TimeAvg) * d.Key.UnitQty,
+                            CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty,
+                            CreatedDt = DateTime.Now
+                        };
+                        int i = 0;
+                        foreach (var s in d)
+                        {
+                            i++;
+                            var stepDtl = new TimeStudyStepDtlModel
+                            {
+                                SeqNo = i,
+                                OperationName = s.OperationName,
+                                OperationDetailName = s.OperationDetailName,
+                                Remark = s.Remark,
+                                Time01 = s.Time01,
+                                Time02 = s.Time02,
+                                Time03 = s.Time03,
+                                Time04 = s.Time04,
+                                Time05 = s.Time05,
+                                TimeAvg = s.TimeAvg,
+                                CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty,
+                                CreatedDt = DateTime.Now
+                            };
+                            dtl.TimeStudyStepDtl.Add(stepDtl);
+                        }
+                        hdr.TimeStudyDtl.Add(dtl);
+                    }
+                    await _con.UV_PE_TimeStudy_Hdr.AddAsync(hdr);
+                }
+                await _con.SaveChangesAsync();
+            }
+            catch(Exception ex)
+            {
+                pev.error_msg = ex.Message;
+                return pev;
+            }
+
+            // group by header-level fields          
+
+            if (uploadList.Count > 0)
+            {
+                pev.data = await GetTimeStudy(new Dictionary<string, object>
+                {
+                    { "@upload_file", file_name }
+                });
+            }
+            return pev;
         }
         #endregion
 

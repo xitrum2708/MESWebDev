@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Azure.Core;
+using ExcelDataReader.Log;
 using MESWebDev.Common;
 using MESWebDev.Data;
 using MESWebDev.Extensions;
@@ -13,6 +14,7 @@ using MESWebDev.Services;
 using MESWebDev.Services.IService;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol.Core.Types;
 using OfficeOpenXml;
 using System.Data;
 using System.Drawing;
@@ -70,15 +72,6 @@ namespace MESWebDev.Controllers
             }
             pev.manpower = new();
             return View("Manpower/Index", pev);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> DownloadData()
-        {
-            //Process and save updated events
-            DataSet ds = new();
-            //ds = await _repository.ExportProdPlan(new());
-            return _ee.DownloadProdPlan(ds, $"ProdPlan");
         }
 
         [HttpPost]
@@ -268,58 +261,15 @@ namespace MESWebDev.Controllers
             DataTable dt = await _peService.GetTimeStudy(new());
             PEViewModel pev = new();
             pev.data = dt;
+            HttpContext.Session.SetComplexDatatable(SD.SessionParametter.DataDT, pev.data);
             return View("TimeStudy/Index", pev);
         }
-
-        [HttpGet]
-        public async Task<IActionResult> GetTimeStudy()
-        {
-            DataTable dt = await _peService.GetTimeStudy(new());
-            PEViewModel pev = new();
-            pev.data = dt;
-            return PartialView("TimeStudy/_Result", pev);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> IniTimeStudy()
-        {
-            DataSet ds = await _peService.IniTimeStudy(new());
-            PEViewModel pev = new();
-            if(ds != null)
-            {
-                if (ds.Tables[0] != null && ds.Tables[0].Rows.Count > 0)
-                {
-                    pev.customers = ds.Tables[0].AsEnumerable().Select(i => i[0].ToString()).Where(j=> !string.IsNullOrEmpty(j)).ToList()!;
-                }
-                if (ds.Tables[1] != null && ds.Tables[1].Rows.Count > 0)
-                {
-                    pev.sections = ds.Tables[1].AsEnumerable().Select(i => i[0].ToString()).Where(j => !string.IsNullOrEmpty(j)).ToList()!;
-                }
-                if (ds.Tables[2] != null && ds.Tables[2].Rows.Count > 0)
-                {
-                    pev.units = ds.Tables[2].AsEnumerable().Select(i => i[0].ToString()).Where(j => !string.IsNullOrEmpty(j)).ToList()!;
-                }
-            }
-            return PartialView("TimeStudy/__Add", pev);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> IniAddTimeStudyDetail()
-        {
-            PEViewModel pev = new();
-            pev.StepNo = ( HttpContext.Session.GetInt32("StepNo") ?? 0 ) + 1;
-            pev.TimeStudyStepDtl = new();
-
-            HttpContext.Session.SetInt32("StepNo", Convert.ToInt32( pev.StepNo));
-            return PartialView("TimeStudy/___AddDetail", pev);            
-        }
-
         // GET Info for other combobox
         [HttpGet]
-        public async Task<IActionResult> CbTimeStudy(string? customer, string? section, string? model, string? b_model, 
+        public async Task<IActionResult> CbTimeStudy(string? customer, string? section, string? model, string? b_model,
                                                         string? lot_no, string? pcb_name, string? pcb_no, string? operation_name)
         {
-            Dictionary<string,object> dic = new();
+            Dictionary<string, object> dic = new();
             dic["@cus_name"] = customer ?? string.Empty;
             dic["@sec_name"] = section ?? string.Empty;
             dic["@model"] = model ?? string.Empty;
@@ -334,8 +284,8 @@ namespace MESWebDev.Controllers
             PEViewModel pev = new();
 
             if (ds != null)
-            {             
-                pev.customers = ds.Tables[0] != null && ds.Tables[0].Rows.Count > 0 ? 
+            {
+                pev.customers = ds.Tables[0] != null && ds.Tables[0].Rows.Count > 0 ?
                         ds.Tables[0].AsEnumerable().Select(i => i[0].ToString()).ToList()! : new List<string>();
                 pev.sections = ds.Tables[1] != null && ds.Tables[1].Rows.Count > 0 ?
                         ds.Tables[1].AsEnumerable().Select(i => i[0].ToString()).ToList()! : new List<string>();
@@ -377,9 +327,65 @@ namespace MESWebDev.Controllers
             return Json(new
             {
                 operationNames = pev.operationNames,
-                operationDetailNames = pev.operationDtlNames
+                operationDtlNames = pev.operationDtlNames
             });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTimeStudy()
+        {
+            DataTable dt = await _peService.GetTimeStudy(new());
+            PEViewModel pev = new();
+            pev.data = dt;
+            return PartialView("TimeStudy/_Result", pev);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> IniTimeStudy()
+        {
+            // When add new, reset step No
+            HttpContext.Session.Remove("StepNo");
+
+            DataSet ds = await _peService.IniTimeStudy(new());
+            PEViewModel pev = new();
+            if(ds != null)
+            {
+                if (ds.Tables[0] != null && ds.Tables[0].Rows.Count > 0)
+                {
+                    pev.customers = ds.Tables[0].AsEnumerable().Select(i => i[0].ToString()).Where(j=> !string.IsNullOrEmpty(j)).ToList()!;
+                }
+                if (ds.Tables[1] != null && ds.Tables[1].Rows.Count > 0)
+                {
+                    pev.sections = ds.Tables[1].AsEnumerable().Select(i => i[0].ToString()).Where(j => !string.IsNullOrEmpty(j)).ToList()!;
+                }
+                if (ds.Tables[2] != null && ds.Tables[2].Rows.Count > 0)
+                {
+                    pev.units = ds.Tables[2].AsEnumerable().Select(i => i[0].ToString()).Where(j => !string.IsNullOrEmpty(j)).ToList()!;
+                }
+            }
+            return PartialView("TimeStudy/__Add", pev);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> IniAddTimeStudyDetail(PEViewModel pev)
+        {
+            pev = pev == null? new(): pev;
+            if(pev.timeStudyList != null && pev.timeStudyList.Count > 0)
+            {
+                pev.StepNo = pev.timeStudyList.Max(i => i.StepNo) + 1;
+            }
+            else
+            {
+                pev.StepNo = (HttpContext.Session.GetInt32("StepNo") ?? 0) + 1;
+
+                pev.TimeStudyStepDtl = new();
+            }
+
+            HttpContext.Session.SetInt32("StepNo", Convert.ToInt32( pev.StepNo));
+            return PartialView("TimeStudy/___AddDetail", pev);            
+        }
+
+
 
         //AddTimeStudyDtl
         //AddTimeStudyStepDtl
@@ -393,7 +399,9 @@ namespace MESWebDev.Controllers
                 decimal[] a = [tsd.Time01 ,tsd.Time02 , tsd.Time03 , tsd.Time04 , tsd.Time05];
                 var validNumber = a.Where(i => i > 0).ToArray();
                 tsd.TimeAvg = validNumber.Length > 0 ? Math.Round(validNumber.Average(),2) : 0;
+                
                 List<TimeStudyStepDtlDTO> tsdList = pev.timeStudyStepDtlList ?? new();
+                tsd.StepId = tsdList.Count > 0 ? tsdList.First().StepId : tsd.StepId;
                 tsdList.Add(tsd);
                 pev.timeStudyStepDtlList = tsdList;
             }
@@ -401,25 +409,72 @@ namespace MESWebDev.Controllers
         }
 
         [HttpPost]
+        public IActionResult EditTimeStudyStepDtl(PEViewModel pev, int index)
+        {
+            // model = form fields (OperationName, OperationDetailName, etc.)
+            // index = the value you appended manually in JS
+            TimeStudyStepDtlDTO tds = pev.TimeStudyStepDtl ?? new();
+            if(tds != null)
+            {
+                decimal[] a = [tds.Time01, tds.Time02, tds.Time03, tds.Time04, tds.Time05];
+                var validNumber = a.Where(i => i > 0).ToArray();
+                tds.TimeAvg = validNumber.Length > 0 ? Math.Round(validNumber.Average(), 2) : 0;
+                tds.SeqNo = index + 1;
+                if(pev.timeStudyStepDtlList == null)
+                {
+                    pev.timeStudyStepDtlList = new List<TimeStudyStepDtlDTO>();
+                }
+                pev.timeStudyStepDtlList[index] = tds;
+            }
+            return PartialView("TimeStudy/___DetailData", pev);
+        }
+
+
+
+
+        [HttpPost]
         public async Task<IActionResult> AddTimeStudyDtl(PEViewModel pev)
         {
             if (pev != null)
             {
                 List<TimeStudyStepDtlDTO> tsdList = pev.timeStudyStepDtlList ?? new();
-                TimeStudyDtlDTO tsDTO = pev.TimeStudyDtl ?? new();
-
                 List<TimeStudyDTO> tsdDtlList = HttpContext.Session.GetComplexData<List<TimeStudyDTO>>("TimeStudyList") ?? new();
 
-                foreach (var item in tsdList)
+                if (tsdList.Count> 0)
                 {
-                    TimeStudyDTO std = _mapper.Map<TimeStudyDTO>(new TimeStudyOtherDTO()
+                    TimeStudyDtlDTO tsDTO = pev.TimeStudyDtl ?? new();
+
+                    // Delete old step
+                    tsdDtlList.RemoveAll(i => i.StepNo == tsDTO.StepNo);
+
+                    foreach (var item in tsdList)
                     {
-                        TimeStudyDtl = tsDTO,
-                        TimeStudyStepDtl = item
-                    });
-                    std.TimeTotal = std.TimeAvg * std.UnitQty;
-                    tsdDtlList.Add(std);
+                        TimeStudyDTO std = _mapper.Map<TimeStudyDTO>(new TimeStudyOtherDTO()
+                        {
+                            TimeStudyDtl = tsDTO,
+                            TimeStudyStepDtl = item
+                        });
+                        std.TimeTotal = std.TimeAvg * std.UnitQty;
+                        tsdDtlList.Add(std);
+                    }
                 }
+                else
+                {
+                    //reduce step = stepNo -1;
+                    TimeStudyDtlDTO tsDTO = pev.TimeStudyDtl ?? new();
+                    // Delete old step
+                    tsdDtlList.RemoveAll(i => i.StepNo == tsDTO.StepNo);
+                    int step = (HttpContext.Session.GetInt32("StepNo") ?? 0) + 1;
+                    //save it 
+                    HttpContext.Session.SetInt32("StepNo", step - 1);
+                }
+
+
+                
+                //List<TimeStudyDTO> tsdDetail = HttpContext.Session.GetComplexData<List<TimeStudyDTO>>("EditTimeStudyDetail") ?? new();
+                //tsdDetail.AddRange(tsdDtlList);
+
+
                 // save it to use next time
                 HttpContext.Session.SetComplexData("TimeStudyList", tsdDtlList);
                 pev.timeStudyList = tsdDtlList;
@@ -434,6 +489,105 @@ namespace MESWebDev.Controllers
             msg = await _peService.AddTimeStudy(pev);
             pev.data = await _peService.GetTimeStudy(new());
             pev.error_msg = msg;
+            HttpContext.Session.SetComplexDatatable(SD.SessionParametter.DataDT, pev.data);
+
+            return PartialView("TimeStudy/_Result", pev);
+        }
+
+        //------------------------------------------------------------------------------------------------------------\\
+
+        [HttpGet]
+        public async Task<IActionResult> EditTimeStudy(int id)
+        {
+            PEViewModel pev = new();
+            pev = await _peService.GetTimeStudyEdit(id);
+
+            //save detail here
+            HttpContext.Session.SetComplexData("TimeStudyList", pev.timeStudyList ?? new());
+            return PartialView("TimeStudy/__Edit", pev);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditTimeStudy(PEViewModel pev)
+        {
+            string msg = string.Empty;
+            msg = await _peService.EditTimeStudy(pev);
+            pev.data = await _peService.GetTimeStudy(new());
+            pev.error_msg = msg;
+            HttpContext.Session.SetComplexDatatable(SD.SessionParametter.DataDT, pev.data);
+            return PartialView("TimeStudy/_Result", pev);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditTimeStudyDtl(int stepNo)
+        {
+            PEViewModel pev = new();
+            List<TimeStudyDTO> list = HttpContext.Session.GetComplexData<List<TimeStudyDTO>>("TimeStudyList") ?? new();
+            var listDetail = list.Where(i => i.StepNo == stepNo);
+            if (listDetail.Any())
+            {
+                pev.TimeStudyDtl = _mapper.Map<TimeStudyDtlDTO>(listDetail.First());
+                pev.timeStudyStepDtlList = _mapper.Map<List<TimeStudyStepDtlDTO>>(listDetail);
+            }
+            pev.StepNo = stepNo;
+            return PartialView("TimeStudy/___AddDetail", pev);
+        }
+        [HttpGet]
+        public async Task<IActionResult> EditTimeStudyDtl2(int stepID)
+        {
+            PEViewModel pev = new();
+            pev = await _peService.GetTimeStudyDtlEdit(stepID);
+            return PartialView("TimeStudy/___AddDetail", pev);
+        }
+
+
+        // UPLOAD FILE
+        [HttpPost]
+        public async Task<IActionResult> TimeStudyUploadFile(IFormFile file1)
+        {
+            PEViewModel pev = new();
+            if (file1 == null)
+            {
+                pev.error_msg = "Please upload no file.";
+                return PartialView("TimeStudy/_Result", pev);
+            }
+            try
+            {
+                pev = await _peService.UploadTimeStudy(file1);
+                //pev.error_msg = msg;
+            }
+            catch (Exception ex)
+            {
+                pev.error_msg = $"An error occurred while processing the files: {ex.Message}";
+            }
+            HttpContext.Session.SetComplexDatatable(SD.SessionParametter.DataDT, pev.data);
+
+            return PartialView("TimeStudy/_Result", pev);
+        }
+        [HttpGet]
+        public async Task<IActionResult> TimeStudySearch()
+        {
+            TimeStudyHdrDTO timeStudyHdr = new TimeStudyHdrDTO();
+            return PartialView("TimeStudy/__Search", timeStudyHdr);
+        }
+        [HttpPost]
+        public async Task<IActionResult> TimeStudySearch(TimeStudyHdrDTO tsh)
+        {
+            PEViewModel pev = new();
+            Dictionary<string, object> dic = new();
+            if (tsh != null)
+            {
+                // Search dictionary base on tsh
+                dic.Add("@cus_name", tsh.Customer ?? string.Empty);
+                dic.Add("@sec_name", tsh.Section ?? string.Empty);
+                dic.Add("@model", tsh.Model ?? string.Empty);
+                dic.Add("@b_model", tsh.BModel ?? string.Empty);
+                dic.Add("@lot", tsh.LotNo ?? string.Empty);
+                dic.Add("@pcb_name", tsh.PcbName ?? string.Empty);
+                dic.Add("@pcb_no", tsh.PcbNo ?? string.Empty);
+            }
+            pev.data = await _peService.GetTimeStudy(dic);
+            HttpContext.Session.SetComplexDatatable(SD.SessionParametter.DataDT, pev.data);
             return PartialView("TimeStudy/_Result", pev);
         }
         #endregion
@@ -448,6 +602,13 @@ namespace MESWebDev.Controllers
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "OperationMaster.xlsx");
         }
 
+        public async Task<IActionResult> DownloadData()
+        {
+            DataTable dt = HttpContext.Session.GetComplexDatatable(SD.SessionParametter.DataDT)?? new DataTable();
+
+            return _ee.DownloadData(dt, $"TimeStudy");
+        }
+
         //------ RESET HTTP CONTEXT SESSION
         private async Task ResetSession()
         {
@@ -458,6 +619,10 @@ namespace MESWebDev.Controllers
             HttpContext.Session.SetComplexData(SD.SessionParametter.DataOther, null);
             //TimeStudyList
             HttpContext.Session.SetComplexData("TimeStudyList", null);
+
+            //EditTimeStudyDetail
+            HttpContext.Session.SetComplexData("EditTimeStudyDetail", null);
+
 
 
             HttpContext.Session.Remove(SD.SessionParametter.ID);

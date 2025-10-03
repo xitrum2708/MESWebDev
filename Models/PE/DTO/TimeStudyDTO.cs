@@ -16,22 +16,22 @@ namespace MESWebDev.Models.PE
         public string OperationDetailName { get; set; }
         public string? Remark { get; set; } = "";
 
-        [Precision(18, 4)]
+        [Precision(18, 2)]
         public decimal Time01 { get; set; } = 0;
-        [Precision(18, 4)]
+        [Precision(18, 2)]
         public decimal Time02 { get; set; } = 0;
-        [Precision(18, 4)]
+        [Precision(18, 2)]
         public decimal Time03 { get; set; } = 0;
-        [Precision(18, 4)]
+        [Precision(18, 2)]
         public decimal Time04 { get; set; } = 0;
-        [Precision(18, 4)]
+        [Precision(18, 2)]
         public decimal Time05 { get; set; } = 0;
-        [Precision(18, 4)]
+        [Precision(18, 2)]
         public decimal TimeAvg { get; set; } = 0;
 
 
         public int UnitQty { get; set; } = 1;
-        [Precision(18, 4)]
+        [Precision(18, 2)]
         public decimal TimeTotal { get; set; } = 0;
 
         //ALLOCATED OPR

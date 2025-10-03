@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Data;
+using System.Globalization;
 
 namespace MESWebDev.Common
 {
@@ -22,6 +23,18 @@ namespace MESWebDev.Common
             if (t == typeof(DateTime))
                 return ((DateTime)v).ToString("yyyy/MM/dd HH:mm:ss", culture);
             return v.ToString();
+        }
+
+        public static T GetValueOrDefault<T>(IDataReader reader, Dictionary<string, int> colMap, string colName, T defaultValue = default)
+        {
+            if (!colMap.TryGetValue(colName, out int idx))
+                return defaultValue;
+
+            object val = reader.GetValue(idx);
+            if (val == DBNull.Value || val == null)
+                return defaultValue;
+
+            return (T)Convert.ChangeType(val, typeof(T));
         }
 
     }

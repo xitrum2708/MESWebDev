@@ -25,9 +25,13 @@ namespace MESWebDev.Services.IService
         Task<DataTable> GetTimeStudy(Dictionary<string, object> dic);
         Task<PEViewModel> UploadTimeStudy(IFormFile f);
         Task<string> DeleteTimeStudy(List<int> ids);
-        Task<string> EditTimeStudy(OperationDetailModel odm);
+        Task<string> EditTimeStudy(PEViewModel pev);
         Task<string> AddTimeStudy(PEViewModel pev);
         Task<OperationDetailModel> GetTimeStudyDetail(int id);
+        Task<PEViewModel> GetTimeStudyEdit(int id);
+        
+
+        Task<PEViewModel> GetTimeStudyDtlEdit(int stepID);
 
         Task<DataSet> IniTimeStudy(Dictionary<string, object> dic);
         Task<PEViewModel> IniTimeStudyDetail(string? operationName);
