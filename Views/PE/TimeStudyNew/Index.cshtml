@@ -1,0 +1,639 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.PE
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Services
+@using System.Data
+@using System.Globalization
+@inject ITranslationService TranslationService
+@model PEViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";  
+
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="float-start d-flex justify-content-center align-items-center">
+                                <h3 class="card-title fw-bold fs-5">
+                                    <i class="bi bi-stopwatch-fill"></i>
+                                    Time Study
+                                </h3>
+                                <a onclick="Search()" class="btn btn-warning btn-sm search-icon ms-5">
+                                    <i class="bi bi-search" style="cursor: pointer;"></i>
+                                    Search
+                                </a>
+                            </div>
+                            <div class="float-end d-flex justify-content-center align-items-center">
+        @*                         <a class="btn btn-primary btn-sm bt_add me-2">
+                                    <i class="bi bi-plus-circle"></i>
+                                    Add
+                                </a> *@
+
+                                <a class="btn btn-info btn-sm bt_upload me-2">
+                                    <i class="bi bi-file-earmark-arrow-up"></i>
+                                    Upload
+                                </a>
+
+                                @* <a asp-action="DownloadProdPlan" asp-controller="ProdPlan" class="btn btn-secondary btn-sm me-2"> *@
+
+                                @* <a id="DeleteData" class="btn btn-danger btn-sm me-2">
+                                    <i class="bi bi-trash3"></i>
+                                    Delete
+                                </a> *@
+                                <a asp-action="DownloadData" asp-controller="PE" class="btn btn-secondary btn-sm me-2">
+                                    <i class="bi bi-download"></i>
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="ResultArea">
+                                @if (Model.data == null)
+                                {
+                                    <h5 class="m-3">Click to <a class="btn btn-warning btn-sm" href="#">Search</a> button to show data.</h5>
+                                }
+                                else
+                                {
+                                    <partial name="TimeStudyNew/_Result" model="@Model" />
+                                }
+                            </div>                            
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <Partial name="TimeStudyNew/__Upload" />
+            @* <partial name="TimeStudyNew/_Edit" /> *@
+            <Partial name="_LoadingPartial" />
+            
+            @* <partial name="TimeStudyNew/__Add" model="@Model"/> *@
+            <div id="modalArea">
+            </div>
+        </div>
+    </div>
+
+}
+catch(Exception ex)
+{
+    string t = ex.Message;
+}
+
+@section Scripts {
+    <link href="~/css/pecss.css" rel="stylesheet" />
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        // -------- COMBOBOX --------- \\
+
+
+         //-------- This for header -------------------
+        function refreshAllCombos(){
+            $.getJSON("/PE/CbTimeStudy"
+                ,{
+                    customer: $("#ip_customer").val(),
+                    section: $("#ip_section").val(),
+                    model: $("#ip_model").val(),
+                    b_model: $("#ip_bModel").val(),
+                    lot_no: $("#ip_lotNo").val(),
+                    pcb_name: $("#ip_pcbName").val(),
+                    pcb_no: $("#ip_pcbNo").val()
+                }
+                ,function(data){
+                    updateList($("#l_customer"), data.customers);
+                    updateList($("#l_section"), data.sections);
+                    updateList($("#l_unit"), data.units);
+                    updateList($("#l_model"), data.models);
+                    updateList($("#l_bModel"), data.bModels);
+                    updateList($("#l_lotNo"), data.lotNos);
+                    updateList($("#l_pcbNo"), data.pcbNos);
+                    updateList($("#l_pcbName"), data.pcbNames)
+                });
+        }        
+        function InitCombo(){
+             bindInputAndList("#ip_customer","#l_customer");
+             bindInputAndList("#ip_section","#l_section");
+             bindInputAndList("#ip_unit","#l_unit");
+             bindInputAndList("#ip_model","#l_model");
+             bindInputAndList("#ip_bModel","#l_bModel");
+             bindInputAndList("#ip_lotNo","#l_lotNo");
+             bindInputAndList("#ip_pcbName","#l_pcbName");
+             bindInputAndList("#ip_pcbNo","#l_pcbNo");
+             // Initial load
+             refreshAllCombos();
+         }
+        function InitCombo2(){
+            bindInputAndList($("#ip_customer"), $("#l_customer"));
+            bindInputAndList($("#ip_section"), $("#l_section"));
+            bindInputAndList($("#ip_unit"), $("#l_unit"));
+            bindInputAndList($("#ip_model"), $("#l_model"));
+            bindInputAndList($("#ip_bModel"), $("#l_bModel"));
+            bindInputAndList($("#ip_lotNo"), $("#l_lotNo"));
+            bindInputAndList($("#ip_pcbName"), $("#l_pcbName"));
+            bindInputAndList($("#ip_pcbNo"), $("#l_pcbNo"));
+            // Initial load
+            refreshAllCombos();
+        }
+
+        //-------- This for detail -------------------
+        function refreshAllDtlCombos(){
+                $.getJSON("/PE/CbTimeStudyDetail"
+                ,{
+                    operation_name: $("#ip_operationName").val()
+                }
+                ,function(data){
+                    updateList($("#l_operationName"), data.operationNames);
+                    updateList($("#l_operationDtlName"), data.operationDtlNames);
+                });
+        }
+        function InitComboDtl(){
+            bindInputAndList("#ip_operationName", "#l_operationName");
+            bindInputAndList("#ip_operationDtlName", "#l_operationDtlName");
+
+            // Initial load
+            refreshAllDtlCombos();
+        }
+
+        function InitComboDtl2(){
+             bindInputAndList($("#ip_operationName"), $("#l_operationName"));
+             bindInputAndList($("#ip_operationDtlName"), $("#l_operationDtlName"));
+
+             // Initial load
+             refreshAllDtlCombos();
+         }
+
+        //---------------------------------------
+
+        function updateList($list, items) {            
+            $list.empty();
+            $.each(items, function (i, item) {
+                $list.append(`<li>${item}</li>`);
+            });
+        }
+
+        function bindInputAndList($input, $list){
+            // Filter list
+            function filterList(){
+                let filter = $($input).val().toLowerCase();
+                $($list).show();
+                $($list).children("li").each(function(){
+                    let text = $(this).text().toLowerCase();
+                    $(this).toggle(text.includes(filter));
+                });
+            }
+
+            // Typing
+            $(document).on("input",$input, debounce(function(){
+                //filterList();
+                refreshAllCombos();
+                refreshAllDtlCombos();
+            }, 300));
+
+            // Focus: show and filter
+            $(document).on("focus", $input, function(){
+                filterList();
+            });
+
+            // Blur: hide after short delay to allow click
+            $(document).on("blur", $input, function(){
+                setTimeout(function(){
+                    $($list).hide();
+                }, 200);
+            });
+
+            // Selecting from list
+            $(document).on("click", $list + " li", function () {
+                $($input).val($(this).text());
+                $($list).hide();
+                refreshAllCombos();
+                refreshAllDtlCombos();
+            });
+
+             // // Selecting from list
+             // $list.on("click", "li", function () {
+             //     $input.val($(this).text());
+             //     $list.hide();
+             //     refreshAllCombos();
+             //     refreshAllDtlCombos();
+             // });
+        }
+
+        function bindInputAndList2($input, $list){
+            // Filter list
+            function filterList(){
+                let filter = $input.val().toLowerCase();
+                $list.show();
+                $list.children("li").each(function(){
+                    let text = $(this).text().toLowerCase();
+                    $(this).toggle(text.includes(filter));
+                });
+            }
+
+            // Typing
+            $input.on("input", debounce(function(){
+                //filterList();
+                refreshAllCombos();
+            }, 300));
+
+            // Focus: show and filter
+            $input.on("focus", function(){
+                filterList();
+            });
+
+            // Blur: hide after short delay to allow click
+            $input.on("blur", function(){
+                setTimeout(function(){
+                    $list.hide();
+                }, 200);
+            });
+
+            // Selecting from list
+            $list.on("click", "li", function () {
+                $input.val($(this).text());
+                $list.hide();
+                refreshAllCombos();
+                refreshAllDtlCombos();
+            });
+        }
+
+        function debounce(fn, delay) {
+            let timer = null;
+            return function () {
+                clearTimeout(timer);
+                timer = setTimeout(fn, delay);
+            };
+        }
+
+
+        //----END COMBOBOX ----------------------------------
+
+        function ClickAddDetail(){
+                  var data = $('#fData').serialize();
+
+                  $.get('/PE/IniAddTimeStudyDetail',data)
+                 .done(function(html){
+                      $('#detailModalArea').html(html);
+                     $('#addDetailModal').modal('show');
+                     InitComboDtl();
+                 })
+                 .fail(function(){
+                     toastr.error('Error to load Detail Modal','error');
+                 });
+        }
+
+        //----------------- START COUNT TIME -----------------\\
+        let timerInterval = null;
+        let counter = 0;
+
+        $(document).on('click', '.bt_timer', function () {
+            var $btn = $(this);
+            var $input = $($btn.data("input"));
+
+
+
+            if ($btn.hasClass('btn-success')) {  
+                //disable other bt_timer
+                $('.bt_timer').not($btn).prop('disabled',true);
+                // --- START ---
+                counter = 0; // reset counter
+                $btn.removeClass('btn-success').addClass('btn-danger')
+                    .html('<i class="bi bi-stop-circle"></i> Stop');
+
+                timerInterval = setInterval(function () {
+                    counter += 0.01; // add 0.01 sec every tick
+                    $input.val(counter.toFixed(2));
+                }, 10); // 10 ms = 0.01 sec
+            }
+            else {                
+                // --- STOP ---
+                $btn.removeClass('btn-danger').addClass('btn-success')
+                    .html('<i class="bi bi-play-circle"></i> Start');
+
+                clearInterval(timerInterval);
+                timerInterval = null;
+
+                // anable all
+                $('.bt_timer').prop('disabled',false);
+            }
+        });
+       // }
+       
+        //------- END COUNT TIME -------------------------------
+
+
+        //-------------- GET DATA FOR STEP TABLE ------------------\\
+         $(document).on('click', '.bt_addOperation', () => {
+            const $form = $('#fAddDetail');
+
+            let sum = 0;
+            // loop through all inputs with ids starting with "ip_time"
+            $("[id^=ip_time]").each(function () {
+                let val = parseFloat($(this).val()) || 0; // convert to number, default 0 if NaN
+                sum += val;
+            });
+
+             let processName = ($('#ip_processName').val() || "").trim();
+             let processQty = ($('#ip_processQty').val() || "").trim();
+            if ($form.valid() && sum > 0 && processName !='' && processQty != '' && parseFloat(processQty) > 0)  {
+                // reset input class = stepDetail            
+
+                $.post('/PE/AddTimeStudyNewStepDtl', $form.serialize(), res =>$('#tbodyTimeStudyNewStepDtlResult').html(res));
+                 $(".stepDetail input").val('').trigger('input');
+            } 
+            else {
+                toastr.error('Please fill in all required fields.');
+            }
+        });
+
+        //remove row
+        let $rowToDelete = null;
+
+        $(document).on('click', '#removeStepDtl', function () {
+            $rowToDelete = $(this).closest('tr'); // store the row
+            $('#deleteConfirmModal').modal('show'); // open modal
+        });
+
+        // When confirm button is clicked
+        $(document).on('click', '#confirmDeleteRow', function () {
+            if ($rowToDelete) {
+                $rowToDelete.remove();
+                reindexRows();
+                $rowToDelete = null; // clear reference
+            }
+            $('#deleteConfirmModal').modal('hide'); // close modal
+        });
+
+        function reindexRows() {
+            $("#tbodyTimeStudyNewStepDtlResult tr").each(function (i) {
+                // update row number
+                $(this).find("td:eq(1)").text(i + 1);
+
+                // update input names
+                $(this).find("input").each(function () {
+                    let oldName = $(this).attr("name");
+                    if (oldName) {
+                        $(this).attr("name", oldName.replace(/\[\d+\]/, `[${i}]`));
+                    }
+                });
+            });
+        }
+
+        //END STEP TABLE -----------------------------------------------------\\
+
+        //GET DATA FOR DETAIL <table>
+         $(document).on('click', '#btnAddDtl', () => {
+            const $form = $('#fAddDetail');
+            if ($form.valid()) {
+                  $('#addDetailModal').modal('hide');
+                  $.post('/PE/AddTimeStudyNewDtl', $form.serialize(), res =>$('#detailBody').html(res));
+            } else {
+                toastr.error('Please fill in all required fields.');
+            }
+        });
+
+
+        function BtnSave(){
+            if($('#fData').valid()){
+                var data = $('#fData').serialize();
+                $.ajax({
+                    url: '/PE/AddTimeStudyNew',
+                    type: 'Post',
+                    data: data,
+                    success: function (html) {
+                        $('#addModal').modal('hide');
+                        $('#ResultArea').html(html);
+
+                        //Get error message if existed
+                        var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                        if (errorMsg) {
+                            toastr.error(errorMsg, "Error");
+                        }
+                        toastr.success('Add successfully !','Success')
+                    },
+                    error: function () {
+                        toastr.error('An error occurred while loading the edit form.');
+                    }
+                });
+            }
+            else{
+                toastr.error("Please fill all fields.","Error");
+                return;
+            }
+        }
+
+
+        //------ Edit Step Detail data -------------------\\
+         $(document).on('click', '#editStepDtl', function (e) {
+             e.preventDefault();
+            var $row = $(this).closest('tr');
+            // Fill form inputs
+            $("#ip_processName").val($row.find("input[name*='ProcessName']").val()).trigger('input');
+             $("#ip_processQty").val($row.find("input[name*='ProcessQty']").val()).trigger('input');
+             $("#ip_stepId").val($row.find("input[name*='StepId']").val());
+
+            $("#ip_time01").val($row.find("input[name*='Time01']").val());
+            $("#ip_time02").val($row.find("input[name*='Time02']").val());
+            $("#ip_time03").val($row.find("input[name*='Time03']").val());
+            $("#ip_time04").val($row.find("input[name*='Time04']").val());
+            $("#ip_time05").val($row.find("input[name*='Time05']").val());
+
+            // Store an index or ID for update later
+            $("#bt_AddOperation").text("Update").removeClass('bt_addOperation').addClass('bt_updateOperation').data("edit-index", $row.index());
+         });
+
+        // When clicking Add/Update button
+        $(document).on("click", ".bt_updateOperation", function () {
+            let index = $(this).data("edit-index");
+            const $form = $('#fAddDetail');
+
+             let sum = 0;
+             // loop through all inputs with ids starting with "ip_time"
+             $("[id^=ip_time]").each(function () {
+                 let val = parseFloat($(this).val()) || 0; // convert to number, default 0 if NaN
+                 sum += val;
+             });
+
+
+            let processName = ($('#ip_processName').val() || "").trim();
+            let processQty = ($('#ip_processQty').val() || "").trim();
+            if ($form.valid() && sum > 0 &&  processName !='' && processQty != '' && parseFloat(processQty) > 0)  {
+            //if ($form.valid()) {
+                // Create a payload with index + serialized form data
+                let formData = $form.serialize(); // returns key=value&key=value
+                formData += "&index=" + encodeURIComponent(index); // append index manually
+
+                $.post('/PE/EditTimeStudyNewStepDtl', formData, function (res) {
+                    $('#tbodyTimeStudyNewStepDtlResult').html(res);
+
+                    // Reset input fields after update
+                    $(".stepDetail input").val("").trigger("input");
+                    $("#bt_AddOperation")
+                        .text("Add")
+                        .removeClass('bt_updateOperation')
+                        .addClass('bt_addOperation')
+                        .removeData("edit-index");
+                });
+            } else {
+                toastr.error('Please fill in all required fields.');
+            }
+        });
+
+        // <!-- #region EDIT timer STUDY -->
+
+          function btnEdit(id){
+               $.get('/PE/EditTimeStudyNew',{id:id})
+                    .done(function(response){
+                             $('#modalArea').html(response);
+                             $('#editModal').modal('show');
+
+                            // Re-parse validation
+                            $.validator.unobtrusive.parse($('#fData'));
+
+                             //onchange class for button Save here
+                             InitCombo();
+                        })
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        toastr.error("Request failed: " + textStatus + " - " + errorThrown);
+                        });
+         }
+
+          function btnEditDtl(stepNo){
+              $.get('/PE/EditTimeStudyNewDtl', {stepNo: stepNo})
+                    .done(function(response){
+                        $('#detailModalArea').html(response);
+                        $('#addDetailModal').modal('show');
+                       
+                        InitComboDtl();
+                    })
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        toastr.error("Request failed: " + textStatus + " - " + errorThrown);
+                    });
+          }
+
+         function BtnEditSave(){
+             if($('#fData').valid()){
+                 var data = $('#fData').serialize();
+                 $.ajax({
+                     url: '/PE/EditTimeStudyNew',
+                     type: 'Post',
+                     data: data,
+                     success: function (html) {
+                         $('#editModal').modal('hide');
+                         $('#ResultArea').html(html);
+
+                         //Get error message if existed
+                         var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                         if (errorMsg) {
+                             toastr.error(errorMsg, "Error");
+                         }
+                         toastr.success('Edit successfully !','Success')
+                     },
+                     error: function () {
+                         toastr.error('An error occurred while loading the edit form.');
+                     }
+                 });
+             }
+             else{
+                 toastr.error("Please fill all fields.","Error");
+                 return;
+             }
+         }
+
+
+        //<!-- #endregion -->
+
+
+
+
+        // --- Show Upload Windows --- \\
+        $('.bt_upload').click( function(){
+             $('#uploadModal').modal('show');
+        });
+
+        $(document).on("click", "#btnUpload", function (e) {
+            e.preventDefault();
+
+            var form = $("#UploadForm")[0];      // get form element
+            var formData = new FormData(form);   // create FormData
+
+            $.ajax({
+                url: '/PE/TimeStudyNewUploadFile',  // controller + action
+                type: 'POST',
+                data: formData,
+                processData: false, // important for FormData
+                contentType: false, // important for FormData
+                success: function (response) {
+                     $('#uploadModal').modal('hide');
+                     $('#ResultArea').html(response);
+
+                    //Get error message if existed
+                    var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                    if (errorMsg) {
+                        toastr.error(errorMsg, "Error");
+                    }
+                    else
+                    toastr.success('Upload successfully !','Success')
+                },
+                error: function (xhr, status, error) {
+                    console.error("Upload error:", error);
+                    alert("Upload failed!");
+                }
+            });
+        });
+
+        // Search
+        function Search(){
+             $.get('/PE/TimeStudyNewSearch')
+              .done(function(html){
+                  $('#modalArea').html(html);
+                  $('#searchModal').modal('show');
+              })
+              .fail(function(){
+                  toastr.error('Error to load Search Modal','error');
+              });
+        }
+
+        $(document).on("click", "#btnSearch", function (e) {
+            e.preventDefault();
+             var data = $('#fSearch').serialize();
+            $.ajax({
+                url: '/PE/TimeStudyNewSearch',  // controller + action
+                type: 'POST',
+                data: data,
+                success: function (response) {
+                    $('#searchModal').modal('hide');
+                    $('#ResultArea').html(response);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Upload error:", error);
+                    alert("Upload failed!");
+                }
+            });
+        });
+
+
+
+        // clear content of input
+        $(document).on('click','.btn-clear',function(){
+            var $ip = $(this).closest('.input-group').find('input');
+            $ip.val('');
+            $ip.trigger('input');
+        })
+
+    </script>
+    
+}

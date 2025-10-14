@@ -9,8 +9,11 @@ using MESWebDev.Models.PE.DTO;
 using MESWebDev.Services.IService;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Packaging;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Net.Http;
 
 namespace MESWebDev.Services
 {
@@ -965,6 +968,544 @@ namespace MESWebDev.Services
                 });
             }
             return pev;
+        }
+        #endregion
+
+
+        //===============>> Time Study New <<==================\\
+        #region Time Study New
+        public async Task<string> AddTimeStudyNew(PEViewModel pev)
+        {
+            try
+            {
+                if(pev.TimeStudyNewStepDtlList != null && pev.TimeStudyNewStepDtlList.Count > 0)
+                {
+                    // Map step detail
+                    //List<TimeStudyNewStepDtlModel> stepList = _mapper.Map<List<TimeStudyNewStepDtlModel>>(pev.TimeStudyNewStepDtlList);
+                    List<TimeStudyNewStepDtlDTO> stepList = pev.TimeStudyNewStepDtlList;
+
+                    List<TimeStudyNewDtlModel> detailList = _mapper.Map<List<TimeStudyNewDtlModel>>(pev.TimeStudyNewDtl);
+
+                    detailList.ForEach(i =>
+                    {
+                        var sList = stepList.Where(j => j.StepContent == i.StepContent);
+                        List<TimeStudyNewStepDtlModel> stepDtlModels = _mapper.Map<List<TimeStudyNewStepDtlModel>>(sList);
+                        stepDtlModels.ForEach(j=> {
+                            j.CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                            j.CreatedDt = DateTime.Now;
+                        });
+                        i.Sumary = pev.TimeStudyNewStepDtlList.Where(k => k.StepContent == i.StepContent).Sum(k => k.TimeAvg);
+                        i.SetTime = i.Sumary * i.UnitQty;
+                        i.TargetQty = i.SetTime > 0 ? (int)Math.Floor(460 * 60 / i.SetTime) : 0;
+                        i.ProcessTime = i.AllocatedOpr > 0 ? Math.Round(i.SetTime / i.AllocatedOpr, 4) : 0;
+                        i.CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                        i.CreatedDt = DateTime.Now;
+                        i.TimeStudyStepDtl.AddRange(stepDtlModels);
+                    });
+
+                    // 1. Map and add header
+                    TimeStudyNewHdrModel thm = _mapper.Map<TimeStudyNewHdrModel>(pev.TimeStudyNewHdr);
+                    thm.CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                    thm.CreatedDt = DateTime.Now;
+
+                    // Other info
+                    //public int OperatorQty { get; set; } = 1; // Number of operators = Sum ( AllocatedOPR) in detail
+                    //        public decimal BottleNeckProcess { get; set; } = 0; // Max ProcessTime in detail
+                    //        public decimal TimeTotal { get; set; } = 0; // Sum of SetTime in detail
+                    //        public decimal OutputTarget { get; set; } = 0; // OutputTarget = Fix Target = 460 * 60 * OperatorQty/ TimeTotal
+                    //        public decimal PitchTime { get; set; } = 0; // PitchTime =   (460*60)/OutputTarget
+                    //public decimal LineBalance { get; set; } = 0; // = TimeTotal / ( BottleNeckProcess * OperatorQty) 
+                    thm.OperatorQty = detailList.Sum(i => i.AllocatedOpr);
+                    thm.BottleNeckProcess = detailList.Any() ? detailList.Max(i => i.ProcessTime) : 0;
+                    thm.TimeTotal = detailList.Sum(i => i.SetTime);
+                    thm.OutputTarget = thm.TimeTotal > 0 ? Math.Floor(460 * 60 * thm.OperatorQty / thm.TimeTotal) : 0;
+                    thm.PitchTime = thm.OutputTarget > 0 ? Math.Round((460 * 60) / thm.OutputTarget, 4) : 0;
+                    thm.LineBalance = thm.BottleNeckProcess > 0 && thm.OperatorQty > 0 ? Math.Round((thm.TimeTotal / (thm.BottleNeckProcess * thm.OperatorQty))*100, 0):0;
+                 
+                    thm.TimeStudyDtl.AddRange(detailList);
+
+                    await _con.UV_PE_TimeStudyNew_Hdr.AddAsync(thm);
+                    await _con.SaveChangesAsync();  // <-- This will populate thm.Id with the generated PK                   
+                } 
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+            return string.Empty;
+        }
+        public Task<string> DeleteTimeStudyNew(List<int> ids)
+        {
+            throw new NotImplementedException();
+        }
+        public async Task<DataTable> GetTimeStudyNew(Dictionary<string, object> dic)
+        {
+            DataTable dt = new();
+            dt = await _proc.Proc_GetDatatable("spweb_UV_PE_InputTimeStudyNew_List", dic);
+            return dt;
+        }
+        public async Task<string> EditTimeStudyNew(PEViewModel pev)
+        {
+            using var tran = await _con.Database.BeginTransactionAsync();
+
+            try
+            {
+                var userName = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+
+                if (pev.TimeStudyNewStepDtlList != null && pev.TimeStudyNewStepDtlList.Count > 0)
+                {
+                    // ====== 1. Load Header ======
+                    var data = await _con.UV_PE_TimeStudyNew_Hdr
+                        .Include(i => i.TimeStudyDtl)
+                        .ThenInclude(d => d.TimeStudyStepDtl)
+                        .FirstOrDefaultAsync(i => i.Id == pev.TimeStudyNewHdr.Id);
+
+                    if (data == null)
+                        return "Header not found.";
+
+                    // ====== 2. Update Header Fields ======
+                    data.Customer = pev.TimeStudyNewHdr.Customer ?? string.Empty;
+                    data.Section = pev.TimeStudyNewHdr.Section;
+                    data.ModelCat = pev.TimeStudyNewHdr.ModelCat;
+                    data.LotNo = pev.TimeStudyNewHdr.LotNo;
+                    data.Unit = pev.TimeStudyNewHdr.Unit;
+                    data.Active = true;
+                    data.PcbName = pev.TimeStudyNewHdr.PcbName;
+                    data.PcbNo = pev.TimeStudyNewHdr.PcbNo;
+                    data.UpdatedBy = userName;
+                    data.UpdatedDt = DateTime.Now;
+
+                    // ====== 3. Remove all old details ======
+                    _con.UV_PE_TimeStudyNewStep_Dtl.RemoveRange(
+                        data.TimeStudyDtl.SelectMany(d => d.TimeStudyStepDtl)
+                    );
+                    _con.UV_PE_TimeStudyNew_Dtl.RemoveRange(data.TimeStudyDtl);
+                    await _con.SaveChangesAsync(); // commit delete before re-add
+
+                    data.TimeStudyDtl = new List<TimeStudyNewDtlModel>();
+
+                    // ====== 4. Rebuild Detail + StepDetail ======
+                    foreach (var i in pev.TimeStudyNewDtlList)
+                    {
+                        var mapped = _mapper.Map<TimeStudyNewDtlModel>(i);
+                        mapped.Id = 0; // reset identity
+                        mapped.ParentId = data.Id;
+                        mapped.CreatedBy = userName;
+                        mapped.CreatedDt = DateTime.Now;
+
+                        // map and reset step details
+                        var sList = _mapper.Map<List<TimeStudyNewStepDtlModel>>(
+                            pev.TimeStudyNewStepDtlList.Where(j => j.StepId == i.Id).ToList()
+                        );
+
+                        // compute metrics
+                        mapped.Sumary = sList.Sum(k => k.TimeAvg);
+                        mapped.SetTime = mapped.Sumary * mapped.UnitQty;
+                        mapped.TargetQty = mapped.SetTime > 0 ? (int)Math.Floor(460 * 60 / mapped.SetTime) : 0;
+                        mapped.ProcessTime = mapped.AllocatedOpr > 0 ? Math.Round(mapped.SetTime / mapped.AllocatedOpr, 4) : 0;
+
+                        // add new detail first to get its ID
+                        await _con.UV_PE_TimeStudyNew_Dtl.AddAsync(mapped);
+                        await _con.SaveChangesAsync();
+
+                        // now link child steps
+                        foreach (var k in sList)
+                        {
+                            k.Id = 0; // reset identity
+                            k.StepId = mapped.Id; // assign FK
+                            k.CreatedBy = userName;
+                            k.CreatedDt = DateTime.Now;
+                        }
+
+                        await _con.UV_PE_TimeStudyNewStep_Dtl.AddRangeAsync(sList);
+                        await _con.SaveChangesAsync();
+
+                        mapped.TimeStudyStepDtl = sList;
+                        data.TimeStudyDtl.Add(mapped);
+                    }
+
+                    // ====== 5. Update Header Aggregates ======
+                    data.OperatorQty = pev.TimeStudyNewDtlList.Sum(i => i.AllocatedOpr);
+                    data.BottleNeckProcess = pev.TimeStudyNewDtlList.Any() ? pev.TimeStudyNewDtlList.Max(i => i.ProcessTime) : 0;
+                    data.TimeTotal = pev.TimeStudyNewDtlList.Sum(i => i.SetTime);
+                    data.OutputTarget = data.TimeTotal > 0 ? Math.Floor(460 * 60 * data.OperatorQty / data.TimeTotal) : 0;
+                    data.PitchTime = data.OutputTarget > 0 ? Math.Round((460 * 60) / data.OutputTarget, 4) : 0;
+                    data.LineBalance = data.BottleNeckProcess > 0 && data.OperatorQty > 0 ? Math.Round((data.TimeTotal / (data.BottleNeckProcess * data.OperatorQty)) * 100, 0) : 0;
+
+                    await _con.SaveChangesAsync();
+                }
+                else
+                {
+                    // ====== Disable Header ======
+                    var data = await _con.UV_PE_TimeStudyNew_Hdr
+                        .FirstOrDefaultAsync(i => i.Id == pev.TimeStudyNewHdr.Id);
+
+                    if (data != null)
+                    {
+                        data.Active = false;
+                        data.UpdatedBy = userName;
+                        data.UpdatedDt = DateTime.Now;
+                        await _con.SaveChangesAsync();
+                    }
+                }
+
+                await tran.CommitAsync();
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                await tran.RollbackAsync();
+                return ex.Message;
+            }
+        }
+
+        public async Task<string> EditTimeStudyNew2(PEViewModel pev)
+        {
+            try
+            {
+                if (pev.TimeStudyNewStepDtlList != null && pev.TimeStudyNewStepDtlList.Count > 0)
+                {
+
+                    // Change Time Study Header
+                    var data = await _con.UV_PE_TimeStudyNew_Hdr.Include(i=>i.TimeStudyDtl).FirstOrDefaultAsync(i=>i.Id == pev.TimeStudyNewHdr.Id);
+                    data.Customer = pev.TimeStudyNewHdr.Customer ?? string.Empty;
+                    data.Section = pev.TimeStudyNewHdr.Section;
+                    //data.Model = pev.TimeStudyNewHdr.Model;
+                    //data.BModel = pev.TimeStudyNewHdr.BModel;
+                    data.ModelCat = pev.TimeStudyNewHdr.ModelCat;
+                    data.LotNo = pev.TimeStudyNewHdr.LotNo;
+                    data.Unit = pev.TimeStudyNewHdr.Unit;
+                    data.Active = true;
+                    data.PcbName = pev.TimeStudyNewHdr.PcbName;
+                    data.PcbNo = pev.TimeStudyNewHdr.PcbNo;
+                    data.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                    data.UpdatedDt = DateTime.Now;
+
+                    _con.UV_PE_TimeStudyNew_Dtl.RemoveRange(data.TimeStudyDtl);
+                    await _con.SaveChangesAsync(); // commit delete first
+
+                    data.TimeStudyDtl = new List<TimeStudyNewDtlModel>();
+
+                    foreach (var i in pev.TimeStudyNewDtlList)
+                    {
+                        var mapped = _mapper.Map<TimeStudyNewDtlModel>(i);
+                        mapped.Id = 0;
+                        mapped.ParentId = data.Id; // ensure FK is set correctly
+                        mapped.CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                        mapped.CreatedDt = DateTime.Now;
+
+                        // compute derived fields safely
+                        var sList = _mapper.Map<List<TimeStudyNewStepDtlModel>>(pev.TimeStudyNewStepDtlList.Where(j => j.StepId == i.Id).ToList());
+
+                        mapped.Sumary = sList.Sum(k => k.TimeAvg);
+                        mapped.SetTime = mapped.Sumary * mapped.UnitQty;
+                        mapped.TargetQty = mapped.SetTime > 0 ? (int)Math.Floor(460 * 60 / mapped.SetTime) : 0;
+                        mapped.ProcessTime = mapped.AllocatedOpr > 0 ? Math.Round(mapped.SetTime / mapped.AllocatedOpr, 4) : 0;
+
+                        await _con.UV_PE_TimeStudyNew_Dtl.AddAsync(mapped);
+                        foreach (var k in sList)
+                        {
+                            k.Id = 0;
+                            k.CreatedBy = mapped.CreatedBy;
+                            k.CreatedDt = mapped.CreatedDt;
+                            k.StepId = mapped.Id; // ensure foreign key assigned after SaveChanges if identity
+                        }
+                        await _con.UV_PE_TimeStudyNewStep_Dtl.AddRangeAsync(sList);
+
+                        data.TimeStudyDtl.Add(mapped);
+                    }
+
+                    data.OperatorQty = data.TimeStudyDtl.Sum(i => i.AllocatedOpr);
+                    data.BottleNeckProcess = data.TimeStudyDtl.Any() ? data.TimeStudyDtl.Max(i => i.ProcessTime) : 0;
+                    data.TimeTotal = data.TimeStudyDtl.Sum(i => i.SetTime);
+                    data.OutputTarget = data.TimeTotal > 0 ? Math.Floor(460 * 60 * data.OperatorQty / data.TimeTotal) : 0;
+                    data.PitchTime = data.OutputTarget > 0 ? Math.Round((460 * 60) / data.OutputTarget, 4) : 0;
+
+                    await _con.SaveChangesAsync();
+                }
+                else
+                {
+                    var data = await _con.UV_PE_TimeStudyNew_Hdr.Include(i => i.TimeStudyDtl).FirstOrDefaultAsync(i => i.Id == pev.TimeStudyNewHdr.Id);
+                    data.Active = false;
+                    data.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                    data.UpdatedDt = DateTime.Now;
+                }
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        public async Task<DataSet> IniTimeStudyNew(Dictionary<string, object> dic)
+        {
+            DataSet ds = await _proc.Proc_GetDataset("spweb_UV_PE_InputTimeStudyNew_Initial", dic);
+            return ds;
+        }
+
+        public async Task<PEViewModel> IniTimeStudyNewDetail(string? operationName)
+        {
+            PEViewModel pvm = new PEViewModel();
+            var opr = _con.Master_Operation_Hdr.Where(i => i.Name.Contains(operationName ?? string.Empty) && i.IsActive);
+            if (opr.Any())
+            {
+                pvm.operationNames = opr.Select(i => i.Name).ToList();
+                if (!string.IsNullOrEmpty(operationName))
+                {
+                    var oprd = _con.Master_Operation_Dtl.Where(i => i.OperationId == opr.FirstOrDefault().Id && i.IsActive);
+                    if (oprd.Any())
+                    {
+                        pvm.operationDtlNames = oprd.Select(i => i.Name).ToList();
+                    }
+                }
+            }
+            pvm.operationDtlNames = pvm.operationDtlNames ?? new();
+            return pvm;
+        }
+
+        public async Task<PEViewModel> GetTimeStudyNewEdit(int id)
+        {
+            PEViewModel pvm = new PEViewModel();
+
+            try
+            {
+                var data = await _con.UV_PE_TimeStudyNew_Hdr.FindAsync(id);
+                if (data == null) return new PEViewModel { error_msg = "Data not found." };
+                var detail = await _con.UV_PE_TimeStudyNew_Dtl.Where(i => i.ParentId == id).ToListAsync();
+                if (!detail.Any()) return new PEViewModel { error_msg = "Detail data not found." };
+
+                List<TimeStudyNewStepDtlModel> stepList = new List<TimeStudyNewStepDtlModel>();
+                foreach (var t in detail)
+                {
+                    var step = await _con.UV_PE_TimeStudyNewStep_Dtl.Where(i => i.StepId == t.Id).ToListAsync();
+                    if (step.Any())
+                    {
+                        stepList.AddRange(step);
+                    }
+                }
+                if (!stepList.Any()) return new PEViewModel { error_msg = "Step detail data not found." };
+
+                TimeStudyNewHdrDTO thd = _mapper.Map<TimeStudyNewHdrDTO>(data);
+                List<TimeStudyNewDtlDTO> tdd = _mapper.Map<List<TimeStudyNewDtlDTO>>(detail.ToList());
+                List<TimeStudyNewStepDtlDTO> tsdd = _mapper.Map<List<TimeStudyNewStepDtlDTO>>(stepList);
+
+                pvm.TimeStudyNewDtlList = tdd;
+                pvm.TimeStudyNewStepDtlList = tsdd;
+                pvm.TimeStudyNewHdr = thd;
+            }
+            catch (Exception ex)
+            {
+                pvm.error_msg = ex.Message;
+            }
+
+
+            return pvm;
+        }
+
+        public async Task<PEViewModel> GetTimeStudyNewDtlEdit(int stepID)
+        {
+            PEViewModel pvm = new PEViewModel();
+            try
+            {
+                var data = await _con.UV_PE_TimeStudyNew_Dtl.FindAsync(stepID);
+                if (data == null) return new PEViewModel { error_msg = "Data not found." };
+                var detail = await _con.UV_PE_TimeStudyNewStep_Dtl.Where(i => i.StepId == stepID).ToListAsync();
+                if (!detail.Any()) return new PEViewModel { error_msg = "Detail data not found." };
+                TimeStudyNewDtlDTO tdd = _mapper.Map<TimeStudyNewDtlDTO>(data);
+                List<TimeStudyNewStepDtlDTO> tsdd = _mapper.Map<List<TimeStudyNewStepDtlDTO>>(detail);
+                pvm.TimeStudyNewDtl = tdd;
+                pvm.TimeStudyNewStepDtlList = tsdd;
+            }
+            catch (Exception ex)
+            {
+                pvm.error_msg = ex.Message;
+            }
+            return pvm;
+        }
+
+
+
+        public async Task<List<TimeStudyNewUploadDTO>> UploadTimeStudyNewData(IFormFile ff)
+        {
+            List<TimeStudyNewUploadDTO> list = new();
+            try
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await ff.CopyToAsync(stream);
+                    // get master upload file information
+                    List<UploadFileMaster> ufm = _con.Master_UploadFile_mst.Where(i => i.file_name.ToLower().Contains("TimeStudyNew")).ToList();
+                    // build dictionary: db_col_name -> col_index
+                    Dictionary<string, int> colMap = ufm.ToDictionary(i => i.db_col_name, i => i.col_index);
+                    int header_row = ufm.FirstOrDefault()?.header_row ?? 0;
+                    int has_header = 0;
+                    //read excel data 
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        while (reader.Read())
+                        {
+                            has_header++;
+                            if (has_header > header_row)
+                            {
+
+                                string model = CommonFormat.GetValueOrDefault<string>(reader, colMap, "Model", string.Empty);
+                               // string bModel = CommonFormat.GetValueOrDefault<string>(reader, colMap, "BModel", string.Empty);
+
+                                int stepNo = CommonFormat.GetValueOrDefault<int>(reader, colMap, "StepNo", 0);
+                                int unitQty = CommonFormat.GetValueOrDefault<int>(reader, colMap, "UnitQty", 0);
+
+                                TimeStudyNewUploadDTO tsu = new TimeStudyNewUploadDTO()
+                                {
+                                    //Customer = CommonFormat.GetValueOrDefault<string>(reader, colMap, "Customer", string.Empty),
+                                    Section = CommonFormat.GetValueOrDefault<string>(reader, colMap, "Section", string.Empty),
+                                    Model = model,
+                                    //BModel = bModel,
+                                    LotNo = CommonFormat.GetValueOrDefault<string>(reader, colMap, "LotNo", string.Empty),
+                                    Unit = CommonFormat.GetValueOrDefault<string>(reader, colMap, "Unit", string.Empty),
+                                    OperationKind = CommonFormat.GetValueOrDefault<string>(reader, colMap, "OperationKind", string.Empty),
+                                    //StepNo = stepNo,
+                                    StepContent = CommonFormat.GetValueOrDefault<string>(reader, colMap, "StepContent", string.Empty),
+                                    UnitQty = unitQty,
+                                    AllocatedOpr = CommonFormat.GetValueOrDefault<int>(reader, colMap, "AllocatedOpr", 0),
+                                    ProcessName = CommonFormat.GetValueOrDefault<string>(reader, colMap, "ProcessName", string.Empty),
+                                    ModelCat = CommonFormat.GetValueOrDefault<string>(reader, colMap, "ModelCat", string.Empty),
+                                   // IsPrepare = (reader.GetValue(colMap.GetValueOrDefault("IsPrepare"))?.ToString() ?? string.Empty).ToLower() == "no" ? false : true
+                                };
+                                list.Add(tsu);
+                            }
+                        }
+                    }
+                }
+                return list;
+            }
+            catch (Exception ex)
+            {
+                return list;
+            }
+
+        }
+        public async Task<PEViewModel> UploadTimeStudyNew(IFormFile ff)
+        {
+            PEViewModel pev = new();
+            List<TimeStudyNewHdrModel> tshList = new();
+            List<TimeStudyNewDtlModel> tsdList = new();
+            List<TimeStudyNewStepDtlModel> tssdList = new();
+            string file_name = $"{ff.FileName}_{DateTime.Now:yyyyMMddHHmmss}";
+            List<TimeStudyNewUploadDTO> uploadList = new();
+            uploadList = await UploadTimeStudyNewData(ff);
+            if (uploadList.Count == 0)
+            {
+                pev.error_msg = "Wrong format data or No data found in the uploaded file.";
+                return pev;
+            }
+            try
+            {
+                var groups = uploadList.GroupBy(r => new {r.Section, r.Model, r.LotNo, r.ModelCat });
+                foreach (var g in groups)
+                {
+                    var existingHdr = await _con.UV_PE_TimeStudyNew_Hdr
+                        .Where(h =>
+                            h.Section == g.Key.Section &&
+                            h.Model == g.Key.Model &&
+                            //h.BModel == g.Key.BModel &&
+                            h.LotNo == g.Key.LotNo &&
+                            //h.Unit == g.Key.Unit &&
+                            //h.IsPrepare == g.Key.IsPrepare &&
+                            h.ModelCat == g.Key.ModelCat).ToListAsync();
+                    if (existingHdr.Any())
+                    {
+                        existingHdr.ToList().ForEach(i => {
+                            i.Active = false;
+                            i.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                            i.UpdatedDt = DateTime.Now;
+                        });
+                        await _con.SaveChangesAsync();
+                    }
+                    var hdr = new TimeStudyNewHdrModel
+                    {
+                        Customer=string.Empty,
+                        Section = g.Key.Section,
+                        Model = g.Key.Model,
+                        //BModel = g.Key.BModel,
+                        LotNo = g.Key.LotNo,
+                        Unit = g.First().Unit,
+                        //IsPrepare = g.Key.IsPrepare,
+                        ModelCat = g.Key.ModelCat,
+                        UploadFile = file_name,
+                        CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty,
+                        CreatedDt = DateTime.Now
+                    };
+                    // Group by Dtl-level fields
+                    var dtlGroups = g.GroupBy(r => new { r.OperationKind, r.StepContent, r.UnitQty, r.AllocatedOpr });
+                    int j = 0;
+                    foreach (var d in dtlGroups)
+                    {
+                        j++;
+                        var dtl = new TimeStudyNewDtlModel
+                        {
+                            OperationKind = d.Key.OperationKind,
+                            StepNo = j,
+                            StepContent = d.Key.StepContent,
+                            UnitQty = d.Key.UnitQty,
+                            AllocatedOpr = d.Key.AllocatedOpr,
+                            Sumary = 0,
+                            CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty,
+                            CreatedDt = DateTime.Now
+                        };
+                        int i = 0;
+                        foreach (var s in d)
+                        {
+                            i++;
+                            var stepDtl = new TimeStudyNewStepDtlModel
+                            {
+                                SeqNo = i,
+                                ProcessName = s.ProcessName,
+                                ProcessQty = 1,
+                                CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty,
+                                CreatedDt = DateTime.Now
+                            };
+                            dtl.TimeStudyStepDtl.Add(stepDtl);
+                        }
+                        hdr.TimeStudyDtl.Add(dtl);
+                    }
+                    await _con.UV_PE_TimeStudyNew_Hdr.AddAsync(hdr);
+                }
+                await _con.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                pev.error_msg = ex.Message;
+                return pev;
+            }
+
+            // group by header-level fields          
+
+            if (uploadList.Count > 0)
+            {
+                pev.data = await GetTimeStudyNew(new Dictionary<string, object>
+                {
+                    { "@upload_file", file_name }
+                });
+            }
+            return pev;
+        }
+
+        public async Task<DataSet> ExportTimeStudyNew(Dictionary<string, object> dic)
+        {
+            DataSet ds = new();
+            ds = await _proc.Proc_GetDataset("spweb_UV_PE_InputTimeStudyNew_Report", dic);
+            return ds;
+        }
+
+        public async Task<List<UploadFileMaster>> GetUploadFileMaster(string name)
+        {
+            List<UploadFileMaster> ufm = new();
+            try { 
+                ufm = await _con.Master_UploadFile_mst.Where(i => i.file_name.ToLower().Contains(name.ToLower())).ToListAsync();
+            }
+            catch { }
+            return ufm;
         }
         #endregion
 

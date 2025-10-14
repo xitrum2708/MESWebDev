@@ -6,17 +6,14 @@ namespace MESWebDev.Models.PE
     {
         public DataTable? data { get; set; }
         public DataTable? detail { get; set; }
-        public ManpowerModel? manpower { get; set; } 
-
-        public OperationModel? operation { get; set; } 
-        public OperationDetailModel? operationDtl { get; set; } 
-        public TimeStudyHdrDTO TimeStudyHdr { get; set; } 
-        public TimeStudyDtlDTO TimeStudyDtl { get; set; } 
-        public TimeStudyStepDtlDTO TimeStudyStepDtl { get; set; } 
-
+        public ManpowerModel? manpower { get; set; }
+        public OperationModel? operation { get; set; }
+        public OperationDetailModel? operationDtl { get; set; }
+        public TimeStudyHdrDTO TimeStudyHdr { get; set; }
+        public TimeStudyDtlDTO TimeStudyDtl { get; set; }
+        public TimeStudyStepDtlDTO TimeStudyStepDtl { get; set; }
         public List<OperationModel>? operationList { get; set; }
         public List<OperationDetailModel>? operationDtlList { get; set; }
-
         public string? error_msg { get; set; }
 
         //input study
@@ -36,9 +33,15 @@ namespace MESWebDev.Models.PE
 
         //step no
         public int? StepNo { get; set; }
-
         public List<string>? operationNames { get; set; }
         public List<string>? operationDtlNames { get; set; }
 
+        // Time Study New
+        public TimeStudyNewHdrDTO TimeStudyNewHdr { get; set; }
+        public TimeStudyNewDtlDTO TimeStudyNewDtl { get; set; }
+        public TimeStudyNewStepDtlDTO TimeStudyNewStepDtl { get; set; }
+        public List<TimeStudyNewHdrDTO>? TimeStudyNewHdrList { get; set; }
+        public List<TimeStudyNewDtlDTO>? TimeStudyNewDtlList { get; set; }
+        public List<TimeStudyNewStepDtlDTO>? TimeStudyNewStepDtlList { get; set; }
     }
 }

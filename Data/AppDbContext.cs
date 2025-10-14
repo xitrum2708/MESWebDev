@@ -88,6 +88,10 @@ namespace MESWebDev.Data
         public DbSet<TimeStudyDtlModel> UV_PE_TimeStudy_Dtl { get; set; }
         public DbSet<TimeStudyStepDtlModel> UV_PE_TimeStudyStep_Dtl { get; set; }
 
+        public DbSet<TimeStudyNewHdrModel> UV_PE_TimeStudyNew_Hdr { get; set; }
+        public DbSet<TimeStudyNewDtlModel> UV_PE_TimeStudyNew_Dtl { get; set; }
+        public DbSet<TimeStudyNewStepDtlModel> UV_PE_TimeStudyNewStep_Dtl { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

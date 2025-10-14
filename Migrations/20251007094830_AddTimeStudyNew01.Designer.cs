@@ -4,6 +4,7 @@ using MESWebDev.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MESWebDev.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251007094830_AddTimeStudyNew01")]
+    partial class AddTimeStudyNew01
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1388,14 +1391,6 @@ namespace MESWebDev.Migrations
                     b.Property<int>("ParentId")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("ProcessTime")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("SetTime")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<string>("StepContent")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1406,9 +1401,6 @@ namespace MESWebDev.Migrations
                     b.Property<decimal>("Sumary")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("TargetQty")
-                        .HasColumnType("int");
 
                     b.Property<int>("TimeStudyHdrId")
                         .HasColumnType("int");
@@ -1443,10 +1435,6 @@ namespace MESWebDev.Migrations
                     b.Property<string>("BModel")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("BottleNeckProcess")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1458,13 +1446,6 @@ namespace MESWebDev.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsPrepare")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("LineBalance")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("LotNo")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1473,34 +1454,15 @@ namespace MESWebDev.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ModelCat")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("OperatorQty")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("OutputTarget")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<string>("PcbName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PcbNo")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("PitchTime")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<string>("Section")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("TimeTotal")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Unit")
                         .HasColumnType("nvarchar(max)");
@@ -1534,12 +1496,9 @@ namespace MESWebDev.Migrations
                     b.Property<DateTime>("CreatedDt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ProcessName")
+                    b.Property<string>("OperationName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProcessQty")
-                        .HasColumnType("int");
 
                     b.Property<int>("SeqNo")
                         .HasColumnType("int");
@@ -1548,28 +1507,28 @@ namespace MESWebDev.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Time01")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("Time02")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("Time03")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("Time04")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("Time05")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TimeAvg")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.HasKey("Id");
 

@@ -31,6 +31,10 @@ namespace MESWebDev.Common
             CreateMap<TimeStudyUploadDTO, TimeStudyStepDtlModel>().ReverseMap();
             CreateMap<TimeStudyUploadDTO, TimeStudyHdrModel>().ReverseMap();
             CreateMap<TimeStudyUploadDTO, TimeStudyDtlModel>().ReverseMap();
+
+            CreateMap<TimeStudyNewHdrDTO, TimeStudyNewHdrModel>().ReverseMap();
+            CreateMap<TimeStudyNewDtlDTO, TimeStudyNewDtlModel>().ReverseMap();
+            CreateMap<TimeStudyNewStepDtlDTO, TimeStudyNewStepDtlModel>().ReverseMap();
         }
     }
 }

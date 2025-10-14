@@ -1,12 +1,22 @@
-﻿using MESWebDev.Models.PE;
+﻿using MESWebDev.Models.COMMON;
+using MESWebDev.Models.PE;
 using MESWebDev.Models.PE.DTO;
 using System.ComponentModel;
 using System.Data;
+using System.Drawing;
 
 namespace MESWebDev.Services.IService
 {
     public interface IPEService
     {
+
+        // Manpower
+        Task<DataTable> GetManpower(Dictionary<string, object> dic);
+        Task<PEViewModel> UploadManpower(IFormFile f);
+        Task<string> DeleteManpower(List<int> ids);
+        Task<string> EditManpower(ManpowerModel mm);
+        Task<string> AddManpower(ManpowerModel mm);
+        Task<ManpowerModel> GetManpowerDetail(int id);
         // Operation
         Task<List<OperationModel>> GetOperation();
         Task<string> DeleteOperation(int id);
@@ -24,10 +34,8 @@ namespace MESWebDev.Services.IService
         // Operation Time Studay
         Task<DataTable> GetTimeStudy(Dictionary<string, object> dic);
         Task<PEViewModel> UploadTimeStudy(IFormFile f);
-        Task<string> DeleteTimeStudy(List<int> ids);
         Task<string> EditTimeStudy(PEViewModel pev);
         Task<string> AddTimeStudy(PEViewModel pev);
-        Task<OperationDetailModel> GetTimeStudyDetail(int id);
         Task<PEViewModel> GetTimeStudyEdit(int id);
         
 
@@ -36,12 +44,24 @@ namespace MESWebDev.Services.IService
         Task<DataSet> IniTimeStudy(Dictionary<string, object> dic);
         Task<PEViewModel> IniTimeStudyDetail(string? operationName);
 
-        // Manpower
-        Task<DataTable> GetManpower(Dictionary<string,object> dic);
-        Task<PEViewModel> UploadManpower(IFormFile f);
-        Task<string> DeleteManpower(List<int> ids);
-        Task<string> EditManpower(ManpowerModel mm);
-        Task<string> AddManpower(ManpowerModel mm);
-        Task<ManpowerModel> GetManpowerDetail(int id);
+
+
+        // Time Study New
+        Task<DataTable> GetTimeStudyNew(Dictionary<string, object> dic);
+        Task<PEViewModel> UploadTimeStudyNew(IFormFile f);
+        Task<string> EditTimeStudyNew(PEViewModel pev);
+        Task<string> AddTimeStudyNew(PEViewModel pev);
+        Task<PEViewModel> GetTimeStudyNewEdit(int id);
+
+
+        Task<PEViewModel> GetTimeStudyNewDtlEdit(int stepID);
+
+        Task<DataSet> IniTimeStudyNew(Dictionary<string, object> dic);
+        Task<PEViewModel> IniTimeStudyNewDetail(string? operationName);
+
+        Task<DataSet> ExportTimeStudyNew(Dictionary<string, object> dic);
+
+        Task<List<UploadFileMaster>> GetUploadFileMaster(string name);
+
     }
 }

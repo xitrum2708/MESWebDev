@@ -21,6 +21,10 @@ namespace MESWebDev.Models.PE
         public string? Unit { get; set; }
         public string? PcbName { get; set; }
         public string? PcbNo { get; set; }
+
+        // Other in
+
+
         public string? UploadFile { get; set; }
 
         public bool Active { get; set; } = true;

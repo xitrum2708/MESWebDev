@@ -1,0 +1,84 @@
+﻿@model PEViewModel
+@try
+{
+    <div class="table-responsive overflow-auto mt-3">
+        <table class="table table-bordered table-hover" id="detailTable">
+            <thead class="table-success">
+                <tr class="text-center">
+                    <td>Action</td>
+                    <th>No</th>
+                    <th>Kind</th>
+                    <th>Step No</th>
+                    <th>Step Content</th>
+                    <th>Unit Qty</th>
+                    <th>Sumary</th>
+                    <th>Time Process/Set</th>
+                    <th>Target Qty</th>
+                    <th>Allocated Opr</th>
+                    <th>Time/Process</th>
+                </tr>
+            </thead>
+            <tbody >
+                @if (Model.TimeStudyNewDtlList != null && Model.TimeStudyNewDtlList.Count > 0)
+                {
+                    for (int i = 0; i < Model.TimeStudyNewDtlList.Count; i++)
+                    {
+                        <tr>
+                            <td class="d-flex justify-content-center align-items-center">
+                                <a class="btn btn-sm btn-warning me-3" onclick="btnEditDtl(@Model.TimeStudyNewDtlList[i].StepNo)">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">@(i + 1)</td>
+                            <td>
+                                @Model.TimeStudyNewDtlList[i].OperationKind
+                                <input hidden asp-for="@Model.TimeStudyNewDtlList[i].OperationKind" />
+                                <input hidden asp-for="@Model.TimeStudyNewDtlList[i].Id" />
+                                <input hidden asp-for="@Model.TimeStudyNewDtlList[i].ParentId" />
+                            </td>
+                            <td class="text-center">
+                                @Model.TimeStudyNewDtlList[i].StepNo
+                                <input hidden asp-for="@Model.TimeStudyNewDtlList[i].StepNo" />
+                            </td>
+                            <td>
+                                @Model.TimeStudyNewDtlList[i].StepContent
+                                <input hidden asp-for="@Model.TimeStudyNewDtlList[i].StepContent" />
+                            </td>
+                            <td>
+                                @Model.TimeStudyNewDtlList[i].UnitQty
+                                <input hidden asp-for="@Model.TimeStudyNewDtlList[i].UnitQty" />
+                            </td>
+                            <td>
+                                @Model.TimeStudyNewDtlList[i].Sumary
+                                <input hidden asp-for="@Model.TimeStudyNewDtlList[i].Sumary" />
+                            </td>
+                            <td>
+                                @Model.TimeStudyNewDtlList[i].SetTime
+                                <input hidden asp-for="@Model.TimeStudyNewDtlList[i].SetTime" />
+                            </td>
+                            <td class="text-end">
+                                @Model.TimeStudyNewDtlList[i].TargetQty
+                                <input hidden asp-for="@Model.TimeStudyNewDtlList[i].TargetQty" />
+                            </td>
+                            <td class="text-end">
+                                @Model.TimeStudyNewDtlList[i].AllocatedOpr
+                                <input hidden asp-for="@Model.TimeStudyNewDtlList[i].AllocatedOpr" />
+                            </td>
+                            <td class="text-end">
+                                @Model.TimeStudyNewDtlList[i].ProcessTime
+                                <input hidden asp-for="@Model.TimeStudyNewDtlList[i].ProcessTime" />
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+    </div>
+}
+catch (Exception ex)
+{
+    <div class="alert alert-danger">
+        Error: @ex.Message
+    </div>
+}
