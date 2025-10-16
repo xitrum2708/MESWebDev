@@ -437,23 +437,52 @@ catch(Exception ex)
 
 
         //------ Edit Step Detail data -------------------\\
-         $(document).on('click', '#editStepDtl', function (e) {
-             e.preventDefault();
-            var $row = $(this).closest('tr');
-            // Fill form inputs
-            $("#ip_processName").val($row.find("input[name*='ProcessName']").val()).trigger('input');
-             $("#ip_processQty").val($row.find("input[name*='ProcessQty']").val()).trigger('input');
-             $("#ip_stepId").val($row.find("input[name*='StepId']").val());
+         // $(document).on('click', '#editStepDtl', function (e) {
+         //     e.preventDefault();
+         //    var $row = $(this).closest('tr');
+         //    // Fill form inputs
+         //    $("#ip_processName").val($row.find("input[name*='ProcessName']").val()).trigger('input');
+         //     $("#ip_processQty").val($row.find("input[name*='ProcessQty']").val()).trigger('input');
+         //     $("#ip_stepId").val($row.find("input[name*='StepId']").val());
 
+         //    $("#ip_time01").val($row.find("input[name*='Time01']").val());
+         //    $("#ip_time02").val($row.find("input[name*='Time02']").val());
+         //    $("#ip_time03").val($row.find("input[name*='Time03']").val());
+         //    $("#ip_time04").val($row.find("input[name*='Time04']").val());
+         //    $("#ip_time05").val($row.find("input[name*='Time05']").val());
+
+         //    // Store an index or ID for update later
+         //    $("#bt_AddOperation").text("Update").removeClass('bt_addOperation').addClass('bt_updateOperation').data("edit-index", $row.index());
+         // });
+
+        $(document).on('click', '#editStepDtl', function (e) {
+            e.preventDefault();
+
+            // Get row index
+            var rowIndex = $(this).closest('tr').index();
+
+            // Call the function that defined earlier
+            editRowByIndex(rowIndex);
+        });
+
+
+        function editRowByIndex(index) {
+            var $row = $("#tb_TimeStudyNewStepDtl tbody tr").eq(index);  // get nth row (0-based)
+
+            $("#ip_processName").val($row.find("input[name*='ProcessName']").val()).trigger('input');
+            $("#ip_processQty").val($row.find("input[name*='ProcessQty']").val()).trigger('input');
+            $("#ip_stepId").val($row.find("input[name*='StepId']").val());
             $("#ip_time01").val($row.find("input[name*='Time01']").val());
             $("#ip_time02").val($row.find("input[name*='Time02']").val());
             $("#ip_time03").val($row.find("input[name*='Time03']").val());
             $("#ip_time04").val($row.find("input[name*='Time04']").val());
             $("#ip_time05").val($row.find("input[name*='Time05']").val());
 
-            // Store an index or ID for update later
-            $("#bt_AddOperation").text("Update").removeClass('bt_addOperation').addClass('bt_updateOperation').data("edit-index", $row.index());
-         });
+            $("#bt_AddOperation").text("Update")
+                .removeClass('bt_addOperation')
+                .addClass('bt_updateOperation')
+                .data("edit-index", index);
+        }
 
         // When clicking Add/Update button
         $(document).on("click", ".bt_updateOperation", function () {
@@ -479,18 +508,41 @@ catch(Exception ex)
                 $.post('/PE/EditTimeStudyNewStepDtl', formData, function (res) {
                     $('#tbodyTimeStudyNewStepDtlResult').html(res);
 
-                    // Reset input fields after update
-                    $(".stepDetail input").val("").trigger("input");
-                    $("#bt_AddOperation")
-                        .text("Add")
-                        .removeClass('bt_updateOperation')
-                        .addClass('bt_addOperation')
-                        .removeData("edit-index");
+
+                    // count row of table first
+                    var $table = $("#tb_TimeStudyNewStepDtl tbody");
+                    var totalRows = $table.find("tr").length;  // count all rows
+                     if(index < totalRows -1){
+                          editRowByIndex(index+1);
+                     }
+                     else{
+                        //Reset input fields after update
+                        $(".stepDetail input").val("").trigger("input");
+                        $("#bt_AddOperation")
+                            .text("Add")
+                            .removeClass('bt_updateOperation')
+                            .addClass('bt_addOperation')
+                            .removeData("edit-index");
+                     }
+
+ 
                 });
             } else {
                 toastr.error('Please fill in all required fields.');
             }
         });
+
+        // when can edit it transforms to Add function
+         $(document).on('click', '#bt_CancelProcess', function () {
+             if ($("#bt_AddOperation").hasClass('bt_updateOperation')) {
+                 $("#bt_AddOperation").text("Add")
+                     .removeClass('bt_updateOperation')
+                     .addClass('bt_addOperation')
+                     .removeData("edit-index");
+                 // Clear input fields
+                 $(".stepDetail input").val("").trigger("input");
+             }
+         });
 
         // <!-- #region EDIT timer STUDY -->
 
