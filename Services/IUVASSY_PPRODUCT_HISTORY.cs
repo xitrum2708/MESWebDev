@@ -9,5 +9,7 @@ namespace MESWebDev.Services
         Task<DataTable> GetAttachedList(int processID, string qrcode);
         Task<DataTable> GetAttachedFile(int Id);
 
+
+        Task<DataTable> GetProductionErrorList(Dictionary<string, object> param);
     }
 }

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Threading.Tasks;
+using static MESWebDev.Common.Export2Excel;
 
 namespace MESWebDev.Controllers
 {
@@ -19,6 +20,7 @@ namespace MESWebDev.Controllers
         private readonly ILoggingService _loggingService;
         private readonly IExcelExportService _excelExportService;
         private readonly IUVASSY_PPRODUCT_HISTORY _uvassyPProductHistoryService;
+        private readonly Export2Excel _ee;
 
         public UVAssyProductionController(AppDbContext context, IUVAssyProductionRepository repository, ILoggingService loggingService, IExcelExportService excelExportService, IUVASSY_PPRODUCT_HISTORY uvassyPProductHistoryService)
             : base(context)
@@ -27,6 +29,7 @@ namespace MESWebDev.Controllers
             _loggingService = loggingService;
             _excelExportService = excelExportService;
             _uvassyPProductHistoryService = uvassyPProductHistoryService;
+            _ee = new();
         }
 
         public async Task<IActionResult> Index(string sortOrder, DateTime? startDate, DateTime? endDate)
@@ -300,5 +303,39 @@ namespace MESWebDev.Controllers
             var name = row["Attach_Name"] as string ?? "attachment.bin";
             return File(bytes, "application/octet-stream", name);
         }
+
+
+        // Production Error List
+        public IActionResult ProdErrorList()
+        {
+            return View("ErrorList/Index");
+        }
+        // Search Production Error List
+        [HttpPost]
+        public async Task<IActionResult> SearchErrorList(string? lotNo, string? processName)
+        {
+            try
+            {
+                Dictionary<string, object> param = new Dictionary<string, object>
+                {
+                    { "@LotNo", lotNo ?? string.Empty },
+                    { "@ProcessName", processName ?? string.Empty }
+                };
+                var dt = await _uvassyPProductHistoryService.GetProductionErrorList(param);
+                return PartialView("ErrorList/_Result", dt);
+            }
+            catch (Exception ex)
+            {                
+                return Json(new { success = false, message = "An error occurred while searching production error list." });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ExportToExcel([FromBody] TableFilterRequest request)
+        {
+            var fileBytes = await _ee.AjaxExcelExport(request, "#,##0");
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "FilteredData.xlsx");
+        }
+
     }
 }

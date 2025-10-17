@@ -34,6 +34,13 @@ namespace MESWebDev.Services
             });
         }
 
+        public async Task<DataTable> GetProductionErrorList(Dictionary<string, object> param)
+        {
+            DataTable dt = new();
+            dt = await _proc.Proc_GetDatatable("spweb_UV_Assy_ErrorList", param);
+            return dt;
+        }
+
         public Task<DataTable> SearchResult(ProductHistoryDto search)
         {
             object DbNullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? DBNull.Value : s.Trim();

@@ -1,0 +1,50 @@
+﻿@* <h2>Product Schedule (Resource Timeline View)</h2> *@
+@using System.Data
+@model DataTable
+
+@{
+    int i = 0;
+}
+ @if (Model != null && Model.Rows.Count > 0)
+    {
+        <div style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative">
+            <table class="table table-bordered table-striped table-hover" id="tb_TimeStudyNew">
+                <thead class="sticky-top">
+                    <!-- Header Row -->
+                    <tr>
+                        <th class="text-center table-info">No.</th>
+                        @foreach (DataColumn column in Model.Columns)
+                        {                           
+                            <th class="text-center table-info">
+                                <span class="d-block p-0 header-text">@column.Caption</span>
+                            </th>
+                            
+                        }
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (DataRow row in Model.Rows)
+                    {
+                        i++;
+                        <tr>
+                            <td >@i</td>
+                            @foreach (DataColumn col in Model.Columns)
+                            {                                
+                                var item = row[col];                             
+                                <td class="body-text  @(CommonFormat.IsNumeric(col.DataType) ? "text-end" : "text-start")">
+                                    @item.ToString()
+                                </td>                                
+                            }              
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning text-center">
+            No data available.
+        </div>
+    }
