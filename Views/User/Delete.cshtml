@@ -1,7 +1,7 @@
 ﻿@using MESWebDev.Models.VM
 @using MESWebDev.Services
 @inject ITranslationService TranslationService
-@model UserViewModel
+@model MasterVM
 
 @{
     var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
@@ -10,70 +10,60 @@
 }
 @section ContentHeader {
     @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
-@* <div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">          
-            <div class="col-sm-12">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
-                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "User")">@TranslationService.GetTranslation("UserManagement", languageCode)</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("DeleteUser", languageCode) </li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div> *@
 }
 
 <div class="app-content">
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">@TranslationService.GetTranslation("ConfirmDelete", languageCode) </h3>
+                <div class="card card-danger">
+                    <div class="card-header fw-bold">
+                        
+                        <h3 class="card-title">
+                            <i class="bi bi-trash3"></i>
+                            @TranslationService.GetTranslation("ConfirmDelete", languageCode) </h3>
                     </div>
                     <div class="card-body">
                         <dl class="row">
                             <dt class="col-sm-2">
                                 @TranslationService.GetTranslation("Username", languageCode)
                             </dt>
-                            <dd class="col-sm-10">
-                                @Model.Username
+                            <dd class="col-sm-10 mb-2">
+                                @Model.User.Username
                             </dd>
                             <dt class="col-sm-2">
                                 @TranslationService.GetTranslation("Email", languageCode)
                             </dt>
-                            <dd class="col-sm-10">
-                                @Model.Email
+                            <dd class="col-sm-10 mb-2">
+                                @Model.User.Email
                             </dd>
                             <dt class="col-sm-2">
                                 @TranslationService.GetTranslation("FullName", languageCode)
                             </dt>
-                            <dd class="col-sm-10">
-                                @Model.FullName
+                            <dd class="col-sm-10 mb-2">
+                                @Model.User.Fullname
                             </dd>
                             <dt class="col-sm-2">
                                 @TranslationService.GetTranslation("Language", languageCode)
                             </dt>
-                            <dd class="col-sm-10">
-                                @Model.LanguageName
+                            <dd class="col-sm-10 mb-2">
+                                @Model.User.LangName
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("Role", languageCode)
+                            </dt>
+                            <dd class="col-sm-10 mb-2">
+                                @Model.User.RoleName
                             </dd>
                             <dt class="col-sm-2">
                                 @TranslationService.GetTranslation("IsActive", languageCode)
                             </dt>
-                            <dd class="col-sm-10">
-                                @(Model.IsActive ? TranslationService.GetTranslation("Yes", languageCode) : TranslationService.GetTranslation("No", languageCode))
-                            </dd>
-                            <dt class="col-sm-2">
-                                @TranslationService.GetTranslation("CreatedAt", languageCode)
-                            </dt>
-                            <dd class="col-sm-10">
-                                @Model.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                            <dd class="col-sm-10 mb-2">
+                                @(Model.User.IsActive ? TranslationService.GetTranslation("Yes", languageCode) : TranslationService.GetTranslation("No", languageCode))
                             </dd>
                         </dl>
                         <form asp-action="Delete">
-                            <input type="hidden" asp-for="UserId" />
+                            <input type="hidden" asp-for="@Model.User.Username" />
                             <button type="submit" class="btn btn-danger">@TranslationService.GetTranslation("Delete", languageCode)</button>
                             <a asp-action="Index" class="btn btn-secondary">@TranslationService.GetTranslation("BackToList", languageCode)</a>
                         </form>

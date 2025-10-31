@@ -1,8 +1,11 @@
 ﻿using MESWebDev.Data;
 using MESWebDev.Extensions;
 using MESWebDev.Models;
+using MESWebDev.Models.Master;
+using MESWebDev.Models.Master.DTO;
 using MESWebDev.Models.VM;
 using MESWebDev.Services;
+using MESWebDev.Services.IService;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,17 +15,19 @@ namespace MESWebDev.Controllers
     {
         //private readonly AppDbContext _context;
         private readonly ITranslationService _translationService;
+        private readonly IAuthService _auth;
 
-        public RoleController(AppDbContext context, ITranslationService translationService)
+        public RoleController(AppDbContext context, ITranslationService translationService, IAuthService auth)
             : base(context)
         {
             _translationService = translationService;
+            _auth = auth;
         }
 
-        public async Task<IActionResult> Index(int page = 1, int pageSize = 10, string searchTerm = null)
+        public async Task<IActionResult> Index()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -30,32 +35,16 @@ namespace MESWebDev.Controllers
             var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
 
             // Query roles
-            var rolesQuery = _context.Roles
-                .Select(r => new RoleViewModel
-                {
-                    RoleId = r.RoleId,
-                    RoleName = r.RoleName,
-                    Description = r.Description,
-                    CreatedAt = r.CreatedAt
-                });
+            var roles = await _auth.GetAllRolesAsync();
 
-            // Apply search if searchTerm is provided
-            if (!string.IsNullOrEmpty(searchTerm))
-            {
-                rolesQuery = rolesQuery.Where(r => r.RoleName.Contains(searchTerm) || r.Description.Contains(searchTerm));
-            }
-
-            // Paginate the results
-            var pagedRoles = rolesQuery.ToPagedResult(page, pageSize, searchTerm);
-
-            return View(pagedRoles);
+            return View(roles);
         }
 
         // GET: Role/Create
         public IActionResult Create()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -66,27 +55,18 @@ namespace MESWebDev.Controllers
         // POST: Role/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(RoleViewModel model)
+        public async Task<IActionResult> Create(RoleDTO model)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
             {
                 return RedirectToAction("Login", "Account");
             }
-
-            if (ModelState.IsValid)
-            {
-                var role = new Role
-                {
-                    RoleName = model.RoleName,
-                    Description = model.Description,
-                    CreatedAt = DateTime.Now
-                };
-
-                _context.Roles.Add(role);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+            string msg = await _auth.CreateRoleAsync(model);
+            if (string.IsNullOrEmpty(msg)) { 
+                 return RedirectToAction(nameof(Index));
             }
+            ModelState.AddModelError(string.Empty, msg);
 
             return View(model);
         }
@@ -94,36 +74,24 @@ namespace MESWebDev.Controllers
         // GET: Role/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
             {
                 return RedirectToAction("Login", "Account");
             }
 
-            var role = await _context.Roles.FindAsync(id);
-            if (role == null)
-            {
-                return NotFound();
-            }
+            var role = await _auth.GetRoleByIdAsync(id);
 
-            var model = new RoleViewModel
-            {
-                RoleId = role.RoleId,
-                RoleName = role.RoleName,
-                Description = role.Description,
-                CreatedAt = role.CreatedAt
-            };
-
-            return View(model);
+            return View(role);
         }
 
         // POST: Role/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, RoleViewModel model)
+        public async Task<IActionResult> Edit(int id, RoleDTO model)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -133,60 +101,28 @@ namespace MESWebDev.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            string msg = await _auth.UpdateRoleAsync(model);
+
+            if (string.IsNullOrEmpty(msg))
             {
-                try
-                {
-                    var role = await _context.Roles.FindAsync(id);
-                    if (role == null)
-                    {
-                        return NotFound();
-                    }
-
-                    role.RoleName = model.RoleName;
-                    role.Description = model.Description;
-
-                    _context.Update(role);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!RoleExists(id))
-                    {
-                        return NotFound();
-                    }
-                    throw;
-                }
                 return RedirectToAction(nameof(Index));
             }
-
+            ModelState.AddModelError(string.Empty, msg);
             return View(model);
         }
 
         // GET: Role/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
             {
                 return RedirectToAction("Login", "Account");
             }
 
-            var role = await _context.Roles.FindAsync(id);
-            if (role == null)
-            {
-                return NotFound();
-            }
+            var role = await _auth.GetRoleByIdAsync(id);
 
-            var model = new RoleViewModel
-            {
-                RoleId = role.RoleId,
-                RoleName = role.RoleName,
-                Description = role.Description,
-                CreatedAt = role.CreatedAt
-            };
-
-            return View(model);
+            return View(role);
         }
 
         // POST: Role/Delete/5
@@ -194,20 +130,21 @@ namespace MESWebDev.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
             {
                 return RedirectToAction("Login", "Account");
             }
 
-            var role = await _context.Roles.FindAsync(id);
-            if (role != null)
-            {
-                _context.Roles.Remove(role);
-                await _context.SaveChangesAsync();
-            }
-
+            var role = await _auth.DeleteRoleAsync(id);
+            if(role)
             return RedirectToAction(nameof(Index));
+            else
+            {
+                var roleData = await _auth.GetRoleByIdAsync(id);
+                ModelState.AddModelError(string.Empty, "Cannot delete role because it is being used.");
+                return View(roleData);
+            }
         }
 
         private bool RoleExists(int id)

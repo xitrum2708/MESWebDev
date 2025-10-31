@@ -1,0 +1,36 @@
+﻿@model MESWebDev.Models.VM.MenuRowViewModel
+
+@{
+    var menu = Model.Menu;
+    var level = Model.Level;
+    var indent = new string('–', level * 3);
+}
+
+<tr>
+    <td>@(indent) @menu.Title</td>
+    <td>@menu.Url</td>
+    <td>@menu.SortOrder</td>
+    <td>@menu.PermissionKey</td>
+    <td>@(menu.IsActive ? "Yes" : "No")</td>
+    <td>@(menu.ParentId.HasValue ? "Has Parent" : "None")</td>
+    <td>@menu.Icon</td>
+    <td>
+        <a href="@Url.Action("Edit", "Menu", new { id = menu.MenuId })" class="btn btn-warning btn-sm">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        <form asp-action="Delete" asp-route-id="@menu.MenuId" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this menu?');">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger btn-sm">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+        </form>
+    </td>
+</tr>
+
+@if (menu.Children != null && menu.Children.Any())
+{
+    foreach (var child in menu.Children)
+    {
+        @await Html.PartialAsync("_MenuRow", new MESWebDev.Models.VM.MenuRowViewModel { Menu = child, Level = level + 1 })
+    }
+}

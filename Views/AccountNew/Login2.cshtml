@@ -1,0 +1,60 @@
+﻿@using MESWebDev.Services
+@inject ITranslationService T
+@model dynamic
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "en";
+    ViewData["Title"] = T.GetTranslation("Login", languageCode);
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
+}
+
+<div class="login-box">
+    <div class="login-logo">
+        <a href="#"><b>Admin</b>Login</a>
+    </div>
+    <div class="card">
+        <div class="card-body login-card-body">
+            <p class="login-box-msg">Sign in to start your session</p>
+
+            <form asp-action="Login" method="post">
+                <div class="input-group mb-3">
+                    <select name="languageCode" class="form-control" onchange="this.form.submit()">
+                        @foreach (var lang in ViewBag.Languages)
+                        {
+                            @: <option value="@lang.Code" @(ViewBag.SelectedLanguage == lang.Code ? "selected" : "")>@lang.Name</option>
+                        }
+                    </select>
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-globe"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <input type="text" name="username" class="form-control" placeholder="Username">
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-user"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <input type="password" name="password" class="form-control" placeholder="Password">
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-lock"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+                    </div>
+                </div>
+                @if (ViewBag.Error != null)
+                {
+                    <p class="text-danger mt-3">@ViewBag.Error</p>
+                }
+            </form>
+        </div>
+    </div>
+</div>

@@ -23,7 +23,7 @@ namespace MESWebDev.Controllers
         public IActionResult Login(string languageCode = "en") // Mặc định là 'vi'
         {
             // Lấy danh sách ngôn ngữ từ database
-            var languages = _context.Languages.Where(l => l.IsActive).ToList();
+            var languages = _context.Master_Language.Where(l => l.IsActive).ToList();
 
             // Lưu ngôn ngữ vào Session hoặc Cookie
             HttpContext.Session.SetString("LanguageCode", languageCode);
@@ -42,7 +42,7 @@ namespace MESWebDev.Controllers
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
                 ViewBag.Error = "Username or password cannot be empty";
-                ViewBag.Languages = _context.Languages.Where(l => l.IsActive).ToList();
+                ViewBag.Languages = _context.Master_Language.Where(l => l.IsActive).ToList();
                 ViewBag.SelectedLanguage = languageCode;
                 return View();
             }
@@ -92,6 +92,7 @@ namespace MESWebDev.Controllers
 
             // 🔥 Save Menu Cache vào Session
             await SaveMenuToSession(user.UserId);
+
             // Cập nhật ngôn ngữ mặc định của user (nếu cần)
             var userEntity = _context.Users.Find(user.UserId);
             if (userEntity != null)

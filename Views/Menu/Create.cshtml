@@ -1,5 +1,5 @@
-﻿@using MESWebDev.Models.VM
-@model MenuViewModel
+﻿@using MESWebDev.Models.Master
+@model FunctionModel
 
 @{
     ViewData["Title"] = "Create Menu";
@@ -34,36 +34,19 @@
                         <form asp-action="Create" method="post">
                             @Html.AntiForgeryToken()
                             <div class="form-group">
-                                <label asp-for="Title">Title</label>
-                                <input asp-for="Title" class="form-control" />
-                                <span asp-validation-for="Title" class="text-danger"></span>
+                                <label asp-for="Order">Sort Order</label>
+                                <input asp-for="Order" class="form-control" type="number" />
+                                <span asp-validation-for="Order" class="text-danger"></span>
                             </div>
                             <div class="form-group">
-                                <label asp-for="Url">URL</label>
-                                <input asp-for="Url" class="form-control" />
-                                <span asp-validation-for="Url" class="text-danger"></span>
+                                <label asp-for="EnName">Title (English) </label>
+                                <input asp-for="EnName" class="form-control" />
+                                <span asp-validation-for="EnName" class="text-danger"></span>
                             </div>
                             <div class="form-group">
-                                <label asp-for="SortOrder">Sort Order</label>
-                                <input asp-for="SortOrder" class="form-control" type="number" />
-                                <span asp-validation-for="SortOrder" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="PermissionKey">Permission Key</label>
-                                <select asp-for="PermissionKey" class="form-control">
-                                    <option value="">-- Select Permission --</option>
-                                    @foreach (var permission in Model.AvailablePermissions)
-                                    {
-                                        <option value="@permission.PermissionKey">
-                                            @permission.PermissionKey | @permission.Description
-                                        </option>
-                                    }
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="Icon">Icon (Bootstrap Icons class, e.g., bi bi-circle)</label>
-                                <input asp-for="Icon" class="form-control" />
-                                <span asp-validation-for="Icon" class="text-danger"></span>
+                                <label asp-for="ViName">Title (VN) </label>
+                                <input asp-for="ViName" class="form-control" />
+                                <span asp-validation-for="ViName" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label asp-for="ParentId">Parent Menu</label>
@@ -73,11 +56,32 @@
                                 </select>
                                 <span asp-validation-for="ParentId" class="text-danger"></span>
                             </div>
+
+                            <div class="form-group">
+                                <label asp-for="Controller">Controller</label>
+                                <input asp-for="Controller" class="form-control" />
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Action">Action</label>
+                                <input asp-for="Action" class="form-control" />
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="IconString">Icon (Bootstrap Icons class, e.g., bi bi-circle)</label>
+                                <input asp-for="IconString" class="form-control" />
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Note">Note</label>
+                                <input asp-for="Note" class="form-control" />
+                            </div>
                             
                             <div class="form-group form-check">
-                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <input asp-for="IsActive" checked class="form-check-input" type="checkbox" />
                                 <label asp-for="IsActive" class="form-check-label">Is Active</label>
                             </div>
+
                             <button type="submit" class="btn btn-primary">Create</button>
                             <a href="@Url.Action("Index", "Menu")" class="btn btn-secondary">Cancel</a>
                         </form>

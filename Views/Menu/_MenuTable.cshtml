@@ -1,23 +1,27 @@
-﻿@model List<MESWebDev.Models.VM.MenuViewModel>
-
-<table class="table table-bordered table-hover">
-    <thead>
+﻿@model List<MESWebDev.Models.Master.FunctionModel>
+<div class=" table-responsive" style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative">
+    <table class="table table-bordered table-hover paginated" id="mytable">
+        <thead class="table-success text-center sticky-top">
         <tr>
-            <th>Title</th>
-            <th>Url</th>
-            <th>Sort Order</th>
-            <th>Permission Key</th>
-            <th>Is Active</th>
-            <th>Parent</th>
+            
+            <th>Order</th>
+            <th>Title (Eng)</th>
+            <th>Title (VN)</th>
+            @* <th>Parent</th> *@
+            <th>Controller</th>
+            <th>Action</th>
             <th>Icon</th>
-            <th>Actions</th>
+            @*         <th>Note</th> *@
+            <th>Active</th>
+            <th>Process</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var menu in Model)
         {
-            @await Html.PartialAsync("_MenuRow", new MESWebDev.Models.VM.MenuRowViewModel { Menu = menu, Level = 0 })
+            @await Html.PartialAsync("_MenuRow", new MESWebDev.Models.VM.MenuRowViewModel { Function = menu, Level = 0 })
         }
         
     </tbody>
 </table>
+</div>

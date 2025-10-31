@@ -5,65 +5,69 @@
 @inject IHttpContextAccessor _httpContextAccessor
 @{
     // Lấy UserId từ session
-    var userId = Context.Session.GetInt32("UserId");
+    var Username = Context.Session.GetString("Username");
     // Lấy ngôn ngữ
-    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
-    var languageId = _context.Languages
-        .Where(l => l.Code == languageCode)
-        .Select(l => l.LanguageId)
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "en";
+    var languageId = _context.Master_Language
+        .Where(l => l.Culture == languageCode)
+        .Select(l => l.Id)
         .FirstOrDefault();
 
-    // Lấy danh sách menu mà user có quyền truy cập
-    var menuRow = _context.UserRoles
-        .Where(ur => ur.UserId == userId)
-        .Join(_context.RolePermissions,
+    var menuRow = _context.Auth_Master_User
+        .Where(ur => ur.Username == Username)
+        .Join(_context.Auth_Master_Role,
             ur => ur.RoleId,
             rp => rp.RoleId,
             (ur, rp) => rp)
-        .Join(_context.Permissions,
-            rp => rp.PermissionId,
-            p => p.PermissionId,
+        .Join(_context.Auth_Mapping_Role_Func_Pms,
+            rp => rp.RoleId,
+            p => p.RoleId,
             (rp, p) => p)
-        .Join(_context.Menus,
-            p => p.PermissionKey,
-            m => m.PermissionKey,
+        .Where(p => p.IsActive)
+        .Join(_context.Auth_Master_Function,
+            p => p.FuncId,
+            m => m.Id,
             (p, m) => m)
-        .Where(m => m.IsActive)       
-        .OrderBy(m => m.SortOrder)
-        .Select(m => new MenuViewModel
+        .Where(m => m.IsActive)
+        .OrderBy(m => m.Order)
+        .Select(m => new FunctionModel
                 {
-                    MenuId = m.MenuId,
-                    Url = m.Url,
-                    SortOrder = m.SortOrder,
+                    Id = m.Id,
+            //Url = m.Controller == null || m.Controller == "#"? "#" : Url.Action(m.Action, m.Controller),
+                    Controller = m.Controller,
+                    Action = m.Action,
+                    Order = m.Order,
                     ParentId = m.ParentId,
-                    Icon = m.Icon,
-                    Title = _context.MenuTranslations
-                        .Where(mt => mt.MenuId == m.MenuId && mt.LanguageId == languageId)
-                        .Select(mt => mt.Title)
-                        .FirstOrDefault() ?? "No Translation"
+                    IconString = m.IconString,
+                    IsActive = m.IsActive,
+                    EnName = _context.Master_Language_Dic
+                                .Where(mt => mt.Key == m.Id.ToString() && mt.LangId == languageId)
+                                .Select(mt => mt.Value)
+                                .FirstOrDefault() ?? "No Translation"
                 })
         .ToList();
 
     var menus = menuRow
-        .GroupBy(m => m.MenuId)
+        .GroupBy(m => m.Id)
         .Select(g => g.First())
         .ToList();
-    List<MenuViewModel> BuildMenuTree(List<MenuViewModel> menus, int? parentId = null)
+
+    List<FunctionModel> BuildMenuTree(List<FunctionModel> menus, int? parentId = null)
     {
         var rootMenus = menus
             .Where(m => m.ParentId == parentId)
-            .OrderBy(m => m.SortOrder)
-            .Select(m => new MenuViewModel
+            .OrderBy(m => m.Order)
+            .Select(m => new FunctionModel
                     {
-                        MenuId = m.MenuId,
-                        Url = m.Url,
-                        SortOrder = m.SortOrder,
-                        PermissionKey = m.PermissionKey,
-                        IsActive = m.IsActive,
-                        Title = m.Title,
+                        Id = m.Id,
+                        Controller = m.Controller,
+                        Action = m.Action,
+                        Order = m.Order,
                         ParentId = m.ParentId,
-                        Icon = m.Icon,
-                        Children = BuildMenuTree(menus, m.MenuId) // Đệ quy
+                        IconString = m.IconString,
+                        IsActive = m.IsActive,
+                        EnName = m.EnName,
+                        Children = BuildMenuTree(menus, m.Id) // Đệ quy
                     })
             .ToList();
 
@@ -74,31 +78,39 @@
     // Lấy URL hiện tại để đánh dấu menu active
     //var currentUrl = Context.Request.Path.ToString().ToLower();
 
+    // var currentUrl = Context.Request.Path.Value.ToLower();
+    // var currentMenu = _context.Auth_Master_Function
+    // .AsEnumerable() // <— switch to client-side LINQ
+    // .Where(m => string.IsNullOrEmpty(m.Action) && Url.Action(m.Action, m.Controller).ToString().ToLower().Contains(currentUrl) )
+    // .FirstOrDefault();
 
-    
-    var currentUrl = Context.Request.Path.Value.ToLower();
-    var currentMenu = _context.Menus
-        .Where(m => m.Url != "#" && m.Url.ToLower() == currentUrl)
-        .FirstOrDefault();
-    var activeMenuId = currentMenu?.MenuId;
+    // var currentMenu = _context.Auth_Master_Function
+    //     .Where(m => string.IsNullOrEmpty(m.Action) && Url.Action(m.Action,m.Controller) == currentUrl)
+    //     .FirstOrDefault();
 
-    //---------------- Nếu không muốn load lại thì gọi hàm này------------------
-    // Nó sẽ lưu lại menu của user khi đăng nhập
-    // Nhược điểm nếu update thì sẽ phải tắt đi mới update menu mới.
 
-    // // // Xây dựng cấu trúc cây
-    // // var menuTree = BuildMenuTree(menus);
-    // var userId = Context.Session.GetInt32("UserId");
-    // var menuSessionKey = $"UserMenu_{userId}";
-    // var menusJson = Context.Session.GetString(menuSessionKey);
+    var currentUrl = Context.Request.Path.Value.TrimEnd('/').ToLower();
+    string[] controllers = new string[] { "/menu", "/user", "/translation", "/language", "/rolefuncpms", "/role" };
+    foreach (var c in controllers)
+    {
+        if (currentUrl.StartsWith(c))
+        {
+            currentUrl = c;
+            break;
+        }
+    }
 
-    // List<MenuViewModel> menuTree = new List<MenuViewModel>();
+    var menu = _context.Auth_Master_Function
+        .Where(m => !string.IsNullOrEmpty(m.Controller) && !string.IsNullOrEmpty(m.Action) && m.IsActive)
+        .AsEnumerable(); // Switch to client-side for Url.Action()
 
-    // if (!string.IsNullOrEmpty(menusJson))
-    // {
-    //     menuTree = JsonSerializer.Deserialize<List<MenuViewModel>>(menusJson);
-    // }  
-    
+    var currentMenu = menu.FirstOrDefault(m =>
+    {
+        var menuUrl = Url.Action(m.Action, m.Controller)?.ToLower();
+        return menuUrl == currentUrl; // or .StartsWith if you want partial match
+    });
+
+    var activeMenuId = currentMenu?.Id;     
 }
 
 
@@ -111,7 +123,7 @@
     <meta name="title" content="MES System | @ViewData["Title"]" />
     <meta name="author" content="ColorlibHQ" />
     <meta name="description" content="Uniden MES System" />
-    @* <meta name="keywords" content="bootstrap 5, bootstrap, bootstrap 5 admin dashboard, bootstrap 5 dashboard, bootstrap 5 charts, bootstrap 5 calendar, bootstrap 5 datepicker, bootstrap 5 tables, bootstrap 5 datatable, vanilla js datatable, colorlibhq, colorlibhq dashboard, colorlibhq admin dashboard" /> *@
+   
     <meta name="keywords" content="mes, mes system"/>
     
     <!-- Fonts -->
@@ -128,6 +140,8 @@
 
     <link rel="stylesheet" href="~/css/custom.css" />
     <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/Pagination.css" />
+
 
     <style>
         /* Giữ toast full-opacity */
@@ -172,109 +186,10 @@
                             <i class="bi bi-list"></i>
                         </a>
                     </li>
-                   @*  <li class="nav-item d-none d-md-block">
-                        <a href="@Url.Action("Dashboard", "Admin")" class="nav-link">Home</a>
-                    </li>
-                    <li class="nav-item d-none d-md-block">
-                        <a href="#" class="nav-link">Contact</a>
-                    </li> *@
                     @RenderSection("ContentHeader", required: false)
                 </ul>
                 <ul class="navbar-nav ms-auto">
-                    @* <li class="nav-item">
-                        <a class="nav-link" data-widget="navbar-search" href="#" role="button">
-                            <i class="bi bi-search"></i>
-                        </a>
-                    </li> *@
-                    @* <li class="nav-item dropdown">
-                        <a class="nav-link" data-bs-toggle="dropdown" href="#">
-                            <i class="bi bi-chat-text"></i>
-                            <span class="navbar-badge badge text-bg-danger">3</span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                            <a href="#" class="dropdown-item">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <img src="~/dist/assets/img/user1-128x128.jpg" alt="User Avatar" class="img-size-50 rounded-circle me-3" />
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h3 class="dropdown-item-title">
-                                            Brad Diesel
-                                            <span class="float-end fs-7 text-danger"><i class="bi bi-star-fill"></i></span>
-                                        </h3>
-                                        <p class="fs-7">Call me whenever you can...</p>
-                                        <p class="fs-7 text-secondary">
-                                            <i class="bi bi-clock-fill me-1"></i> 4 Hours Ago
-                                        </p>
-                                    </div>
-                                </div>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <img src="~/dist/assets/img/user8-128x128.jpg" alt="User Avatar" class="img-size-50 rounded-circle me-3" />
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h3 class="dropdown-item-title">
-                                            John Pierce
-                                            <span class="float-end fs-7 text-secondary"><i class="bi bi-star-fill"></i></span>
-                                        </h3>
-                                        <p class="fs-7">I got your message bro</p>
-                                        <p class="fs-7 text-secondary">
-                                            <i class="bi bi-clock-fill me-1"></i> 4 Hours Ago
-                                        </p>
-                                    </div>
-                                </div>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <img src="~/dist/assets/img/user3-128x128.jpg" alt="User Avatar" class="img-size-50 rounded-circle me-3" />
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h3 class="dropdown-item-title">
-                                            Nora Silvester
-                                            <span class="float-end fs-7 text-warning"><i class="bi bi-star-fill"></i></span>
-                                        </h3>
-                                        <p class="fs-7">The subject goes here</p>
-                                        <p class="fs-7 text-secondary">
-                                            <i class="bi bi-clock-fill me-1"></i> 4 Hours Ago
-                                        </p>
-                                    </div>
-                                </div>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
-                        </div>
-                    </li> *@
-                    @* <li class="nav-item dropdown">
-                        <a class="nav-link" data-bs-toggle="dropdown" href="#">
-                            <i class="bi bi-bell-fill"></i>
-                            <span class="navbar-badge badge text-bg-warning">15</span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-                            <span class="dropdown-item dropdown-header">15 Notifications</span>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item">
-                                <i class="bi bi-envelope me-2"></i> 4 new messages
-                                <span class="float-end text-secondary fs-7">3 mins</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item">
-                                <i class="bi bi-people-fill me-2"></i> 8 friend requests
-                                <span class="float-end text-secondary fs-7">12 hours</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item">
-                                <i class="bi bi-file-earmark-fill me-2"></i> 3 new reports
-                                <span class="float-end text-secondary fs-7">2 days</span>
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
-                        </div>
-                    </li> *@
+                 
                     <li class="nav-item">
                         <a class="nav-link fullscreen" href="#" data-lte-toggle="fullscreen">
                             <i data-lte-icon="maximize" class="bi bi-arrows-fullscreen"></i>
@@ -294,13 +209,6 @@
                                     <small>@Context.Session.GetString("Username")</small>
                                 </p>
                             </li>
-                           @*  <li class="user-body">
-                                <div class="row">
-                                    <div class="col-4 text-center"><a href="#">Followers</a></div>
-                                    <div class="col-4 text-center"><a href="#">Sales</a></div>
-                                    <div class="col-4 text-center"><a href="#">Friends</a></div>
-                                </div>
-                            </li> *@
                             <li class="user-footer">
                                 @* <a href="#" class="btn btn-default btn-flat">Profile</a> *@
                                 <a href="@Url.Action("Logout", "Account")" class="btn btn-default btn-flat float-end">Sign out</a>
@@ -386,11 +294,6 @@
         document.querySelector('[data-lte-toggle="sidebar"]').addEventListener('click', function(e) {
             e.preventDefault();
             document.body.classList.toggle('sidebar-collapsed');
-        //             const body = document.body;
-        // if (body.classList.contains('sidebar-collapsed') && body.classList.contains('sidebar-open')) {
-        //     body.classList.remove('sidebar-collapsed');
-        //     // hoặc body.classList.remove('sidebar-open');
-        // }
         });
 
         $(document).on('click', '.fullscreen', function () {
@@ -404,9 +307,7 @@
         });
 
         // Cleanup class conflict
-
-    </script>
-   
+    </script>   
 
      <!-- Custom Script for Sidebar -->  
     @RenderSection("Scripts", required: false)    

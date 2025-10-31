@@ -9,21 +9,23 @@
 
         if (i < Model.Count - 1)
         {
-            <li class="breadcrumb-item fw-bold">
-                @if (isNonNavigable)
+            <li class="breadcrumb-item fw-bold text-success">
+          @*       @if (isNonNavigable)
                 {
                     @item.Title?.ToUpper()
                 }
                 else
                 {
-                    <a href="@item.Url fw-bold">@item.Title?.ToUpper()</a>
-                }
+                    <a href="@item.Url" class="fw-bold text-decoration-none">@item.Title?.ToUpper()</a>
+                } *@
+                @item.Title?.ToUpper()
+
             </li>
         }
         else
         {
             // Mục cuối cùng hiển thị ở dạng active (không link)
-            <li class="breadcrumb-item active" aria-current="page">@item.Title?.ToUpper()</li>
+            <li class="breadcrumb-item active fw-bold text-dark" aria-current="page">@item.Title?.ToUpper()</li>
         }
     }
 </ol>

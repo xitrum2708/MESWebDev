@@ -2,7 +2,7 @@
 @using MESWebDev.Services
 @inject ITranslationService TranslationService
 
-@model UserViewModel
+@model MasterVM
 
 @{
     var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
@@ -30,53 +30,62 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                <div class="card">
+                <div class="card card-primary">
                     <div class="card-header">
+                        <i class="bi bi-person-plus"></i>
                         <h3 class="card-title">@TranslationService.GetTranslation("AddNewUser", languageCode)</h3>
                     </div>
                     <div class="card-body">
                         <form asp-action="Create" method="post">
                             @Html.AntiForgeryToken()
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                            <div class="form-group">
-                                <label asp-for="Username" class="control-label">@TranslationService.GetTranslation("Username", languageCode)</label>
-                                <input asp-for="Username" class="form-control" />
-                                <span asp-validation-for="Username" class="text-danger"></span>
+                            <div class="form-group mb-2">
+                                <label asp-for="@Model.User.Username" class="control-label">@TranslationService.GetTranslation("Username", languageCode)</label>
+                                <input asp-for="@Model.User.Username" class="form-control" />
+                                <span asp-for="@Model.User.Username" class="text-danger"></span>
                             </div>
 
-                            <div class="form-group">
-                                <label asp-for="Password" class="control-label">@TranslationService.GetTranslation("Password", languageCode)</label>
-                                <input asp-for="Password" type="password" class="form-control" />
-                                <span asp-validation-for="Password" class="text-danger"></span>
+                            <div class="form-group mb-2">
+                                <label asp-for="@Model.User.Password" class="control-label">@TranslationService.GetTranslation("Password", languageCode)</label>
+                                <input asp-for="@Model.User.Password" type="password" class="form-control" />
+                                <span asp-for="@Model.User.Password" class="text-danger"></span>
                             </div>
 
-                            <div class="form-group">
-                                <label asp-for="Email" class="control-label">@TranslationService.GetTranslation("Email", languageCode)</label>
-                                <input asp-for="Email" class="form-control" />
-                                <span asp-validation-for="Email" class="text-danger"></span>
+                            <div class="form-group mb-2">
+                                <label asp-for="@Model.User.Email" class="control-label">@TranslationService.GetTranslation("Email", languageCode)</label>
+                                <input asp-for="@Model.User.Email" class="form-control" />
+                                <span asp-for="@Model.User.Email" class="text-danger"></span>
                             </div>
 
-                            <div class="form-group">
-                                <label asp-for="FullName" class="control-label">@TranslationService.GetTranslation("FullName", languageCode)</label>
-                                <input asp-for="FullName" class="form-control" />
-                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            <div class="form-group mb-2">
+                                <label asp-for="@Model.User.Fullname" class="control-label">@TranslationService.GetTranslation("FullName", languageCode)</label>
+                                <input asp-for="@Model.User.Fullname" class="form-control" />
+                                <span asp-for="@Model.User.Fullname" class="text-danger"></span>
                             </div>
 
-                            <div class="form-group">
-                                <label asp-for="LanguageId" class="control-label">@TranslationService.GetTranslation("Language", languageCode)</label>
-                                <select asp-for="LanguageId" class="form-control" asp-items="@(new SelectList(ViewBag.Languages, "LanguageId", "Name"))">
+                            <div class="form-group mb-2">
+                                <label asp-for="@Model.User.LangId" class="control-label">@TranslationService.GetTranslation("Language", languageCode)</label>
+                                <select asp-for="@Model.User.LangId" class="form-control" asp-items="@Model.LanguageSL">
                                     <option value="">@TranslationService.GetTranslation("SelectLanguage", languageCode)</option>
                                 </select>
-                                <span asp-validation-for="LanguageId" class="text-danger"></span>
+                                <span asp-for="@Model.User.LangId" class="text-danger"></span>
                             </div>
 
-                            <div class="form-group">
-                                <label asp-for="IsActive" class="control-label">@TranslationService.GetTranslation("IsActive", languageCode)</label>
-                                <input asp-for="IsActive" type="checkbox" class="form-check-input" />
-                                <span asp-validation-for="IsActive" class="text-danger"></span>
+                            <div class="form-group mb-2">
+                                <label asp-for="@Model.User.RoleId" class="control-label">@TranslationService.GetTranslation("Role", languageCode)</label>
+                                <select asp-for="@Model.User.RoleId" class="form-control" asp-items="@Model.RoleSL">
+                                    <option value="">@TranslationService.GetTranslation("SelectRole", languageCode)</option>
+                                </select>
+                                <span asp-for="@Model.User.RoleId" class="text-danger"></span>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group mb-2">
+                                <label asp-for="@Model.User.IsActive" class="control-label">@TranslationService.GetTranslation("IsActive", languageCode)</label>
+                                <input asp-for="@Model.User.IsActive" type="checkbox" class="form-check-input" />
+                                <span asp-for="@Model.User.IsActive" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-2">
                                 <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Create", languageCode)</button>
                                 <a asp-action="Index" class="btn btn-secondary">@TranslationService.GetTranslation("BackToList", languageCode)</a>
                             </div>

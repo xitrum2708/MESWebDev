@@ -1,0 +1,84 @@
+﻿/*---------------------------- pagination -------------------- */
+/* variables */
+:root {
+    --color_green1: #217346;
+    --color_yellow1: #ffa200;
+    --color_yellow2: #f0b54f;
+    --color_blue_1: #0973ec;
+    --color_blue_2: #3f93f1;
+    --color_dark1: #1e1e1e;
+    --color_dark2: #252527;
+    --color_dark3: #202124;
+    --color_dark4: #323336;
+    --color_light1: #fff;
+    /* --color_light_1: #dfdfdf; */
+    --color_light2: #c4c4c4;
+    --color_light3: #a1a0a0;
+    --color_white: #fff;
+    --color_green: #217346;
+    --color_bg_checkbox: #f7f7f9;
+    --width_sidebar: 260px;
+    --close_width_sidebar: 50px;
+    --width_search: 40px;
+    /*--height_sidebar-list: 200px;*/
+    --height_sidebar-list: 160px;
+    --height-title-area: 50px;
+    --height-search-area-home: 300px;
+    --height-search-area-home-a: 40px;
+    /* ---------- font size ----------- */
+    --fs-content: 12px;
+    --fs-title-area: 1.3em; /* 18px; */
+    --fw-title-area: 800;
+    --fs-title-area-i: 1.7em; /*27px;*/
+    --fw-title-area-i: 500;
+    --fs-search-area-i: 1.9em; /*27px;*/
+
+    --fs-card-header: 1.5em; /*18px;*/
+    --fw-card-header: 600;
+    --fs-card-header-i: 1.2em; /*22px;*/
+    --fw-card-header-i: 700;
+    --fs-table-th: 1.17em; /*14px;*/
+    --fw-table-th: 500;
+    --fs-table-td: 1.17em; /*14px;*/
+}
+
+div.pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin: 0.2em 1em;
+}
+
+    div.pager span {
+        /*display: inline-block;*/
+        width: fit-content;
+        margin-right: 1em;
+        height: 2em;
+        line-height: 2em;
+        text-align: center;
+        cursor: pointer;
+        background-color: transparent;
+        color: var(--color_green);
+    }
+
+        div.pager span.page-number {
+            display: none;
+        }
+
+        div.pager span.active.page-number {
+            width: 3em;
+            display: inline-block;
+            background: var(--color_green1);
+            color: var(--color_light1);
+        }
+
+        div.pager span.page-rows, span.page-total, span.page-select option {
+            font-size: var(--fs-table-th);
+            font-weight: var(--fw-card-header);
+            color: var(--color_dark1);
+        }
+
+button.bd {
+    border-bottom: 5px;
+}

@@ -1,6 +1,7 @@
 ﻿using MESWebDev.Models;
 using MESWebDev.Models.COMMON;
 using MESWebDev.Models.IQC;
+using MESWebDev.Models.Master;
 using MESWebDev.Models.OQC;
 using MESWebDev.Models.PE;
 using MESWebDev.Models.ProdPlan;
@@ -92,9 +93,30 @@ namespace MESWebDev.Data
         public DbSet<TimeStudyNewDtlModel> UV_PE_TimeStudyNew_Dtl { get; set; }
         public DbSet<TimeStudyNewStepDtlModel> UV_PE_TimeStudyNewStep_Dtl { get; set; }
 
+        //-------------- CHANGE MASTER -------------------
+        public DbSet<ActionModel> Auth_Master_Action { get; set; }
+        public DbSet<RoleModel> Auth_Master_Role { get; set; }
+        public DbSet<LanguageModel> Master_Language { get; set; }
+        public DbSet<DictionaryModel> Master_Language_Dic { get; set; }
+        public DbSet<PmsModel> Auth_Master_Pms { get; set; }
+        public DbSet<FunctionModel> Auth_Master_Function { get; set; }
+        public DbSet<UserModel> Auth_Master_User { get; set; }
+        public DbSet<PmsActionModel> Auth_Mapping_Pms_Action { get; set; }
+        public DbSet<UserFuncPmsModel> Auth_Mapping_User_Func_Pms { get; set; }
+        public DbSet<RoleFuncPmsModel> Auth_Mapping_Role_Func_Pms { get; set; }
+
+
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<FunctionModel>()
+                .HasOne(f => f.Parent)
+                .WithMany(f => f.Children)
+                .HasForeignKey(f => f.ParentId) // 👈 Explicitly set the foreign key
+                .OnDelete(DeleteBehavior.Restrict); // 👈 Prevent infinite cascade delete
+
+
             modelBuilder.Entity<UV_LOTCONTROL_MASTER>(entity =>
             {
                 entity.ToTable("UV_LOTCONTROL_MASTER");

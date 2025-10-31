@@ -1,7 +1,5 @@
-﻿@using MESWebDev.Models.VM
-@using MESWebDev.Services
-@inject ITranslationService TranslationService
-@model RoleViewModel
+﻿
+@model RoleDTO
 
 @{
     var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
@@ -10,47 +8,30 @@
 }
 @section ContentHeader {
     @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
-@* <div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">          
-            <div class="col-sm-12">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
-                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Role")">@TranslationService.GetTranslation("RoleManagement", languageCode)</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("DeleteRole", languageCode) </li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div> *@
 }
 <div class="app-content">
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                <div class="card">
+                <div class="card card-danger">
                     <div class="card-header">
-                        <h3 class="card-title">@TranslationService.GetTranslation("ConfirmDelete", languageCode) </h3>                        
+                        <h3 class="card-title">
+                            <i class="bi bi-trash3"></i>
+                            @TranslationService.GetTranslation("ConfirmDelete", languageCode) </h3>                        
                     </div>
                     <div class="card-body">
                         <dl class="row">
                             <dt class="col-sm-2">
                                 @TranslationService.GetTranslation("RoleName", languageCode)
                             </dt>
-                            <dd class="col-sm-10">
+                            <dd class="col-sm-10 mb-3">
                                 @Model.RoleName
                             </dd>
                             <dt class="col-sm-2">
                                 @TranslationService.GetTranslation("Description", languageCode)
                             </dt>
                             <dd class="col-sm-10">
-                                @Model.Description
-                            </dd>
-                            <dt class="col-sm-2">
-                                @TranslationService.GetTranslation("CreatedAt", languageCode)
-                            </dt>
-                            <dd class="col-sm-10">
-                                @Model.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                                @Model.Note
                             </dd>
                         </dl>
                         <form asp-action="Delete">

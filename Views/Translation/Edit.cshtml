@@ -1,8 +1,5 @@
-﻿@using MESWebDev.Models.VM
-@using MESWebDev.Services
-@inject ITranslationService TranslationService
-
-@model TranslationViewModel
+﻿
+@model MasterVM
 
 @{
     var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
@@ -11,47 +8,36 @@
 }
 @section ContentHeader {
     @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
-@* <div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">          
-            <div class="col-sm-12">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
-                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Translation")">@TranslationService.GetTranslation("TranslationManagement", languageCode)</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("EditTranslation", languageCode)</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div> *@
 }
 
 <div class="app-content">
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                <div class="card">
+                <div class="card card-warning">
                     <div class="card-header">
-                        <h3 class="card-title">@TranslationService.GetTranslation("EditTranslation", languageCode)</h3>
+                        <h3 class="card-title fw-bold">
+                            <i class="bi bi-pencil me-2"></i>
+                            @TranslationService.GetTranslation("EditTranslation", languageCode)</h3>
                     </div>
                     <div class="card-body">
                         <form asp-action="Edit" method="post">
                             @Html.AntiForgeryToken()
-                            <input type="hidden" asp-for="TranslationId" />
+                            <input type="hidden" asp-for="@Model.Dictionary.Id" />
                             <div class="form-group">
-                                <label asp-for="Keyvalue">@TranslationService.GetTranslation("Key", languageCode)</label>
-                                <input asp-for="Keyvalue" class="form-control" />
-                                <span asp-validation-for="Keyvalue" class="text-danger"></span>
+                                <label asp-for="@Model.Dictionary.Key">@TranslationService.GetTranslation("Key", languageCode)</label>
+                                <input asp-for="@Model.Dictionary.Key" class="form-control" />
+                                <span asp-validation-for="@Model.Dictionary.Key" class="text-danger"></span>
                             </div>
                             <div class="form-group">
-                                <label asp-for="LanguageId">@TranslationService.GetTranslation("Language", languageCode)</label>
-                                <select asp-for="LanguageId" class="form-select" asp-items="Model.AvailableLanguages"></select>
-                                <span asp-validation-for="LanguageId" class="text-danger"></span>
+                                <label asp-for="@Model.Dictionary.LangId">@TranslationService.GetTranslation("Language", languageCode)</label>
+                                <select asp-for="@Model.Dictionary.LangId" class="form-select" asp-items="Model.LanguageSL"></select>
+                                <span asp-validation-for="@Model.Dictionary.LangId" class="text-danger"></span>
                             </div>
                             <div class="form-group">
-                                <label asp-for="Value">@TranslationService.GetTranslation("Value", languageCode)</label>
-                                <input asp-for="Value" class="form-control" />
-                                <span asp-validation-for="Value" class="text-danger"></span>
+                                <label asp-for="@Model.Dictionary.Value">@TranslationService.GetTranslation("Value", languageCode)</label>
+                                <input asp-for="@Model.Dictionary.Value" class="form-control" />
+                                <span asp-validation-for="@Model.Dictionary.Value" class="text-danger"></span>
                             </div>
                             <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Save", languageCode)</button>
                             <a href="@Url.Action("Index", "Translation")" class="btn btn-secondary">@TranslationService.GetTranslation("Cancel", languageCode)</a>

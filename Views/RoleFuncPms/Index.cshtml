@@ -1,0 +1,99 @@
+﻿
+@model List<RoleFuncPmsDTO>
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("RolePermissionManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="bi bi-shield-shaded"></i>
+                            @TranslationService.GetTranslation("ListOfRolePermission", languageCode)</h3>
+                        <div class="card-tools d-flex justify-content-between align-content-center w-75">
+                            <div class="input-group me-3 w-50">
+                                <input type="text" class="form-control form-input-sm" id="quick_search" onkeyup="QuickSearch()" placeholder="Searching...">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            </div>
+                            <a href="@Url.Action("Create", "RoleFuncPms")" class="btn btn-primary btn-sm me-3">
+                                <i class="bi bi-plus-lg"></i> 
+                                @TranslationService.GetTranslation("Add New", languageCode)
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class=" table-responsive" style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative">
+                            <table class="table table-bordered table-hover paginated" id="mytable">
+                                <thead class="table-success text-center sticky-top">
+                                    <tr>
+                                        <th>@TranslationService.GetTranslation("Role Name", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Func Name", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Pms Name", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Action", languageCode)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var rfm in Model)
+                                    {
+                                        <tr>
+                                            <td>@rfm.RoleName</td>
+                                            <td>@rfm.FuncName</td>
+                                            <td>@rfm.PmsName</td>
+                                            <td>
+                                                <a href="@Url.Action("Edit", "RoleFuncPms", new { id = rfm.Id })" class="btn btn-warning btn-sm">
+                                                    <i class="bi bi-pencil"></i> @TranslationService.GetTranslation("Edit", languageCode)
+                                                </a>
+                                                <a asp-action="Delete" asp-route-id="@rfm.Id" class="btn btn-sm btn-danger">@TranslationService.GetTranslation("Delete", languageCode)</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card-footer pager p-0">
+                        <partial name="_PagingPartialView" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/panigation.js?@DateTime.Now.Ticks"></script>
+    <script>
+        $(document).ready(function () {
+
+        });
+
+        //debugger
+        function QuickSearch() {
+            //debugger
+            var inputString = $('#quick_search').val().toUpperCase();
+
+            $('#mytable tbody tr').each(function () {
+                var tr = $(this);
+                tr.find('td').each(function () {
+                    //debugger
+                    var txtValue = $(this).text();
+                    if (txtValue.toUpperCase().indexOf(inputString) > -1) { tr.show(); return false; }
+                    else tr.hide();
+                })
+            })
+        }
+    </script>
+}

@@ -2,27 +2,16 @@
 @using MESWebDev.Models.VM
 @using MESWebDev.Services
 @inject ITranslationService TranslationService
-@model PagedResult<UserViewModel>
+@model MasterVM
 
 @{
     var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
     ViewData["Title"] = TranslationService.GetTranslation("UserManagement", languageCode);
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    int i = 0;
 }
 @section ContentHeader {
     @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
-@* <div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">          
-            <div class="col-12">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("UserManagement", languageCode)</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div> *@
 }
 
 <div class="app-content">
@@ -30,43 +19,57 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">@TranslationService.GetTranslation("ListOfUsers", languageCode)</h3>
-                        <div class="card-tools">
-                            <a href="@Url.Action("Create", "User")" class="btn btn-primary btn-sm">
-                                <i class="bi bi-plus-lg"></i> @TranslationService.GetTranslation("AddNewUser", languageCode)
+                    <div class="card-header card-success  ">
+                        <h3 class="card-title fw-bold">
+                            <i class="bi bi-people me-2"></i>
+                            @TranslationService.GetTranslation("ListOfUsers", languageCode)
+                        </h3>
+                       
+                        <div class="card-tools d-flex justify-content-between align-content-center w-75">
+                            <div class="input-group me-3 w-50">
+                                <input type="text" class="form-control form-input-sm" id="quick_search" onkeyup="QuickSearch()" placeholder="Searching...">
+                                <span class="input-group-text"><i class="bi bi-search"></i></i></span>
+                            </div>
+
+                            <a href="@Url.Action("Create", "User")" class="btn btn-primary btn-sm me-3">
+                                <i class="bi bi-person-plus me-1"></i>
+                                @TranslationService.GetTranslation("Add User", languageCode)
                             </a>
                         </div>
                     </div>
                     <div class="card-body">
                         <!-- Phân trang -->
-                        @await Html.PartialAsync("_SearchForm", Model)
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead>
+                        @* @await Html.PartialAsync("_SearchForm", Model) *@
+                        <div class=" table-responsive" style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative">
+                            <table class="table table-bordered table-hover paginated" id="mytable">
+                                <thead class="table-success text-center sticky-top">
                                     <tr>
+                                        <th>No.</th>
                                         <th>@TranslationService.GetTranslation("Username", languageCode)</th>
                                         <th>@TranslationService.GetTranslation("Email", languageCode)</th>
                                         <th>@TranslationService.GetTranslation("FullName", languageCode)</th>
                                         <th>@TranslationService.GetTranslation("Language", languageCode)</th>
+                                        <th>@TranslationService.GetTranslation("Role", languageCode)</th>
                                         <th>@TranslationService.GetTranslation("IsActive", languageCode)</th>
-                                        <th>@TranslationService.GetTranslation("CreatedAt", languageCode)</th>
                                         <th>@TranslationService.GetTranslation("Action", languageCode)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var user in Model.Items)
+                                    @foreach (var user in Model.Users)
                                     {
+                                        i++;
                                         <tr>
+                                            <td class="text-center">@i</td>
                                             <td>@user.Username</td>
                                             <td>@user.Email</td>
-                                            <td>@user.FullName</td>
-                                            <td>@user.LanguageName</td>
+                                            <td>@user.Fullname</td>
+                                            <td>@user.LangName</td>
+                                            <td>@user.RoleName</td>
                                             <td>@(user.IsActive ? TranslationService.GetTranslation("Yes", languageCode) : TranslationService.GetTranslation("No", languageCode))</td>
-                                            <td>@user.CreatedAt.ToString("yyyy/MM/dd")</td>
+                                           
                                             <td>
-                                                <a asp-action="Edit" asp-route-id="@user.UserId" class="btn btn-sm btn-warning">@TranslationService.GetTranslation("Edit", languageCode)</a>
-                                                <a asp-action="Delete" asp-route-id="@user.UserId" class="btn btn-sm btn-danger">@TranslationService.GetTranslation("Delete", languageCode)</a>
+                                                <a asp-action="Edit" asp-route-Username="@user.Username" class="btn btn-sm btn-warning">@TranslationService.GetTranslation("Edit", languageCode)</a>
+                                                <a asp-action="Delete" asp-route-Username="@user.Username" class="btn btn-sm btn-danger">@TranslationService.GetTranslation("Delete", languageCode)</a>
                                             </td>
                                         </tr>
                                     }
@@ -74,10 +77,43 @@
                             </table>
                         </div>
                         <!-- Phân trang -->
-                        @await Html.PartialAsync("_Pagination", Model)
+                        @* @await Html.PartialAsync("_Pagination", Model) *@
+                    </div>
+
+                    <div class="card-footer pager p-0">
+
+                        <partial name="_PagingPartialView" />
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/panigation.js"></script>
+    <script>
+        $(document).ready(function () {
+
+        });
+
+        //debugger
+        function QuickSearch() {
+            //debugger
+            var inputString = $('#quick_search').val().toUpperCase();
+
+            $('#mytable tbody tr').each(function () {
+                var tr = $(this);
+                tr.find('td').each(function () {
+                    //debugger
+                    var txtValue = $(this).text();
+                    if (txtValue.toUpperCase().indexOf(inputString) > -1) { tr.show(); return false; }
+                    else tr.hide();
+                })
+            })
+        }
+    </script>
+}

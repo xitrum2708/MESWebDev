@@ -1,9 +1,14 @@
-﻿using MESWebDev.Data;
+﻿using AutoMapper;
+using MESWebDev.Data;
 using MESWebDev.Extensions;
 using MESWebDev.Models;
+using MESWebDev.Models.Master;
+using MESWebDev.Models.Master.DTO;
 using MESWebDev.Models.VM;
 using MESWebDev.Services;
+using MESWebDev.Services.IService;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace MESWebDev.Controllers
@@ -12,133 +17,88 @@ namespace MESWebDev.Controllers
     {
         //private readonly AppDbContext _context;
         private readonly ITranslationService _translationService;
+        private readonly IMapper _map;
+        private readonly IAuthService _authService;
+        private readonly ILanguageService _lang;
 
-        public UserController(AppDbContext context, ITranslationService translationService)
+        public UserController(AppDbContext context, ITranslationService translationService, IMapper map, IAuthService authService, ILanguageService lang)
             : base(context)
         {
             // _context = context;
             _translationService = translationService;
+            _map = map;
+            _authService = authService;
+            _lang = lang;
         }
 
         // GET: User/Index
-        public async Task<IActionResult> Index(int page = 1, int pageSize = 10, string searchTerm = null)
+        public async Task<IActionResult> Index()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(username))
             {
                 return RedirectToAction("Login", "Account");
-            }
+            }            
 
-            var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
+            var usersQuery = _authService.GetAllUsersAsync().Result.AsQueryable();
+            MasterVM mvm = new();
+            mvm.Users = usersQuery.ToList();
 
-            var usersQuery = _context.Users
-                .Include(u => u.Language)
-                .Select(u => new UserViewModel
-                {
-                    UserId = u.UserId,
-                    Username = u.Username,
-                    Email = u.Email,
-                    FullName = u.FullName,
-                    LanguageId = u.LanguageId,
-                    LanguageName = u.Language != null ? u.Language.Name : "N/A",
-                    IsActive = u.IsActive,
-                    CreatedAt = u.CreatedAt
-                });
-
-            if (!string.IsNullOrEmpty(searchTerm))
-            {
-                usersQuery = usersQuery.Where(u => u.Username.Contains(searchTerm) || u.Email.Contains(searchTerm) || u.FullName.Contains(searchTerm));
-            }
-
-            var pagedUsers = usersQuery.ToPagedResult(page, pageSize, searchTerm);
-
-            return View(pagedUsers);
+            return View(mvm);
         }
 
         // GET: User/Create
         public async Task<IActionResult> Create()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(username))
             {
                 return RedirectToAction("Login", "Account");
             }
-
-            ViewBag.Languages = await _context.Languages
-                .Where(l => l.IsActive)
-                .Select(l => new { l.LanguageId, l.Name })
-                .ToListAsync();
-
-            return View();
+            MasterVM mvm = new();
+            mvm.User = new();
+            mvm.LanguageSL = await _lang.GetLangSL();
+            mvm.RoleSL = await _authService.GetRoleSL();
+            return View(mvm);
         }
-
         // POST: User/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(UserViewModel model)
+        public async Task<IActionResult> Create(MasterVM model)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(username))
             {
                 return RedirectToAction("Login", "Account");
             }
-            ModelState.Remove("LanguageName");
-            if (ModelState.IsValid)
-            {
-                var user = new User
-                {
-                    Username = model.Username,
-                    Password = model.Password, // In a real app, hash the password
-                    Email = model.Email,
-                    FullName = model.FullName,
-                    LanguageId = model.LanguageId,
-                    IsActive = model.IsActive,
-                    CreatedAt = DateTime.Now
-                };
 
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
+            string msg = await _authService.CreateUserAsync(model.User);
+            if (string.IsNullOrEmpty(msg))
+            {
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.Languages = await _context.Languages
-                .Where(l => l.IsActive)
-                .Select(l => new { l.LanguageId, l.Name })
-                .ToListAsync();
-
+            model.LanguageSL = await _lang.GetLangSL();
+            model.RoleSL = await _authService.GetRoleSL();
+            model.ErrorMsg = msg;
+            ModelState.AddModelError(string.Empty, msg);
             return View(model);
         }
 
         // GET: User/Edit/5
-        public async Task<IActionResult> Edit(int id)
+        public async Task<IActionResult> Edit(string Username)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(username))
             {
                 return RedirectToAction("Login", "Account");
             }
 
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+            var model = new MasterVM();
+            model.User = await _authService.GetUserByUsernameAsync(Username);
 
-            var model = new UserViewModel
-            {
-                UserId = user.UserId,
-                Username = user.Username,
-                Email = user.Email,
-                FullName = user.FullName,
-                LanguageId = user.LanguageId,
-                IsActive = user.IsActive,
-                CreatedAt = user.CreatedAt
-            };
-
-            ViewBag.Languages = await _context.Languages
-                .Where(l => l.IsActive)
-                .Select(l => new { l.LanguageId, l.Name })
-                .ToListAsync();
+            model.LanguageSL = await _lang.GetLangSL();
+            model.RoleSL = await _authService.GetRoleSL();
 
             return View(model);
         }
@@ -146,109 +106,56 @@ namespace MESWebDev.Controllers
         // POST: User/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, UserViewModel model)
+        public async Task<IActionResult> Edit(MasterVM model)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(username))
             {
                 return RedirectToAction("Login", "Account");
             }
-
-            if (id != model.UserId)
+            string msg = await _authService.UpdateUserAsync(model.User);
+            if (string.IsNullOrEmpty(msg))
             {
-                return NotFound();
-            }
-            ModelState.Remove("LanguageName");
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var user = await _context.Users.FindAsync(id);
-                    if (user == null)
-                    {
-                        return NotFound();
-                    }
-
-                    user.Username = model.Username;
-                    user.Email = model.Email;
-                    user.FullName = model.FullName;
-                    user.LanguageId = model.LanguageId;
-                    user.IsActive = model.IsActive;
-
-                    if (!string.IsNullOrEmpty(model.Password))
-                    {
-                        user.Password = model.Password; // In a real app, hash the password
-                    }
-
-                    _context.Update(user);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!UserExists(id))
-                    {
-                        return NotFound();
-                    }
-                    throw;
-                }
                 return RedirectToAction(nameof(Index));
             }
+            model.LanguageSL = await _lang.GetLangSL();
+            model.RoleSL = await _authService.GetRoleSL();
+            model.ErrorMsg = msg;
+            ModelState.AddModelError(string.Empty, msg);
 
-            ViewBag.Languages = await _context.Languages
-                .Where(l => l.IsActive)
-                .Select(l => new { l.LanguageId, l.Name })
-                .ToListAsync();
 
             return View(model);
         }
 
         // GET: User/Delete/5
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(string Username)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(username))
             {
                 return RedirectToAction("Login", "Account");
             }
 
-            var user = await _context.Users.Include(u => u.Language).FirstOrDefaultAsync(u => u.UserId == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+            var model = new MasterVM();
+            model.User = await _authService.GetUserByUsernameAsync(Username);
 
-            var model = new UserViewModel
-            {
-                UserId = user.UserId,
-                Username = user.Username,
-                Email = user.Email,
-                FullName = user.FullName,
-                LanguageId = user.LanguageId,
-                LanguageName = user.Language != null ? user.Language.Name : "N/A",
-                IsActive = user.IsActive,
-                CreatedAt = user.CreatedAt
-            };
-
+            model.LanguageSL = await _lang.GetLangSL();
+            model.RoleSL = await _authService.GetRoleSL();
             return View(model);
         }
 
         // POST: User/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(string Username)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(username))
             {
                 return RedirectToAction("Login", "Account");
             }
 
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
-            {
-                _context.Users.Remove(user);
-                await _context.SaveChangesAsync();
-            }
+            bool del = await _authService.DeleteUserAsync(Username);
 
             return RedirectToAction(nameof(Index));
         }

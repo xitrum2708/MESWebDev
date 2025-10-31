@@ -1,47 +1,14 @@
-﻿@model MESWebDev.Models.VM.MenuViewModel
-@using MESWebDev.Models.VM
+﻿@model FunctionModel
 
-
-
-@* @{
-    var currentUrl = Context.Request.Path.ToString().ToLower();
-    var hasChildren = Model.Children != null && Model.Children.Any();
-    var isActive = !string.IsNullOrEmpty(Model.Url) && currentUrl.StartsWith(Model.Url.ToLower()) && Model.Url != "#";
-    var isParentActive = Model.Children.Any(child => currentUrl.StartsWith(child.Url?.ToLower() ?? ""));
-}
-
-<li class="nav-item @(hasChildren && isParentActive ? "menu-open" : "")">
-    <a href="@(string.IsNullOrEmpty(Model.Url) ? "#" : Model.Url)" class="nav-link @(isActive ? "active" : "")">
-        <i class="nav-icon @(Model.Icon ?? "bi bi-circle")"></i>
-        <p>
-            @Model.Title
-            @if (hasChildren)
-            {
-                <i class="nav-arrow bi bi-chevron-right"></i>
-            }
-        </p>
-    </a>
-
-    @if (hasChildren)
-    {
-        <ul class="nav nav-treeview">
-            @foreach (var child in Model.Children)
-            {
-                @await Html.PartialAsync("_SidebarMenuItem", child)
-            }
-        </ul>
-    }
-</li>
- *@
 @{
     var activeMenuId = ViewData["ActiveMenuId"] as int?;
     var hasChildren = Model.Children != null && Model.Children.Any();
-    var isActive = Model.MenuId == activeMenuId;
+    var isActive = Model.Id == activeMenuId;
 
     // Hàm đệ quy kiểm tra xem menu hiện tại có chứa activeMenuId
-    bool IsAncestor(MenuViewModel menu, int? targetId)
+    bool IsAncestor(FunctionModel menu, int? targetId)
     {
-        if (menu.MenuId == targetId)
+        if (menu.Id == targetId)
             return true;
 
         if (menu.Children != null)
@@ -58,11 +25,14 @@
 
     var isExpanded = IsAncestor(Model, activeMenuId);
 }
+
 <li class="nav-item @(hasChildren && isExpanded ? "menu-open" : "")">
-    <a href="@(Model.Url ?? "#")" class="nav-link @(isActive ? "active" : "")">
-        <i class="nav-icon @(Model.Icon ?? "bi bi-circle")"></i>
+    @* <a href="@(Model.Url ?? "#")" class="nav-link @(isActive ? "active" : "")"> *@
+        <a href="@(string.IsNullOrEmpty(Model.Action) ? "#" : Url.Action(Model.Action,Model.Controller))" class="nav-link @(isExpanded ? "active" : "")">
+
+        <i class="nav-icon @(Model.IconString ?? "bi bi-circle")"></i>
         <p>
-            @Model.Title
+            @Model.EnName
             @if (hasChildren)
             {
                 <i class="nav-arrow bi bi-chevron-right"></i>
@@ -72,7 +42,7 @@
 
     @if (hasChildren)
     {
-        <ul class="nav nav-treeview">
+        <ul class="nav nav-treeview ps-3">
             @foreach (var sub in Model.Children)
             {
                 @await Html.PartialAsync("_SidebarMenuItem", sub)

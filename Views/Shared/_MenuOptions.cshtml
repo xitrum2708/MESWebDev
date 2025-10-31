@@ -1,5 +1,5 @@
-﻿@using MESWebDev.Models.VM
-@model (List<MenuViewModel> Menus, int Level)
+﻿
+@model (List<FunctionModel> Menus, int Level)
 
 @{
     var menus = Model.Menus;
@@ -8,7 +8,7 @@
     foreach (var menu in menus)
     {
         var indent = new string('—', level) + (level > 0 ? " " : "");
-        <option value="@menu.MenuId">@indent@menu.Title</option>
+        <option value="@menu.Id">@indent@menu.EnName</option>
 
         if (menu.Children.Any())
         {

@@ -1,0 +1,47 @@
+﻿@using MESWebDev.Services
+@inject ITranslationService T
+@model dynamic
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "en";
+    ViewData["Title"] = T.GetTranslation("Login", languageCode);
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
+}
+
+
+<body>
+
+<div class="login-card">
+    <div class="text-center mb-3">        
+        <h4 class="fw-bold">LOGIN SYSTEM</h4>
+        <img src="~/Image/mes.jpg" class="logo" alt="MES Logo">
+    </div>
+    <form  asp-action="Login" method="post">
+        <select name="languageCode" class="form-select fs-6 mb-3" onchange="this.form.submit()">
+            @foreach (var lang in ViewBag.Languages)
+            {
+                @: <option value="@lang.Code" @(ViewBag.SelectedLanguage == lang.Code ? "selected" : "")>@lang.Name</option>
+            }
+        </select>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control fs-6" id="username" name="username" placeholder="Username" required>
+            <label for="username">Username</label>
+        </div>
+        <div class="form-floating mb-4">
+            <input type="password" class="form-control fs-6" id="password" name="password" placeholder="Password" required>
+            <label for="password">Password</label>
+        </div>
+        <button type="submit" class="btn btn-login w-100 fs-6 py-2">Login</button>
+        @if (ViewBag.Error != null)
+        {
+            <p class="text-danger mt-3">@ViewBag.Error</p>
+        }
+        <div class="text-center mt-3">
+            <small class="text-muted">&copy; 2025 UNIDEN - Manufacturing Execution System</small>
+        </div>
+
+    </form>
+</div>
+@section Scripts {
+    <link href="~/css/Login.css?@DateTime.Now.Ticks" rel="stylesheet" />
+}
+</body>

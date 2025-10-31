@@ -1,8 +1,4 @@
-﻿@using MESWebDev.Common
-@using MESWebDev.Models.VM
-@using MESWebDev.Services
-@inject ITranslationService TranslationService
-@model PagedResult<LanguageViewModel>
+﻿@model List<LanguageModel>
 
 @{
     var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
@@ -11,18 +7,6 @@
 }
 @section ContentHeader {
     @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
-@* <div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">         
-            <div class="col-sm-12">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">@TranslationService.GetTranslation("Home", languageCode)</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">@TranslationService.GetTranslation("LanguageManagement", languageCode)</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div> *@
 }
 
 <div class="app-content">
@@ -31,19 +15,24 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">@TranslationService.GetTranslation("ListofLanguages", languageCode)</h3>
-                        <div class="card-tools">
+                        <h3 class="card-title fw-bold">
+                            <i class="nav-icon bi bi-globe me-2"></i>
+                            @TranslationService.GetTranslation("ListofLanguages", languageCode)</h3>
+
+                        <div class="card-tools d-flex justify-content-between align-content-center w-75">
+                            <div class="input-group me-3 w-50">
+                                <input type="text" class="form-control form-input-sm" id="quick_search" onkeyup="QuickSearch()" placeholder="Searching...">
+                                <span class="input-group-text"><i class="bi bi-search"></i></i></span>
+                            </div>
                             <a href="@Url.Action("Create", "Language")" class="btn btn-primary btn-sm">
                                 <i class="bi bi-plus-lg"></i> @TranslationService.GetTranslation("AddNewLanguage", languageCode)
                             </a>
                         </div>
                     </div>
                     <div class="card-body">
-                        <!-- Phân trang -->
-                        @await Html.PartialAsync("_SearchForm", Model)
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead>
+                        <div class=" table-responsive" style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative">
+                            <table class="table table-bordered table-hover paginated" id="mytable">
+                                <thead class="table-success text-center">
                                     <tr>
                                         <th>@TranslationService.GetTranslation("LanguageId", languageCode)</th>
                                         <th>@TranslationService.GetTranslation("LanguageCode", languageCode)</th>
@@ -53,15 +42,15 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var language in Model.Items)
+                                    @foreach (var language in Model)
                                     {
                                         <tr>
-                                            <td>@language.LanguageId</td>
-                                            <td>@language.Code</td>
+                                            <td>@language.Id</td>
+                                            <td>@language.Culture</td>
                                             <td>@language.Name</td>
                                             <td>@(language.IsActive ? TranslationService.GetTranslation("Yes", languageCode) : TranslationService.GetTranslation("No", languageCode))</td>
                                             <td>
-                                                <a href="@Url.Action("Edit", "Language", new { id = language.LanguageId })" class="btn btn-warning btn-sm">
+                                                <a href="@Url.Action("Edit", "Language", new { id = language.Id })" class="btn btn-warning btn-sm">
                                                     <i class="bi bi-pencil"></i> @TranslationService.GetTranslation("Edit", languageCode)
                                                 </a>
                                                 @* <form asp-action="Delete" asp-route-id="@language.LanguageId" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this menu?');">
@@ -76,11 +65,40 @@
                                 </tbody>
                             </table>
                         </div>
-                        <!-- Phân trang -->
-                        @await Html.PartialAsync("_Pagination", Model)
+                    </div>
+                    <div class="card-footer pager p-0">
+                        <partial name="_PagingPartialView" />
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/panigation.js"></script>
+    <script>
+        $(document).ready(function () {
+
+        });
+
+        //debugger
+        function QuickSearch() {
+            //debugger
+            var inputString = $('#quick_search').val().toUpperCase();
+
+            $('#mytable tbody tr').each(function () {
+                var tr = $(this);
+                tr.find('td').each(function () {
+                    //debugger
+                    var txtValue = $(this).text();
+                    if (txtValue.toUpperCase().indexOf(inputString) > -1) { tr.show(); return false; }
+                    else tr.hide();
+                })
+            })
+        }
+    </script>
+}

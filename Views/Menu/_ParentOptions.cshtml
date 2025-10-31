@@ -1,4 +1,4 @@
-﻿@model List<MESWebDev.Models.VM.MenuViewModel>
+﻿@model List<MESWebDev.Models.Master.FunctionModel>
 
 @{
     int level = ViewData["Level"] != null ? (int)ViewData["Level"] : 0;
@@ -8,8 +8,8 @@
 @foreach (var menu in Model)
 {
     var indent = new string('-', level * 3);
-    <option value="@menu.MenuId" selected="@(menu.MenuId == selectedParentId)">
-        @($"{indent} {menu.Title}")
+    <option value="@menu.Id" selected="@(menu.Id == selectedParentId)">
+        @($"{indent} {menu.EnName}")
     </option>
 
     @* Nếu có con thì render tiếp *@

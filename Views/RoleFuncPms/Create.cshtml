@@ -1,0 +1,58 @@
+﻿
+@model MasterVM
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("CreateRolePermission", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title fw-bold">
+                            <i class="bi bi-person-plus me-2"></i>
+                            @TranslationService.GetTranslation("AddNewRolePermission", languageCode)</h3>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="Create" method="post">
+                            @Html.AntiForgeryToken()
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            <input hidden asp-for="@Model.RoleFuncPms.PmsId" value="1" >
+                            <div class="form-group mb-3">
+                                <label asp-for="@Model.RoleFuncPms.RoleId" class="control-label">@TranslationService.GetTranslation("Role", languageCode)</label>
+                                <select asp-for="@Model.RoleFuncPms.RoleId" class="form-select" asp-items="@Model.RoleSL">
+                                    <option value="">@TranslationService.GetTranslation("SelectRole", languageCode)</option>
+                                </select>
+                                <span asp-validation-for="@Model.RoleFuncPms.RoleId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="@Model.RoleFuncPms.FuncId" class="control-label">@TranslationService.GetTranslation("Permission", languageCode)</label>
+                                <select asp-for="@Model.RoleFuncPms.FuncId" class="form-select" asp-items="@Model.FuncSL">
+                                    <option value="">@TranslationService.GetTranslation("SelectMenu", languageCode)</option>
+                                </select>
+                                <span asp-validation-for="@Model.RoleFuncPms.FuncId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Create", languageCode)</button>
+                                <a asp-action="Index" class="btn btn-secondary">@TranslationService.GetTranslation("BackToList", languageCode)</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

@@ -1,204 +1,92 @@
 ﻿using MESWebDev.Data;
 using MESWebDev.Extensions;
 using MESWebDev.Models;
+using MESWebDev.Models.Master;
 using MESWebDev.Models.VM;
 using MESWebDev.Services;
+using MESWebDev.Services.IService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Threading.Tasks;
 
 namespace MESWebDev.Controllers
 {
+    [Authorize]
     public class TranslationController : BaseController
     {
         //private readonly AppDbContext _context;
         private readonly ITranslationService _translationService;
+        private readonly ILanguageService _langService;
 
         //private const int PageSize = 10;
 
-        public TranslationController(AppDbContext context, ITranslationService translationService)
+        public TranslationController(AppDbContext context, ITranslationService translationService, ILanguageService langService)
             : base(context)
         {
             //_context = context;
             _translationService = translationService;
+            _langService = langService;
         }
 
         // GET: Translation/Index
-        public IActionResult Index(int page = 1, string searchTerm = null, int pageSize = 10)
+        public async Task<IActionResult> Index()
         {
-            // Lấy dữ liệu và chuyển đổi thành TranslationViewModel trước khi phân trang
-            var query = _context.Translations
-                .Select(t => new TranslationViewModel
-                {
-                    TranslationId = t.TranslationId,
-                    Keyvalue = t.Keyvalue,
-                    LanguageId = t.LanguageId,
-                    LanguageCode = _context.Languages
-                        .Where(l => l.LanguageId == t.LanguageId)
-                        .Select(l => l.Code)
-                        .FirstOrDefault(),
-                    Value = t.Value
-                })
-                .AsQueryable();
+            var data = await _langService.GetDictionaryAsync();
 
-            // Áp dụng tìm kiếm nếu có
-            var searchModel = new TranslationViewModel();
-            query = searchModel.ApplySearch(query, searchTerm);
-
-            // Áp dụng phân trang
-            var result = query.ToPagedResult(page, pageSize, searchTerm);
-
-            return View(result);
+            return View(data);
         }
 
         // GET: Translation/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            var model = new TranslationViewModel
-            {
-                AvailableLanguages = _context.Languages
-                    .Select(l => new SelectListItem
-                    {
-                        Value = l.LanguageId.ToString(),
-                        Text = l.Code
-                    })
-                    .ToList()
-            };
+            MasterVM mvm = new();
+            mvm.Dictionary = new();
+            mvm.LanguageSL = await _langService.GetLangSL();
 
-            return View(model);
+            return View(mvm);
         }
 
         // POST: Translation/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(TranslationViewModel model)
+        public async Task<IActionResult> Create(MasterVM model)
         {
-            ModelState.Remove("LanguageCode");
-            ModelState.Remove("AvailableLanguages");
-            if (ModelState.IsValid)
+
+            string msg = await _langService.CreateDictionaryAsync(model.Dictionary);
+            if (string.IsNullOrEmpty(msg))
             {
-                var translation = new Translation
-                {
-                    Keyvalue = model.Keyvalue,
-                    LanguageId = model.LanguageId,
-                    Value = model.Value
-                };
-
-                _context.Translations.Add(translation);
-                _context.SaveChanges();
-
-                // Xóa cache cho ngôn ngữ tương ứng
-                var languageCode = _context.Languages
-                    .Where(l => l.LanguageId == model.LanguageId)
-                    .Select(l => l.Code)
-                    .FirstOrDefault();
-                _translationService.ClearCache(languageCode);
-
                 return RedirectToAction(nameof(Index));
             }
-
-            // Nếu ModelState không hợp lệ, tải lại danh sách ngôn ngữ
-            model.AvailableLanguages = _context.Languages
-                .Select(l => new SelectListItem
-                {
-                    Value = l.LanguageId.ToString(),
-                    Text = l.Code
-                })
-                .ToList();
+            ModelState.AddModelError(string.Empty, msg);
+            model.LanguageSL = await _langService.GetLangSL();
 
             return View(model);
         }
 
         // GET: Translation/Edit/5
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var translation = _context.Translations.Find(id);
-            if (translation == null)
-            {
-                return NotFound();
-            }
-
-            var model = new TranslationViewModel
-            {
-                TranslationId = translation.TranslationId,
-                Keyvalue = translation.Keyvalue,
-                LanguageId = translation.LanguageId,
-                LanguageCode = _context.Languages
-                    .Where(l => l.LanguageId == translation.LanguageId)
-                    .Select(l => l.Code)
-                    .FirstOrDefault(),
-                Value = translation.Value,
-                AvailableLanguages = _context.Languages
-                    .Select(l => new SelectListItem
-                    {
-                        Value = l.LanguageId.ToString(),
-                        Text = l.Code,
-                        Selected = l.LanguageId == translation.LanguageId
-                    })
-                    .ToList()
-            };
-
-            return View(model);
+            MasterVM mvm = new();
+            mvm.Dictionary = await _langService.GetDictionaryById(id);
+            mvm.LanguageSL = await _langService.GetLangSL();
+            return View(mvm);
         }
 
         // POST: Translation/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, TranslationViewModel model)
+        public async Task<IActionResult> Edit(int id, MasterVM mvm)
         {
-            if (id != model.TranslationId)
+            string msg = await _langService.UpdateDictionaryAsync(mvm.Dictionary);
+            if (string.IsNullOrEmpty(msg))
             {
-                return NotFound();
-            }
-            // Bỏ qua validation cho LanguageCode và AvailableLanguages
-            ModelState.Remove("LanguageCode");
-            ModelState.Remove("AvailableLanguages");
-            if (ModelState.IsValid)
-            {
-                var translation = _context.Translations.Find(id);
-                if (translation == null)
-                {
-                    return NotFound();
-                }
-
-                // Lưu ngôn ngữ cũ để xóa cache
-                var oldLanguageId = translation.LanguageId;
-
-                translation.Keyvalue = model.Keyvalue;
-                translation.LanguageId = model.LanguageId;
-                translation.Value = model.Value;
-
-                _context.SaveChanges();
-
-                // Xóa cache cho ngôn ngữ cũ và mới (nếu thay đổi ngôn ngữ)
-                var oldLanguageCode = _context.Languages
-                    .Where(l => l.LanguageId == oldLanguageId)
-                    .Select(l => l.Code)
-                    .FirstOrDefault();
-                _translationService.ClearCache(oldLanguageCode);
-
-                if (oldLanguageId != model.LanguageId)
-                {
-                    var newLanguageCode = _context.Languages
-                        .Where(l => l.LanguageId == model.LanguageId)
-                        .Select(l => l.Code)
-                        .FirstOrDefault();
-                    _translationService.ClearCache(newLanguageCode);
-                }
-
                 return RedirectToAction(nameof(Index));
             }
+            ModelState.AddModelError(string.Empty, msg);
+            mvm.LanguageSL = await _langService.GetLangSL();
 
-            // Nếu ModelState không hợp lệ, tải lại danh sách ngôn ngữ
-            model.AvailableLanguages = _context.Languages
-                .Select(l => new SelectListItem
-                {
-                    Value = l.LanguageId.ToString(),
-                    Text = l.Code,
-                    Selected = l.LanguageId == model.LanguageId
-                })
-                .ToList();
-
-            return View(model);
+            return View(mvm);
         }
 
         // POST: Translation/Delete/5
@@ -218,12 +106,7 @@ namespace MESWebDev.Controllers
             _context.Translations.Remove(translation);
             _context.SaveChanges();
 
-            // Xóa cache cho ngôn ngữ tương ứng
-            var languageCode = _context.Languages
-                .Where(l => l.LanguageId == languageId)
-                .Select(l => l.Code)
-                .FirstOrDefault();
-            _translationService.ClearCache(languageCode);
+            
 
             return RedirectToAction(nameof(Index));
         }

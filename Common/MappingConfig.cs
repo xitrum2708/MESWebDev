@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using MESWebDev.Models.Master;
+using MESWebDev.Models.Master.DTO;
 using MESWebDev.Models.PE;
 using MESWebDev.Models.PE.DTO;
 using MESWebDev.Models.ProdPlan;
@@ -35,6 +37,26 @@ namespace MESWebDev.Common
             CreateMap<TimeStudyNewHdrDTO, TimeStudyNewHdrModel>().ReverseMap();
             CreateMap<TimeStudyNewDtlDTO, TimeStudyNewDtlModel>().ReverseMap();
             CreateMap<TimeStudyNewStepDtlDTO, TimeStudyNewStepDtlModel>().ReverseMap();
+
+
+            CreateMap<UserModel, UserDTO>()
+                .ForMember(dest => dest.LangName, opt => opt.MapFrom(src => src.Language != null ? src.Language.Name : string.Empty))
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.RoleName : string.Empty))
+                ;
+            CreateMap<UserDTO, UserModel>();
+
+            CreateMap<RoleFuncPmsDTO, RoleFuncPmsModel>();
+            CreateMap<RoleFuncPmsModel, RoleFuncPmsDTO>()
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.RoleName : string.Empty))
+                .ForMember(dest => dest.FuncName, opt => opt.MapFrom(src => src.Function != null ? src.Function.EnName : string.Empty))
+                .ForMember(dest => dest.PmsName, opt => opt.MapFrom(src => src.Pms != null ? src.Pms.PmsName : string.Empty));
+
+            CreateMap<DictionaryDTO, DictionaryModel>();
+            CreateMap<DictionaryModel, DictionaryDTO>()
+                .ForMember(dest => dest.LangName, opt => opt.MapFrom(src => src.Language != null ? src.Language.Name : string.Empty));
+
+            CreateMap<RoleDTO, RoleModel>().ReverseMap();
+
         }
     }
 }

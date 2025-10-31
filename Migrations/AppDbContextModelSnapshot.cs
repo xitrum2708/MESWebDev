@@ -899,6 +899,386 @@ namespace MESWebDev.Migrations
                     b.ToTable("UVMES_Languages", (string)null);
                 });
 
+            modelBuilder.Entity("MESWebDev.Models.Master.ActionModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Auth_Master_Action");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.DictionaryModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LangId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LangId");
+
+                    b.ToTable("Master_Language_Dic");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.FunctionModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Controller")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EnName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IconString")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ViName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("Auth_Master_Function");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.LanguageModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Culture")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Master_Language");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.PmsActionModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PmsId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionId");
+
+                    b.HasIndex("PmsId");
+
+                    b.ToTable("Auth_Mapping_Pms_Action");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.PmsModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PmsName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Auth_Master_Pms");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.RoleFuncPmsModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FuncId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PmsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FuncId");
+
+                    b.HasIndex("PmsId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("Auth_Mapping_Role_Func_Pms");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.RoleModel", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("RoleId");
+
+                    b.ToTable("Auth_Master_Role");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.UserFuncPmsModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreeatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("FuncId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PmsId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FuncId");
+
+                    b.HasIndex("PmsId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Auth_Mapping_User_Func_Pms");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.UserModel", b =>
+                {
+                    b.Property<string>("Username")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Fullname")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("LangId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Username");
+
+                    b.HasIndex("LangId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("Auth_Master_User");
+                });
+
             modelBuilder.Entity("MESWebDev.Models.Menu", b =>
                 {
                     b.Property<int>("MenuId")
@@ -1410,9 +1790,6 @@ namespace MESWebDev.Migrations
                     b.Property<int>("TargetQty")
                         .HasColumnType("int");
 
-                    b.Property<int>("TimeStudyHdrId")
-                        .HasColumnType("int");
-
                     b.Property<int>("UnitQty")
                         .HasColumnType("int");
 
@@ -1424,7 +1801,7 @@ namespace MESWebDev.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TimeStudyHdrId");
+                    b.HasIndex("ParentId");
 
                     b.ToTable("UV_PE_TimeStudyNew_Dtl");
                 });
@@ -1457,9 +1834,6 @@ namespace MESWebDev.Migrations
                     b.Property<string>("Customer")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsPrepare")
-                        .HasColumnType("bit");
 
                     b.Property<decimal>("LineBalance")
                         .HasPrecision(18, 2)
@@ -3193,6 +3567,117 @@ namespace MESWebDev.Migrations
                     b.Navigation("Reports");
                 });
 
+            modelBuilder.Entity("MESWebDev.Models.Master.DictionaryModel", b =>
+                {
+                    b.HasOne("MESWebDev.Models.Master.LanguageModel", "Language")
+                        .WithMany()
+                        .HasForeignKey("LangId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Language");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.FunctionModel", b =>
+                {
+                    b.HasOne("MESWebDev.Models.Master.FunctionModel", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.PmsActionModel", b =>
+                {
+                    b.HasOne("MESWebDev.Models.Master.ActionModel", "ActionModel")
+                        .WithMany()
+                        .HasForeignKey("ActionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MESWebDev.Models.Master.PmsModel", "PmsModel")
+                        .WithMany()
+                        .HasForeignKey("PmsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ActionModel");
+
+                    b.Navigation("PmsModel");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.RoleFuncPmsModel", b =>
+                {
+                    b.HasOne("MESWebDev.Models.Master.FunctionModel", "Function")
+                        .WithMany()
+                        .HasForeignKey("FuncId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MESWebDev.Models.Master.PmsModel", "Pms")
+                        .WithMany()
+                        .HasForeignKey("PmsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MESWebDev.Models.Master.RoleModel", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Function");
+
+                    b.Navigation("Pms");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.UserFuncPmsModel", b =>
+                {
+                    b.HasOne("MESWebDev.Models.Master.FunctionModel", "Function")
+                        .WithMany()
+                        .HasForeignKey("FuncId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MESWebDev.Models.Master.PmsModel", "PmsModel")
+                        .WithMany()
+                        .HasForeignKey("PmsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MESWebDev.Models.Master.UserModel", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Function");
+
+                    b.Navigation("PmsModel");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.UserModel", b =>
+                {
+                    b.HasOne("MESWebDev.Models.Master.LanguageModel", "Language")
+                        .WithMany()
+                        .HasForeignKey("LangId");
+
+                    b.HasOne("MESWebDev.Models.Master.RoleModel", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Language");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("MESWebDev.Models.Menu", b =>
                 {
                     b.HasOne("MESWebDev.Models.Menu", "Parent")
@@ -3245,13 +3730,13 @@ namespace MESWebDev.Migrations
 
             modelBuilder.Entity("MESWebDev.Models.PE.TimeStudyNewDtlModel", b =>
                 {
-                    b.HasOne("MESWebDev.Models.PE.TimeStudyNewHdrModel", "TimeStudyHdr")
+                    b.HasOne("MESWebDev.Models.PE.TimeStudyNewHdrModel", "TimeStudyNewHdr")
                         .WithMany("TimeStudyDtl")
-                        .HasForeignKey("TimeStudyHdrId")
+                        .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("TimeStudyHdr");
+                    b.Navigation("TimeStudyNewHdr");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.PE.TimeStudyNewStepDtlModel", b =>
@@ -3352,6 +3837,11 @@ namespace MESWebDev.Migrations
             modelBuilder.Entity("MESWebDev.Models.IQC.UV_IQC_Report", b =>
                 {
                     b.Navigation("ReportItems");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Master.FunctionModel", b =>
+                {
+                    b.Navigation("Children");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.Menu", b =>

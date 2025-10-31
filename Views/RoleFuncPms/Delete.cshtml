@@ -1,0 +1,65 @@
+﻿@model RoleFuncPmsDTO
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("DeleteRolePermission", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card card-danger">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="bi bi-trash3"></i>
+                            @TranslationService.GetTranslation("ConfirmDelete", languageCode) </h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("RoleName", languageCode)
+                            </dt>
+                            <dd class="col-sm-10 mb-3">
+                                @Model.RoleName
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("Menu", languageCode)
+                            </dt>
+                            <dd class="col-sm-10 mb-3">
+                                @Model.FuncName
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("Permission", languageCode)
+                            </dt>
+                            <dd class="col-sm-10 mb-3">
+                                @Model.PmsName
+                            </dd>
+                            <dt class="col-sm-2">
+                                @TranslationService.GetTranslation("Note", languageCode)
+                            </dt>
+                            <dd class="col-sm-10 mb-3">
+                                @Model.Note
+                            </dd>
+                        </dl>
+                        <form asp-action="Delete">
+                            <input type="hidden" asp-for="Id" />
+                            <button type="submit" class="btn btn-danger">@TranslationService.GetTranslation("Delete", languageCode)</button>
+                            <a asp-action="Index" class="btn btn-secondary">@TranslationService.GetTranslation("BackToList", languageCode)</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

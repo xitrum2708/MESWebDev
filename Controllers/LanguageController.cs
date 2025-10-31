@@ -1,9 +1,12 @@
 ﻿using MESWebDev.Data;
 using MESWebDev.Extensions;
 using MESWebDev.Models;
+using MESWebDev.Models.Master;
 using MESWebDev.Models.VM;
 using MESWebDev.Services;
+using MESWebDev.Services.IService;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace MESWebDev.Controllers
 {
@@ -11,135 +14,74 @@ namespace MESWebDev.Controllers
     {
         //private readonly AppDbContext _context;
         private readonly ITranslationService _translationService;
+        private readonly ILanguageService _langService;
 
-        public LanguageController(AppDbContext context, ITranslationService translationService)
+        public LanguageController(AppDbContext context, ITranslationService translationService, ILanguageService langService)
             : base(context)
         {
             //_context = context;
             _translationService = translationService;
+            _langService = langService;
         }
 
         // GET: LanguageController
-        public ActionResult Index(int page = 1, int pageSize = 10, string searchTerm = null)
+        public async Task<ActionResult> Index()
         {
-            var query = _context.Languages
-                .Select(t => new LanguageViewModel
-                {
-                    LanguageId = t.LanguageId,
-                    Name = t.Name,
-                    Code = t.Code,
-                    IsActive = t.IsActive,
-                });
-            //.AsQueryable();
-            var searchLanguage = new LanguageViewModel();
-            query = searchLanguage.ApplySearch(query, searchTerm);
-            var language = query.ToPagedResult(page, pageSize, searchTerm);
-            return View(language);
+            var data = await _langService.GetAllLanguagesAsync();
+            return View(data);
         }
 
         // GET: LanguageController/Create
         public ActionResult Create()
         {
-            var model = new LanguageViewModel();
+            var model = new LanguageModel();
             return View(model);
         }
 
         // POST: LanguageController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(LanguageViewModel model)
+        public async Task<ActionResult> Create(LanguageModel model)
         {
-            try
-            {
-                if (ModelState.IsValid)
-                {
-                    var language = new Language
-                    {
-                        Name = model.Name,
-                        Code = model.Code,
-                        IsActive = model.IsActive,
-                    };
-                    _context.Languages.Add(language);
-                    _context.SaveChanges();
-                    return RedirectToAction(nameof(Index));
-                }
-                return View(model);
+            string msg = await _langService.CreateLanguageAsync(model);
+            if (string.IsNullOrEmpty(msg)) {
+                return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View();
-            }
+            ModelState.AddModelError(string.Empty, msg);
+            return View(model);
         }
 
         // GET: LanguageController/Edit/5
-        public ActionResult Edit(int id)
+        public async Task<ActionResult> Edit(int id)
         {
-            var language = _context.Languages.Find(id);
-            if (language == null)
-            {
-                return NotFound();
-            }
-            var model = new LanguageViewModel
-            {
-                Name = language.Name,
-                Code = language.Code,
-                IsActive = language.IsActive,
-            };
+            var model = await _langService.GetLanguageById(id);
             return View(model);
         }
 
         // POST: LanguageController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, LanguageViewModel model)
+        public async Task<ActionResult> Edit(LanguageModel model)
         {
-            try
+            string msg = await _langService.UpdateLanguageAsync(model);
+            if (string.IsNullOrEmpty(msg))
             {
-                if (id != model.LanguageId)
-                {
-                    return NotFound();
-                }
-                if (ModelState.IsValid)
-                {
-                    var language = _context.Languages.Find(id);
-                    if (language == null)
-                    {
-                        return NotFound();
-                    }
-                    language.Code = model.Code;
-                    language.IsActive = model.IsActive;
-                    language.Name = model.Name;
-                    _context.SaveChanges();
-                    return RedirectToAction(nameof(Index));
-                }
-                return View(model);
+                return RedirectToAction(nameof(Index));
             }
-            catch
-            {
-                return View(model);
-            }
+            ModelState.AddModelError(string.Empty, msg);
+            return View(model);
         }
 
         // POST: LanguageController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id)
+        public async Task<ActionResult> Delete(int id)
         {
-            try
-            {
-                var langugage = _context.Languages.Find(id);
-                if (langugage == null)
-                {
-                    return NotFound();
-                }
-                _context.Languages.Remove(langugage);
-                _context.SaveChanges();
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            bool isDeleted = await _langService.DeleteLanguageAsync(id);
+            if (isDeleted) return RedirectToAction(nameof(Index));
+            ModelState.AddModelError(string.Empty, "Cannot delete the language. It may be in use.");
+            var model = await _langService.GetLanguageById(id);
+            return View(model);
         }
     }
 }

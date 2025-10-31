@@ -25,14 +25,14 @@ namespace MESWebDev.Services
             if (!_cache.TryGetValue(cacheKey, out Dictionary<string, string> translations))
             {
                 // Nếu không có trong cache, lấy từ CSDL
-                var languageId = _context.Languages
-                    .Where(l => l.Code == languageCode)
-                    .Select(l => l.LanguageId)
+                var languageId = _context.Master_Language
+                    .Where(l => l.Culture == languageCode)
+                    .Select(l => l.Id)
                     .FirstOrDefault();
 
-                translations = _context.Translations
-                    .Where(t => t.LanguageId == languageId)
-                    .ToDictionary(t => t.Keyvalue, t => t.Value);
+                translations = _context.Master_Language_Dic
+                    .Where(t => t.LangId == languageId)
+                    .ToDictionary(t => t.Key, t => t.Value);
 
                 var cts = new CancellationTokenSource();
                 // Cấu hình tùy chọn cache
