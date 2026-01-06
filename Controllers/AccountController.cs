@@ -66,7 +66,7 @@ namespace MESWebDev.Controllers
             if (user == null)
             {
                 ViewBag.Error = "Invalid credentials";
-                ViewBag.Languages = _context.Languages.Where(l => l.IsActive).ToList();
+                ViewBag.Languages = _context.Master_Language.Where(l => l.IsActive).ToList();
                 ViewBag.SelectedLanguage = languageCode;
                 return View();
             }
