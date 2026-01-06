@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MESWebDev.Models.ProdPlan
+namespace MESWebDev.Models.ProdPlan.PC
 {
     public class ProdPlanModel
     {

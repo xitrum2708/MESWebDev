@@ -4,7 +4,6 @@ using MESWebDev.Models.IQC;
 using MESWebDev.Models.Master;
 using MESWebDev.Models.OQC;
 using MESWebDev.Models.PE;
-using MESWebDev.Models.ProdPlan;
 using MESWebDev.Models.REPAIR;
 using MESWebDev.Models.SMT;
 using MESWebDev.Models.SPO;
@@ -12,6 +11,9 @@ using MESWebDev.Models.TELSTAR;
 using MESWebDev.Models.UVASSY;
 using MESWebDev.Models.WHS;
 using Microsoft.EntityFrameworkCore;
+using MESWebDev.Models.ProdPlan.PC;
+using MESWebDev.Models.ProdPlan.SMT;
+using MESWebDev.Models.Setting;
 
 namespace MESWebDev.Data
 {
@@ -105,7 +107,18 @@ namespace MESWebDev.Data
         public DbSet<UserFuncPmsModel> Auth_Mapping_User_Func_Pms { get; set; }
         public DbSet<RoleFuncPmsModel> Auth_Mapping_Role_Func_Pms { get; set; }
 
-
+        //--------------- SMT PRODUCTION PLAN -------------------
+       // public DbSet<SMTProdPlanModel> SMT_ProdPlan_tbl { get; set; }
+        public DbSet<SMTLineModel> UV_SMT_Mst_Line { get; set; }
+        public DbSet<SMTMachineModel> UV_SMT_Mst_Machine { get; set; }
+        public DbSet<SMTShiftModel> UV_SMT_Mst_Shift { get; set; }
+        public DbSet<SMTMachineConditionModel> UV_SMT_Mst_MachineCondition { get; set; }
+        public DbSet<SMTLineCalendarModel> UV_SMT_Mst_LineCalendar { get; set; }
+        public DbSet<SMTLineMachineDataModel> UV_SMT_LineMachineData { get; set; }
+        public DbSet<SMTLotPcbModel> UV_SMT_Lot_PCB { get; set; }
+        public DbSet<SMTProdPlanModel> UV_SMT_Prod_Plan { get; set; }
+        public DbSet<SMTPlanModel> UV_SMT_Plan { get; set; }
+        public DbSet<ProjectSettingModel> UV_Common_Project_Setting { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -113,8 +126,8 @@ namespace MESWebDev.Data
             modelBuilder.Entity<FunctionModel>()
                 .HasOne(f => f.Parent)
                 .WithMany(f => f.Children)
-                .HasForeignKey(f => f.ParentId) // 👈 Explicitly set the foreign key
-                .OnDelete(DeleteBehavior.Restrict); // 👈 Prevent infinite cascade delete
+                .HasForeignKey(f => f.ParentId) // Explicitly set the foreign key
+                .OnDelete(DeleteBehavior.Restrict); // Prevent infinite cascade delete
 
 
             modelBuilder.Entity<UV_LOTCONTROL_MASTER>(entity =>

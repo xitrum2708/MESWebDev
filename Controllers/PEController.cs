@@ -33,8 +33,10 @@ namespace MESWebDev.Controllers
         private readonly Export2SpecificExcel _ese;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _web;
+        private readonly ISettingService _settingService;
 
-        public PEController(AppDbContext context, ITranslationService translationService, IPEService peService, IMapper map, IWebHostEnvironment web)
+        public PEController(AppDbContext context, ITranslationService translationService, IPEService peService, IMapper map
+            , IWebHostEnvironment web, ISettingService settingService)
             : base(context)
         {
             _translationService = translationService;
@@ -43,6 +45,7 @@ namespace MESWebDev.Controllers
             _mapper = map;
             _web = web;
             _ese = new(_web);
+            _settingService = settingService;
         }
 
         //======================>> Manpower <<======================\\
@@ -79,7 +82,7 @@ namespace MESWebDev.Controllers
             return View("Manpower/Index", pev);
         }
 
-        [HttpPost]
+        [HttpPost] //DownloadWeb
         public async Task<IActionResult> ExportToExcel([FromBody] TableFilterRequest request)
         {
             var fileBytes = await _ee.AjaxExcelExport(request, "#,##0.0000");
@@ -237,6 +240,8 @@ namespace MESWebDev.Controllers
 
             PEViewModel pev = new();
             pev.operationList = om;
+
+            pev.FormatRazorDTO = await _settingService.GetFormatRazor();
             return pev;
         }
 

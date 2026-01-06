@@ -46,13 +46,13 @@
                                     {
                                         <tr>
                                             <td>@translation.Key</td>
-                                            <td>@translation.LangId</td>
+                                            <td>@translation.LangName</td>
                                             <td>@translation.Value</td>
                                             <td>
-                                                <a href="@Url.Action("Edit", "Translation", new { id = translation.LangId })" class="btn btn-warning btn-sm">
+                                                <a href="@Url.Action("Edit", "Translation", new { id = translation.Id })" class="btn btn-warning btn-sm">
                                                     <i class="bi bi-pencil"></i> @TranslationService.GetTranslation("Edit", languageCode)
                                                 </a>
-                                                <form asp-action="Delete" asp-route-id="@translation.LangId" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this translation?');">
+                                                <form asp-action="Delete" asp-route-id="@translation.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this translation?');">
                                                     @Html.AntiForgeryToken()
                                                     <button type="submit" class="btn btn-danger btn-sm">
                                                         <i class="bi bi-trash"></i> @TranslationService.GetTranslation("Delete", languageCode)

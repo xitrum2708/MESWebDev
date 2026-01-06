@@ -2,6 +2,23 @@
 {
     public class SD
     {
+        public const string FormatDatetime = "Format Datetime";
+        public const string FormatDate = "Format Date";
+        public const string FormatNumber = "Format Number";
+        public const string CssDate = "Css Date";
+        public const string CssNumber = "Css Number";
+        public const string CssString = "Css String";
+
+        public const int TimeOut = 30;
+
+        public const string CatchSettingKey = "CatchSettingKey";
+
+        public class ErrorMsg
+        {
+            public const string Existed = "existed";
+            public const string NotExisted = "not_existed";
+            public const string Duplicated = "duplicated";
+        }
         public class SessionParametter
         {
             public const string SessionID = "ID";
@@ -40,6 +57,8 @@
             public const string DataDT2 = "DataDT2";
             public const string DataDetail2 = "DataDetail2";
             public const string DataList2 = "DataList2";
+
+            
 
         }
     }

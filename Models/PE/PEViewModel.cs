@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using MESWebDev.Models.Setting.DTO;
+using System.Data;
 
 namespace MESWebDev.Models.PE
 {
@@ -43,5 +44,8 @@ namespace MESWebDev.Models.PE
         public List<TimeStudyNewHdrDTO>? TimeStudyNewHdrList { get; set; }
         public List<TimeStudyNewDtlDTO>? TimeStudyNewDtlList { get; set; }
         public List<TimeStudyNewStepDtlDTO>? TimeStudyNewStepDtlList { get; set; }
+
+        //2025-12-22 add Format for Razor
+        public FormatRazorDTO FormatRazorDTO { get; set; } = new FormatRazorDTO();
     }
 }

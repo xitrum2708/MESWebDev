@@ -1,5 +1,4 @@
-﻿
-@model PagedResult<FunctionModel>
+﻿@model List<MESWebDev.Models.Master.FunctionModel>
 
 @{
     var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
@@ -15,26 +14,89 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        
+                    <div class="card-header">                        
                         <h3 class="card-title fw-bold">
                             <i class="bi bi-list"></i>
                             @TranslationService.GetTranslation("ListOfMenus", languageCode)
                         </h3>
-                        <div class="card-tools">
-                            <a href="@Url.Action("Create", "Menu")" class="btn btn-primary btn-sm">
-                                <i class="bi bi-plus-lg"></i> @TranslationService.GetTranslation("AddNewMenu",languageCode)
+
+                        <div class="card-tools d-flex justify-content-between align-content-center w-75">
+                            <div class="input-group me-3 w-50">
+                                <input type="text" class="form-control form-input-sm" id="quick_search" onkeyup="QuickSearch()" placeholder="Searching...">
+                                <span class="input-group-text"><i class="bi bi-search"></i></i></span>
+                            </div>
+
+                            <a href="@Url.Action("Create", "Menu")" class="btn btn-primary btn-sm me-3">
+                                <i class="bi bi-person-plus me-1"></i>
+                                @TranslationService.GetTranslation("AddNewMenu", languageCode)
                             </a>
                         </div>
                     </div>
                     <div class="card-body">
-                        @await Html.PartialAsync("_SearchForm", Model)
-                        @await Html.PartialAsync("_MenuTable", Model.Items)
                         <!-- Phân trang -->
-                        @await Html.PartialAsync("_Pagination", Model)
+                        @* @await Html.PartialAsync("_SearchForm", Model) *@
+                        <div class=" table-responsive" style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative">
+                            <table class="table table-bordered table-hover paginated" id="mytable">
+                                <thead class="table-success text-center sticky-top">
+                                    <tr>
+                                        <th>Order</th>
+                                        <th>Title (Eng)</th>
+                                        <th>Title (VN)</th>
+                                            @* <th>Parent</th> *@
+                                        <th>Controller</th>
+                                        <th>Action</th>
+                                        <th>Icon</th>
+                                            @*         <th>Note</th> *@
+                                        <th>Active</th>
+                                        <th>Process</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var menu in Model)
+                                    {
+                                        @await Html.PartialAsync("_MenuRow", new MESWebDev.Models.VM.MenuRowViewModel { Function = menu, Level = 0 })
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Phân trang -->
+                        @* @await Html.PartialAsync("_Pagination", Model) *@
+                    </div>
+
+                    <div class="card-footer pager p-0">
+
+                        <partial name="_PagingPartialView" />
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/panigation.js"></script>
+    <script>
+        $(document).ready(function () {
+
+        });
+
+        //debugger
+        function QuickSearch() {
+            //debugger
+            var inputString = $('#quick_search').val().toUpperCase();
+
+            $('#mytable tbody tr').each(function () {
+                var tr = $(this);
+                tr.find('td').each(function () {
+                    //debugger
+                    var txtValue = $(this).text();
+                    if (txtValue.toUpperCase().indexOf(inputString) > -1) { tr.show(); return false; }
+                    else tr.hide();
+                })
+            })
+        }
+    </script>
+}

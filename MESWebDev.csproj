@@ -7,10 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\UploadTemplate\PE\MainpowerUploadTemplate - Copy.xlsx" />
     <Content Remove="wwwroot\UploadTemplate\PE\MainpowerUploadTemplate.xlsx" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="wwwroot\UploadTemplate\PE\MainpowerUploadTemplate - Copy.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="wwwroot\UploadTemplate\PE\MainpowerUploadTemplate.xlsx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -47,7 +51,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\Manual\" />
+    <Folder Include="Views\ProdPlan\SMT\" />
   </ItemGroup>
 
 </Project>

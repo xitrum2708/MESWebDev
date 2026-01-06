@@ -1,0 +1,59 @@
+﻿
+@model ProdPlanViewModel
+
+@{
+    int i = 0;
+    DataTable dt = Model != null && Model.Data != null && Model.Data.Rows.Count > 0 ? Model.Data : new();
+}
+
+    @if (dt.Rows.Count>0)
+    {
+        <div style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative">
+            <table class="table table-bordered table-striped table-hover" id="mytable">
+                <thead class="sticky-top">
+                    <!-- Header Row -->
+                    <tr>
+                    <th class="text-center table-info header-text">No.</th>
+                        @foreach (DataColumn col in dt.Columns)
+                        {
+                            <th class="text-center table-info header-text"> @TranslationService.Trans(col.ColumnName)</th>
+                        } 
+                        <th class="table-info"></th>
+                    </tr>
+                </thead>
+
+                <tbody id="tbodyResult">
+                    @foreach (DataRow row in dt.Rows)
+                    {
+                        i++;
+                        <tr>
+                            <td class="body-text">@i</td>
+                            @foreach (var f in row.ItemArray)
+                            {
+                                <td class="@CommonFormat.FormatCss(f.GetType(), Model.FormatRazorDTO) body-text">@CommonFormat.FormatCell(f,f.GetType(),Model.FormatRazorDTO)</td>
+                            }
+                            <td class="d-flex align-content-center justify-content-center">
+                                <button class="btn btn-sm btn-warning me-2" onclick="editItem(@Convert.ToInt32(row["Id"]))">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteItem(@Convert.ToInt32(row["Id"]))">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.error_msg))
+        {
+            <div id="errorMsg" data-msg="@Model.error_msg"></div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-warning text-center">
+            No data available, pls add it.
+        </div>
+    }

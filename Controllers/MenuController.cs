@@ -65,15 +65,15 @@ namespace MESWebDev.Controllers
             var menuTree = BuildMenuTree(Auth_Master_Function);
 
             // Không phân trang ở đây (hoặc bạn tự paging bằng js nếu muốn sau này)
-            var pagedAuth_Master_Function = new PagedResult<FunctionModel>
-            {
-                Items = menuTree, // Full cây
-                CurrentPage = page,
-                PageSize = pageSize,
-                TotalItems = menuTree.Count
-            };
+            //var pagedAuth_Master_Function = new PagedResult<FunctionModel>
+            //{
+            //    Items = menuTree, // Full cây
+            //    CurrentPage = page,
+            //    PageSize = pageSize,
+            //    TotalItems = menuTree.Count
+            //};
 
-            return View(pagedAuth_Master_Function);
+            return View(menuTree);
         }
 
         private List<FunctionModel> BuildMenuTree(List<FunctionModel> Auth_Master_Function, int? parentId = null, int level = 0)

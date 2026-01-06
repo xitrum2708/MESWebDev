@@ -1,0 +1,276 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.PE
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Services
+@using System.Data
+@using System.Globalization
+@model ProdPlanViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="float-start d-flex justify-content-between align-items-center w-50">
+                                <h3 class="card-title fw-bold fs-5">
+                                    <i class="bi bi-box"></i>
+                                    @TranslationService.Trans("73")
+                                </h3>
+                                <input class="form-control w-50 ms-3" placeholder="🔍 Quick Search..." id="quickSearch" onkeyup="QuickSearch()" />
+                            </div>
+                            <div class="float-end d-flex justify-content-center align-items-center">
+                                <button class="btn btn-sm btn-primary me-2" onclick="AddMachine()">
+                                    <i class="bi bi-plus-circle"></i>
+                                    @TranslationService.Trans("add")
+                                </button>
+                                <a class="btn btn-sm btn-secondary me-2" id="DownloadData">
+                                    <i class="bi bi-download"></i>
+                                    @TranslationService.Trans("Download")
+                                </a>
+                                <a class="btn btn-sm btn-light" href="~/Manual/Manual_Setting.xlsx">
+                                    <i class="bi bi-question-circle"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="ResultArea">
+                                @if (Model.Data == null)
+                                {
+                                    <h5 class="m-3">No data available.</h5>
+                                }
+                                else
+                                {
+                                    <partial name="Master/Machine/_Result" model="@Model" />
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @* <partial name="ProdPlan/Setting/_Edit" /> *@
+            <Partial name="_LoadingPartial" />
+            <partial name="Master/Machine/__Delete" />
+            @* <partial name="ProdPlan/Setting/__Add" model="@Model"/> *@
+            <div id="modalArea">
+            </div>
+        </div>
+    </div>
+
+}
+catch (Exception ex)
+{
+    string t = ex.Message;
+}
+
+@section Scripts {
+    <link href="~/css/pecss.css" rel="stylesheet" />
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+         
+        
+
+        // Click Edit
+        function editItem(id) {
+            //alert(id);
+            $.ajax({
+                url: '@Url.Action("MachineEdit")',
+                type: 'Get',
+                data: { machineId: id },
+                success: function (html) {
+                    $('#modalArea').html(html);
+                    $('#editModal').modal('show');
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the edit form.');
+                }
+            });
+        }
+        function Edit() {
+            if($('#fEdit').valid()){
+                var data = $('#fEdit').serialize();
+                $.ajax({
+                    url: '@Url.Action("MachineEdit")',
+                    type: 'Post',
+                    data: data,
+                    success: function (html) {
+                        $('#editModal').modal('hide');
+                        $('#ResultArea').html(html);
+                        //Get error message if existed
+                        var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                        if (errorMsg) {
+                            toastr.error(errorMsg, "Error");
+                        }
+                        else{
+                            toastr.success('Edit successfully !','Success')
+                        }
+                    },
+                    error: function () {
+                        toastr.error('An error occurred while loading the edit form.');
+                    }
+
+                });
+            }
+            else{
+                toastr.error("Please fill all fields.","Error");
+                return;
+            }
+        }
+
+        //------------------ ADD ------------------
+        // Click Add Use off before on to prevent double click
+        function AddMachine(){
+            //alert('Hi there!');
+            $.ajax({
+                url: '@Url.Action("MachineAdd")',
+                type: 'Get',
+                success: function (html) {
+                    $('#modalArea').html(html);
+                    $('#addModal').modal('show');
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the add form.');
+                }
+            });
+        }
+        function Add() {
+            if($('#fAdd').valid()){
+                var data = $('#fAdd').serialize();
+                $.ajax({
+                    url: '@Url.Action("MachineAdd")',
+                    type: 'Post',
+                    data: data,
+                    success: function (html) {
+                        $('#addModal').modal('hide');
+                        $('#ResultArea').html(html);
+                        
+                        //Get error message if existed
+                        var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                        if (errorMsg) {
+                            toastr.error(errorMsg, "Error");
+                        }
+                        else
+                        toastr.success('Add successfully !','Success')
+                    },
+                    error: function () {
+                        toastr.error('An error occurred while loading the edit form.');
+                    }
+                });
+            }
+            else{
+                toastr.error("Please fill all fields.","Error");
+                return;
+            }           
+        }
+        
+        
+        // DELETE
+        function deleteItem(id) {
+            $('#deleteId').val(id);
+            $('#deleteModal').modal('show');
+        }
+
+        function Delete() {
+            let index = $('#deleteId').val();
+            $.ajax({
+                url: '@Url.Action("MachineDelete")',
+                type: 'Post',
+                data: {machineId: index},
+                success: function (html) {
+                    $('#ResultArea').html(html);
+                    $('#deleteModal').modal('hide');
+                    //Get error message if existed
+                    var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                    if (errorMsg) {
+                        toastr.error(errorMsg, "Error");
+                    }
+                    else{
+                        toastr.success('Delete successfully !','Success')
+                    }
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the edit form.');
+                }
+            });            
+        }
+
+        //Download
+        $('#DownloadData').on('click', function () {
+            const headers = [];
+            $('table thead .header-text').each(function () {
+                //alert($(this).text().trim());
+                headers.push($(this).text().trim());
+            });
+
+            const rows = [];
+            $('table tbody tr:visible').each(function () {
+                const rowData = [];
+                $(this).find('td.body-text').each(function () {
+                    rowData.push($(this).text().trim());
+                });
+                rows.push(rowData);
+            });
+
+            const payload = { headers: headers, rows: rows };
+
+            $.ajax({
+                url: '@Url.Action("DownloadWeb")',
+                type: 'POST',
+                data: JSON.stringify(payload),
+                contentType: 'application/json',
+                xhrFields: { responseType: 'blob' }, // important to download file'
+                success: function (data) {
+                const blob = new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                //a.download = "FilteredData.xlsx";
+
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                const fileName = `MachineMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            }
+            });
+        });
+
+        // Quick Search
+        function QuickSearch(){
+            var query = $('#quickSearch').val().toUpperCase();
+            $('#mytable tbody tr').each(function(){
+                var row = $(this);
+                row.find('td').each(function(){
+                    var tdText = $(this).text().toUpperCase();
+                    if(tdText.indexOf(query) > -1){
+                        row.show(); return false;
+                    }
+                    else{
+                        row.hide();
+                    }
+                });
+            });
+        }
+
+    </script>
+
+}

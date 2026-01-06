@@ -23,24 +23,24 @@
                     <div class="card-body">
                         <form asp-action="Edit" method="post">
                             @Html.AntiForgeryToken()
-                            <input type="hidden" asp-for="@Model.Dictionary.Id" />
-                            <div class="form-group">
-                                <label asp-for="@Model.Dictionary.Key">@TranslationService.GetTranslation("Key", languageCode)</label>
-                                <input asp-for="@Model.Dictionary.Key" class="form-control" />
-                                <span asp-validation-for="@Model.Dictionary.Key" class="text-danger"></span>
+                            <input type="hidden" asp-for="Dictionary.Id" />
+                            <div class="form-group mb-3">
+                                <label asp-for="Dictionary.Key">@TranslationService.GetTranslation("Key", languageCode)</label>
+                                <input asp-for="Dictionary.Key" class="form-control" />
+                                <span asp-validation-for="Dictionary.Key" class="text-danger"></span>
                             </div>
-                            <div class="form-group">
-                                <label asp-for="@Model.Dictionary.LangId">@TranslationService.GetTranslation("Language", languageCode)</label>
-                                <select asp-for="@Model.Dictionary.LangId" class="form-select" asp-items="Model.LanguageSL"></select>
-                                <span asp-validation-for="@Model.Dictionary.LangId" class="text-danger"></span>
+                            <div class="form-group mb-3">
+                                <label asp-for="Dictionary.LangId">@TranslationService.GetTranslation("Language", languageCode)</label>
+                                <select asp-for="Dictionary.LangId" class="form-select" asp-items="Model.LanguageSL"></select>
+                                <span asp-validation-for="Dictionary.LangId" class="text-danger"></span>
                             </div>
-                            <div class="form-group">
-                                <label asp-for="@Model.Dictionary.Value">@TranslationService.GetTranslation("Value", languageCode)</label>
-                                <input asp-for="@Model.Dictionary.Value" class="form-control" />
-                                <span asp-validation-for="@Model.Dictionary.Value" class="text-danger"></span>
+                            <div class="form-group mb-3">
+                                <label asp-for="Dictionary.Value">@TranslationService.GetTranslation("Value", languageCode)</label>
+                                <input asp-for="Dictionary.Value" class="form-control" />
+                                <span asp-validation-for="Dictionary.Value" class="text-danger"></span>
                             </div>
-                            <button type="submit" class="btn btn-primary">@TranslationService.GetTranslation("Save", languageCode)</button>
-                            <a href="@Url.Action("Index", "Translation")" class="btn btn-secondary">@TranslationService.GetTranslation("Cancel", languageCode)</a>
+                            <button type="submit" class="btn btn-primary btn-sm">@TranslationService.GetTranslation("Save", languageCode)</button>
+                            <a href="@Url.Action("Index", "Translation")" class="btn btn-secondary btn-sm">@TranslationService.GetTranslation("Cancel", languageCode)</a>
                         </form>
                     </div>
                 </div>

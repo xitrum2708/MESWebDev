@@ -804,7 +804,6 @@ namespace MESWebDev.Services
                             {
                                 decimal t1 = CommonFormat.GetValueOrDefault<decimal>(reader, colMap, "Time01", 0m);
                                 decimal t2 = CommonFormat.GetValueOrDefault<decimal>(reader, colMap, "Time02", 0m);
-
                                 decimal t3 = CommonFormat.GetValueOrDefault<decimal>(reader, colMap, "Time03", 0m);
                                 decimal t4 = CommonFormat.GetValueOrDefault<decimal>(reader, colMap, "Time04", 0m);
                                 decimal t5 = CommonFormat.GetValueOrDefault<decimal>(reader, colMap, "Time05", 0m);

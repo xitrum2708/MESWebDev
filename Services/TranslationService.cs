@@ -1,6 +1,7 @@
 ﻿using MESWebDev.Data;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
+using System.Globalization;
 
 namespace MESWebDev.Services
 {
@@ -32,7 +33,7 @@ namespace MESWebDev.Services
 
                 translations = _context.Master_Language_Dic
                     .Where(t => t.LangId == languageId)
-                    .ToDictionary(t => t.Key, t => t.Value);
+                    .ToDictionary(t => t.Key.ToUpper(), t => t.Value);
 
                 var cts = new CancellationTokenSource();
                 // Cấu hình tùy chọn cache
@@ -62,7 +63,61 @@ namespace MESWebDev.Services
             }
 
             // Lấy chuỗi dịch từ dictionary trong cache
-            return translations.TryGetValue(key, out var value) ? value : key;
+            return translations.TryGetValue(key.ToUpper(), out var value) ? value : key;
+        }
+
+        public string Trans(string key)
+        {
+            string languageCode = "en"; // Mặc định là tiếng Anh
+            //get current language from session or other source
+            languageCode = CultureInfo.CurrentUICulture.Name;
+            
+
+            // Tạo key cache duy nhất cho từng ngôn ngữ
+            var cacheKey = $"{CacheKeyPrefix}{languageCode}";
+           // _cache.Remove(cacheKey);
+            // Kiểm tra xem dữ liệu đã có trong cache chưa
+            if (!_cache.TryGetValue(cacheKey, out Dictionary<string, string> translations))
+            {
+                // Nếu không có trong cache, lấy từ CSDL
+                var languageId = _context.Master_Language
+                    .Where(l => l.Culture == languageCode)
+                    .Select(l => l.Id)
+                    .FirstOrDefault();
+
+                translations = _context.Master_Language_Dic
+                    .Where(t => t.LangId == languageId)
+                    .ToDictionary(t => t.Key.ToUpper(), t => t.Value);
+
+                var cts = new CancellationTokenSource();
+                // Cấu hình tùy chọn cache
+                var cacheEntryOptions = new MemoryCacheEntryOptions
+                {
+                    // Thời gian sống tuyệt đối: 30 phút
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
+                    // Thời gian sống trượt: Nếu không truy cập trong 10 phút, xóa
+                    SlidingExpiration = TimeSpan.FromMinutes(10),
+                    // Kích thước của mục cache (dùng cho SizeLimit)
+                    Size = translations.Count,
+                    // Ưu tiên: Low (có thể bị xóa sớm nếu bộ nhớ đầy)
+                    Priority = CacheItemPriority.Low
+                }.AddExpirationToken(new CancellationChangeToken(cts.Token));
+
+                // Lưu CancellationTokenSource vào cache với MemoryCacheEntryOptions
+                var ctsCacheOptions = new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
+                    SlidingExpiration = TimeSpan.FromMinutes(10),
+                    Size = 1, // Đặt Size cho CancellationTokenSource
+                    Priority = CacheItemPriority.Low
+                };
+
+                _cache.Set($"{cacheKey}_cts", cts, ctsCacheOptions); // Lưu CancellationTokenSource vào cache
+                _cache.Set(cacheKey, translations, cacheEntryOptions); // Lưu translations
+            }
+
+            // Lấy chuỗi dịch từ dictionary trong cache
+            return translations.TryGetValue(key.ToUpper(), out var value) ? value : key;
         }
 
         public void ClearCache(string languageCode)

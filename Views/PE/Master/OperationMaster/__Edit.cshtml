@@ -15,9 +15,9 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body bg-warning">
+                <div class="modal-body bg-warning bg-opacity-25">
 
-                <input type="hidden" asp-for="@Model.operation.Id"  />
+                <input type="hidden" asp-for="@Model.operation.Id" />
                 <div class="row g-2">
                     <div class="col-4">Operation Name</div>
                     <div class="col-8"><input type="text" class="form-control" asp-for="@Model.operation.Name" required /></div>

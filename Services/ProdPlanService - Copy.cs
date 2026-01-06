@@ -3,6 +3,9 @@ using ExcelDataReader;
 using MESWebDev.Common;
 using MESWebDev.Data;
 using MESWebDev.Models.ProdPlan;
+using MESWebDev.Models.ProdPlan.PC;
+using MESWebDev.Models.Setting;
+using MESWebDev.Services.IService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using System.Data;
@@ -11,7 +14,7 @@ using System.Text.RegularExpressions;
 
 namespace MESWebDev.Services
 {
-    public class ProdPlanService2 : IProdPlanService
+    public class ProdPlanService2
     {
         private readonly AppDbContext _con;
         private readonly IMapper _mapper;
@@ -1014,6 +1017,41 @@ namespace MESWebDev.Services
             if (data.Any())
                 dic = await data.ToDictionaryAsync(i => i.name, i => (object)i.value);
             return dic;
+        }
+
+        public Task<DataTable> ProjectSettingList(RequestDTO _request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> ProjectSettingAdd(ProjectSettingModel psModel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> ProjectSettingEdit(ProjectSettingModel psModel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<DataTable> ProjectSettingList(Dictionary<string, object> dic)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> ProjectSettingDelete(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ProjectSettingModel> ProjectSettingDetail(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> ProjectSettingValue(string property)
+        {
+            throw new NotImplementedException();
         }
     }
 }

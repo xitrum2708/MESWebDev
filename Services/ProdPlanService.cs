@@ -1,12 +1,19 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Vml;
 using ExcelDataReader;
 using MESWebDev.Common;
 using MESWebDev.Data;
 using MESWebDev.Models.ProdPlan;
+using MESWebDev.Models.ProdPlan.PC;
+using MESWebDev.Models.ProdPlan.SMT;
+using MESWebDev.Models.Setting;
+using MESWebDev.Services.IService;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using System.Data;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -17,12 +24,20 @@ namespace MESWebDev.Services
         private readonly AppDbContext _con;
         private readonly IMapper _mapper;
         private readonly Procedure _proc;
-        public ProdPlanService(AppDbContext con, IMapper mapper)
+        private readonly IHttpContextAccessor _hca;
+        private readonly ITranslationService _trans;
+
+        public ProdPlanService(AppDbContext con, IMapper mapper, IHttpContextAccessor hca, ITranslationService translation)
         {
             _con = con;
             _mapper = mapper;
             _proc = new Procedure(_con);
+            _hca = hca;
+            _trans = translation;
         }
+
+
+        #region PC Production Plan
         public async Task<ProdPlanViewModel> GetDataFromUploadFile(RequestDTO _request)
         {
             ProdPlanViewModel pp = new();
@@ -40,7 +55,7 @@ namespace MESWebDev.Services
 
                 // GET Holiday Data
                 pp.holidays = await GetHoliday(new());// GetHolidayData(files[2]);
-                pp = await ProdPlanViewModel(pp);                
+                pp = await ProdPlanViewModel(pp);
             }
             catch (Exception ex)
             {
@@ -313,7 +328,7 @@ namespace MESWebDev.Services
             {
                 if ((ppv.start_hour ?? 0) == 8 && is_other_model)
                 {
-                    ppm.Add(CreateProdPlan(p, start_run, endOfWorking, working_hour, ppv.line, start_sch_date, Math.Min(p.capa_qty,p.bal_qty)));
+                    ppm.Add(CreateProdPlan(p, start_run, endOfWorking, working_hour, ppv.line, start_sch_date, Math.Min(p.capa_qty, p.bal_qty)));
                     ppv.sch_dt = start_run.Date.AddDays(1);
                     ppv.start_hour = DefaultStartHour;
                     ppv.prodPlanModel.bal_qty -= p.qty;
@@ -760,8 +775,8 @@ namespace MESWebDev.Services
 
         public async Task<List<string>> GetHolidays(RequestDTO _request = null)
         {
-            var holidays = _con.PP_Calendar_tbl.Where(i => i.is_holiday == true 
-                                            && (_request == null || _request==new RequestDTO() ||(i.date.Year == _request.year && i.date.Month == _request.month)));
+            var holidays = _con.PP_Calendar_tbl.Where(i => i.is_holiday == true
+                                            && (_request == null || _request == new RequestDTO() || (i.date.Year == _request.year && i.date.Month == _request.month)));
 
             if (holidays.Any())
                 return holidays.Select(i => i.date.ToString("yyyy-MM-dd")).ToList();
@@ -808,18 +823,18 @@ namespace MESWebDev.Services
                             }).ToList();
                         //ppv.events = ppv.events.OrderBy(i => i.line).ThenBy(i => i.id).ToList();
                     }
-                    Dictionary<string,object> para = await GetParas();
+                    Dictionary<string, object> para = await GetParas();
                     // model_change_time
-                    if(para.TryGetValue("model_change_time", out var value))
+                    if (para.TryGetValue("model_change_time", out var value))
                     {
                         ppv.model_stransfer_time = Convert.ToInt32(value);
-                    }         
+                    }
                     // model_fisrt_run_percent
-                    if(para.TryGetValue("model_fisrt_run_percent", out var value2))
+                    if (para.TryGetValue("model_fisrt_run_percent", out var value2))
                     {
                         ppv.new_model_rate = Convert.ToInt32(value2);
                     }
-                    
+
                 }
                 else
                 {
@@ -901,7 +916,7 @@ namespace MESWebDev.Services
                     return msg;
                 }
                 await addHolidays(ppv.holidays);
-                
+
             }
             catch (Exception ex)
             {
@@ -910,17 +925,17 @@ namespace MESWebDev.Services
             return msg;
         }
 
-        public async Task<DataSet> ExportProdPlan(Dictionary<string,object> dic)
+        public async Task<DataSet> ExportProdPlan(Dictionary<string, object> dic)
         {
             DataSet ds = new();
             DataSet dset = await _proc.Proc_GetDataset("PP_ProdPlan_Export", dic);
-            if(dset != null && dset.Tables.Count >1)
+            if (dset != null && dset.Tables.Count > 1)
             {
                 DataTable data = new();// dset.Tables[0];
                 DataTable holiday = new();// dset.Tables[1];
                 if (dset.Tables[0] != null && dset.Tables[0].Rows.Count > 0)
                 {
-                    if(dset.Tables[1].Rows.Count > 0)
+                    if (dset.Tables[1].Rows.Count > 0)
                     {
                         holiday = dset.Tables[1].Copy();
                     }
@@ -950,7 +965,7 @@ namespace MESWebDev.Services
                     }
 
                 }
-            } 
+            }
             return ds;
         }
 
@@ -1007,7 +1022,7 @@ namespace MESWebDev.Services
                 }
                 await _con.SaveChangesAsync();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 msg = ex.Message;
             }
@@ -1028,6 +1043,285 @@ namespace MESWebDev.Services
             if (data.Any())
                 dic = await data.ToDictionaryAsync(i => i.name, i => (object)i.value);
             return dic;
-        }      
+        }
+
+        #endregion
+
+        #region SMT Production Plan
+
+
+        #endregion
+
+        #region Master
+
+        //-------- Machine --------//
+        #region ------------- Machine --------------
+        public async Task<DataTable> MachineList(Dictionary<string, object> dic)
+        {
+            //spweb_UV_SMT_Master_Machine
+            DataTable dt = await _proc.Proc_GetDatatable("spweb_UV_SMT_Master_Machine", dic);
+            return dt;
+        }
+
+        public async Task<SMTMachineModel> MachineDetail(string machineId)
+        {
+            var data = await _con.UV_SMT_Mst_Machine.FindAsync(machineId);
+            return data ?? new();
+        }
+
+        public async Task<string> MachineAdd(SMTMachineModel machine)
+        {
+            var data = await _con.UV_SMT_Mst_Machine.FindAsync(machine.MachineCode);
+            if (data == null)
+            {
+                await _con.UV_SMT_Mst_Machine.AddAsync(machine);
+                await _con.SaveChangesAsync();
+                return string.Empty;
+            }
+            return machine.MachineCode;
+        }
+
+        public async Task<string> MachineEdit(SMTMachineModel machine)
+        {
+            var data = await _con.UV_SMT_Mst_Machine.FindAsync(machine.MachineCode);
+            if (data == null) return machine.MachineCode;
+
+            data.MachineName = machine.MachineName;
+            data.Remark = machine.Remark;
+            data.IsActive = machine.IsActive;
+            await _con.SaveChangesAsync();
+            return string.Empty;
+        }
+
+        public async Task<string> MachineDelete(string machineId)
+        {
+            var data = await _con.UV_SMT_Mst_Machine.FindAsync(machineId);
+            if (data == null) return machineId;
+
+            _con.Remove(data);
+            await _con.SaveChangesAsync();
+            return string.Empty;
+        }
+        #endregion
+
+        //-------- Line --------//
+        #region ------------ Line --------------
+        public async Task<DataTable> LineList(Dictionary<string, object> dic)
+        {
+            DataTable dt = await _proc.Proc_GetDatatable("spweb_UV_SMT_Master_Line", dic);
+            return dt;
+        }
+
+        public async Task<SMTLineModel> LineDetail(string lineId)
+        {
+            var data = await _con.UV_SMT_Mst_Line.FindAsync(lineId);
+            return data ?? new();
+        }
+
+        public async Task<string> LineAdd(SMTLineModel line)
+        {
+            var data = await _con.UV_SMT_Mst_Line.FindAsync(line.LineCode);
+            if (data == null)
+            {
+                await _con.UV_SMT_Mst_Line.AddAsync(line);
+                await _con.SaveChangesAsync();
+                return string.Empty;
+            }
+            return line.LineCode;
+        }
+
+        public async Task<string> LineEdit(SMTLineModel line)
+        {
+            var data = await _con.UV_SMT_Mst_Line.FindAsync(line.LineCode);
+            if (data == null) return line.LineCode;
+            data.LineName = line.LineName;
+            data.DisplayOrder = line.DisplayOrder;
+            data.DisplayColor = line.DisplayColor;
+            data.Remark = line.Remark;
+            data.IsActive = line.IsActive;
+            await _con.SaveChangesAsync();
+            return string.Empty;
+        }
+
+        public async Task<string> LineDelete(string lineId)
+        {
+            var data = await _con.UV_SMT_Mst_Line.FindAsync(lineId);
+            if (data == null) return lineId;
+            _con.UV_SMT_Mst_Line.Remove(data);
+            await _con.SaveChangesAsync();
+            return string.Empty;
+        }
+        #endregion
+
+        //-------- Machine Condition --------//
+        #region -------------- Machine Condition ---------------
+        public async Task<DataTable> MachineConditionList(Dictionary<string, object> dic)
+        {
+            DataTable dt = await _proc.Proc_GetDatatable("spweb_UV_SMT_Master_MachineCondition", dic);
+            return dt;
+        }
+
+        public async Task<SMTMachineConditionModel> MachineConditionDetail(int Id)
+        {
+            var data = await _con.UV_SMT_Mst_MachineCondition.Include(i => i.Machine).FirstOrDefaultAsync(i=>i.Id == Id);
+            return data ?? new();
+        }
+
+        public async Task<string> MachineConditionAdd(SMTMachineConditionModel mc)
+        {
+            var data = await _con.UV_SMT_Mst_MachineCondition
+                                    .FirstOrDefaultAsync(i=>i.MachineCode == mc.MachineCode && i.ChipMin == mc.ChipMin && i.ChipMax == mc.ChipMax);
+            try
+            {
+                if (data != null)
+                {
+                    _con.UV_SMT_Mst_MachineCondition.Remove(data);
+                    await _con.SaveChangesAsync();
+                }
+                await _con.UV_SMT_Mst_MachineCondition.AddAsync(mc);
+                await _con.SaveChangesAsync();
+                return string.Empty;
+            }
+            catch (Exception ex) {
+                return ex.Message;
+            }
+        }
+
+        public async Task<string> MachineConditionEdit(SMTMachineConditionModel mc)
+        {
+            var data = await _con.UV_SMT_Mst_MachineCondition.FindAsync(mc.Id);
+
+            if (data == null) return $"{mc.Id.ToString()} {_trans.Trans(SD.ErrorMsg.NotExisted)}";
+
+            var check = _con.UV_SMT_Mst_MachineCondition
+                                    .Where(i => i.MachineCode == mc.MachineCode && i.ChipMin == mc.ChipMin
+                                                                                && i.ChipMax == mc.ChipMax && i.Id != mc.Id);
+            if (check.Any()) return _trans.Trans(SD.ErrorMsg.Duplicated);
+            data.ChipMin = mc.ChipMin;
+            data.ChipMax = mc.ChipMax;
+            data.Remark = mc.Remark;
+            data.Priority = mc.Priority;            
+
+            await _con.SaveChangesAsync();
+            return string.Empty;
+        }
+
+        public async Task<string> MachineConditionDelete(int Id)
+        {
+            var data = await _con.UV_SMT_Mst_MachineCondition.FindAsync(Id);
+            if (data == null) return $"{Id.ToString()} {_trans.Trans(SD.ErrorMsg.NotExisted)}";
+            _con.UV_SMT_Mst_MachineCondition.Remove(data);
+            await _con.SaveChangesAsync();
+            return string.Empty;
+        }
+
+        #endregion
+
+        //-------- Line Machine --------//
+        #region -------------- Line Machine ---------------
+
+        public async Task<DataTable> LineMachineList(Dictionary<string, object> dic)
+        {
+            DataTable dt = await _proc.Proc_GetDatatable("spweb_UV_SMT_Master_LineMachine", dic);
+            return dt;
+        }
+    
+        public async Task<SMTLineMachineDataModel> LineMachineDetail(int Id)
+        {
+            var data = await _con.UV_SMT_LineMachineData.Include(i=>i.Line).Include(i => i.Machine).FirstOrDefaultAsync(i => i.Id == Id);
+            return data ?? new();
+        }
+
+        public async Task<string> LineMachineAdd(SMTLineMachineDataModel line)
+        {
+            var data = await _con.UV_SMT_LineMachineData.FirstOrDefaultAsync(i=> i.LineCode == line.LineCode && i.MachineCode == line.MachineCode);
+            if (data == null)
+            {
+                await _con.UV_SMT_LineMachineData.AddAsync(line);
+                await _con.SaveChangesAsync();
+                return string.Empty;
+            }
+            return $"Line {line.LineCode} - {line.MachineCode} {SD.ErrorMsg.Existed}";
+        }
+
+        public async Task<string> LineMachineEdit(SMTLineMachineDataModel line)
+        {
+            var check = await _con.UV_SMT_LineMachineData.FirstOrDefaultAsync(i => i.LineCode == line.LineCode && i.MachineCode == line.MachineCode && i.Id != line.Id);
+
+            if (check == null) return $"Line {line.LineCode} - {line.MachineCode} {_trans.Trans(SD.ErrorMsg.Existed)}";
+            var data = await _con.UV_SMT_LineMachineData.FindAsync(line.Id);
+            if (data == null) return $"ID: {line.Id.ToString()} {_trans.Trans(SD.ErrorMsg.Existed)}";
+
+            data.LineCode = line.LineCode;
+            data.MachineCode = line.MachineCode;
+            data.Remark = line.Remark;
+            data.UsageDate = line.UsageDate;
+            data.UsagePercent = line.UsagePercent;
+
+            await _con.SaveChangesAsync();
+            return string.Empty;
+        }
+
+        public async Task<string> LineMachineDelete(int Id)
+        {
+            var data = await _con.UV_SMT_LineMachineData.FindAsync(Id);
+            if (data == null) return $"{Id.ToString()} {_trans.Trans(SD.ErrorMsg.NotExisted)}";
+            _con.UV_SMT_LineMachineData.Remove(data);
+            await _con.SaveChangesAsync();
+            return string.Empty;
+        }
+
+        #endregion
+
+        //-------- Shift Master --------//
+        #region -------------- Shift Master ---------------
+        public async Task<DataTable> ShiftList(Dictionary<string, object> dic)
+        {
+            DataTable dt = await _proc.Proc_GetDatatable("spweb_UV_SMT_Master_Shift", dic);
+            return dt;
+        }
+
+        public async Task<SMTShiftModel> ShiftDetail(string shiftCode)
+        {
+            var data = await _con.UV_SMT_Mst_Shift.FindAsync(shiftCode);
+            return data ?? new();
+        }
+
+        public async Task<string> ShiftAdd(SMTShiftModel shift)
+        {
+            var check = await _con.UV_SMT_Mst_Shift.FindAsync(shift.ShiftCode); 
+            if(check == null)
+            {
+                await _con.UV_SMT_Mst_Shift.AddAsync(shift);
+                await _con.SaveChangesAsync();
+                return string.Empty;
+            }
+            return $"{shift.ShiftCode} {_trans.Trans(SD.ErrorMsg.Existed)}";
+        }
+
+        public async Task<string> ShiftEdit(SMTShiftModel shift)
+        {
+            var data = await _con.UV_SMT_Mst_Shift.FindAsync(shift.ShiftCode);
+            if (data == null) return $"{shift.ShiftCode} {_trans.Trans(SD.ErrorMsg.NotExisted)}";
+            data.ShiftName = shift.ShiftName;
+            data.Priority = shift.Priority;
+            data.Remark = shift.Remark;
+            data.Pattern = shift.Pattern;
+            return string.Empty;
+        }
+
+        public async Task<string> ShiftDelete(string shiftCode)
+        {
+            var data = await _con.UV_SMT_Mst_Shift.FindAsync(shiftCode);
+            if (data == null) return $"{shiftCode} {_trans.Trans(SD.ErrorMsg.NotExisted)}";
+            _con.UV_SMT_Mst_Shift.Remove(data);
+            await _con.SaveChangesAsync();
+            return string.Empty;
+        }
+
+        #endregion
+
+        #endregion
+
     }
 }

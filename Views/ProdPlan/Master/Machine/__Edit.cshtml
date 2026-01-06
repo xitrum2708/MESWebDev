@@ -1,0 +1,52 @@
+﻿@using MESWebDev.Models.Setting
+@model SMTMachineModel
+@{
+    int i = 0;
+}
+
+<form id="fEdit" method="post">
+    @Html.AntiForgeryToken()
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">@* " modal-lg"> *@
+            <div class="modal-content">
+                <div class="modal-header table-success">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil-square"></i>
+                        @TranslationService.Trans("Edit")
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-warning bg-opacity-25">
+
+                    <input type="hidden" asp-for="@Model.MachineCode" />
+                    <div class="row g-2">
+                        <div class="col-4">@TranslationService.Trans("MachineCode")</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="@Model.MachineCode" disabled /></div>
+
+                        <div class="col-4">@TranslationService.Trans("MachineName")</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="@Model.MachineName" /></div>
+
+                        <div class="col-4">@TranslationService.Trans("Remark")</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="@Model.Remark" /></div>
+
+                        <div class="col-4">@TranslationService.Trans("IsActive")</div>
+                        <div class="col-8"><input type="checkbox" class="form-check-input p-2" asp-for="@Model.IsActive" /></div>                      
+                    </div>
+                
+                </div>
+                <div class="modal-footer">
+                    <a id="btnEdit" onclick="Edit()" class="btn btn-sm btn-info">
+                        <i class="bi bi-floppy"></i>
+                        @TranslationService.Trans("save")
+                    </a>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa-regular fa-circle-xmark"></i>
+                        @TranslationService.Trans("close")
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</form>

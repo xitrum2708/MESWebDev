@@ -65,7 +65,7 @@ namespace MESWebDev.Controllers
             if (user == null)
             {
                 ViewBag.Error = "Invalid credentials";
-                ViewBag.Languages = _context.Languages.Where(l => l.IsActive).ToList();
+                ViewBag.Languages = _context.Master_Language.Where(l => l.IsActive).ToList();
                 ViewBag.SelectedLanguage = languageCode;
                 return View();
             }
@@ -92,12 +92,12 @@ namespace MESWebDev.Controllers
             // 🔥 Save Menu Cache vào Session
             await SaveMenuToSession(user.Username);
             // Cập nhật ngôn ngữ mặc định của user (nếu cần)
-            var userEntity = _context.Users.Find(user.Username);
+            var userEntity = _context.Auth_Master_User.Find(user.Username);
             if (userEntity != null)
             {
-                userEntity.LanguageId = _context.Languages
-                    .Where(l => l.Code == languageCode)
-                    .Select(l => (int?)l.LanguageId)
+                userEntity.LangId = _context.Master_Language
+                    .Where(l => l.Culture == languageCode)
+                    .Select(l => (int?)l.Id)
                     .FirstOrDefault();
                 _context.SaveChanges();
             }

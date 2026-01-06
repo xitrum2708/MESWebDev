@@ -81,6 +81,8 @@ builder.Services.AddScoped<IPEService, PEService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILanguageService, LanguageService>();
 
+builder.Services.AddScoped<ISettingService, SettingService>();
+
 // Logging is already configured in ASP.NET Core by default, but you can customize it
 builder.Services.AddLogging(logging =>
 {
@@ -93,9 +95,9 @@ builder.Services.AddLogging(logging =>
 builder.Services.AddAuthentication("CookieAuth")
     .AddCookie("CookieAuth", options =>
     {
-        options.LoginPath = "/Account/Login"; // Redirect unauthenticated users to /Account/Login
+        options.LoginPath = "/AccountNew/Login"; // Redirect unauthenticated users to /Account/Login
         options.AccessDeniedPath = "/Account/AccessDenied"; // Optional: Redirect for access denied
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(SD.TimeOut);
         options.SlidingExpiration = true;
     });
 

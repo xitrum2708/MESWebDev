@@ -6,6 +6,9 @@ using MESWebDev.Models.Master;
 using MESWebDev.Models.Master.DTO;
 using MESWebDev.Services.IService;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using System.Globalization;
 namespace MESWebDev.Services
 {
     public class LanguageService : ILanguageService
@@ -15,12 +18,17 @@ namespace MESWebDev.Services
         private readonly IHttpContextAccessor _hca;
         private readonly ITranslationService _translationService;
 
-        public LanguageService(IMapper map, IHttpContextAccessor hca, AppDbContext context, ITranslationService translationService  )
+        private readonly IMemoryCache _cache;
+        private const string CacheKeyPrefix = "Translations_";
+
+        public LanguageService(IMapper map, IHttpContextAccessor hca, AppDbContext context, 
+            ITranslationService translationService, IMemoryCache  cache)
         {
             _context = context;
             _map = map;
             _hca = hca;
             _translationService = translationService;
+            _cache = cache;
         }
 
         #region ------------------- LANGUAGE  --------------------
@@ -103,6 +111,9 @@ namespace MESWebDev.Services
             dicModel.CreatedDt = DateTime.Now;
             await _context.Master_Language_Dic.AddAsync(dicModel);
             await _context.SaveChangesAsync();
+
+            //delete catche
+            _cache.Remove($"{CacheKeyPrefix}{CultureInfo.CurrentCulture.Name}");
             return string.Empty;
         }
 
@@ -124,7 +135,7 @@ namespace MESWebDev.Services
 
         public async Task<List<DictionaryDTO>> GetDictionaryAsync(DictionaryDTO? dic = null)
         {
-            var query = _context.Master_Language_Dic.AsQueryable();
+            var query = _context.Master_Language_Dic.Include(i => i.Language).AsQueryable();
             if(dic != null)
             {
                 if (dic.LangId != 0)
@@ -167,6 +178,9 @@ namespace MESWebDev.Services
             dicModel.UpdatedBy = _hca.HttpContext.User.Identity.Name;
             dicModel.UpdatedDt = DateTime.Now;
             _context.Master_Language_Dic.Update(dicModel);
+
+            //delete catche
+            _cache.Remove($"{CacheKeyPrefix}{CultureInfo.CurrentCulture.Name}");
             await _context.SaveChangesAsync();
 
 

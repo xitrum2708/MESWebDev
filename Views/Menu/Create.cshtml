@@ -7,19 +7,6 @@
 }
 @section ContentHeader {
     @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
-@* <div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">        
-            <div class="col-sm-12">
-                <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">Home</a></li>
-                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Menu")">Menu Management</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Create Menu</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div> *@
 }
 
 <div class="app-content">

@@ -58,7 +58,7 @@ namespace MESWebDev.Controllers
             {
                 return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError(string.Empty, msg);
+            ModelState.AddModelError("Dictionary.Key", msg);
             model.LanguageSL = await _langService.GetLangSL();
 
             return View(model);
@@ -83,7 +83,7 @@ namespace MESWebDev.Controllers
             {
                 return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError(string.Empty, msg);
+            ModelState.AddModelError("Dictionary.Key", msg);
             mvm.LanguageSL = await _langService.GetLangSL();
 
             return View(mvm);

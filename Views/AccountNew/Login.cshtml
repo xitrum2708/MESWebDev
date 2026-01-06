@@ -19,7 +19,7 @@
         <select name="languageCode" class="form-select fs-6 mb-3" onchange="this.form.submit()">
             @foreach (var lang in ViewBag.Languages)
             {
-                @: <option value="@lang.Code" @(ViewBag.SelectedLanguage == lang.Code ? "selected" : "")>@lang.Name</option>
+                @: <option value="@lang.Culture" @(ViewBag.SelectedLanguage == lang.Culture ? "selected" : "")>@lang.Name</option>
             }
         </select>
         <div class="form-floating mb-3">

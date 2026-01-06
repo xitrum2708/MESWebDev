@@ -2039,7 +2039,7 @@ namespace MESWebDev.Migrations
                     b.ToTable("UVMES_Permissions", (string)null);
                 });
 
-            modelBuilder.Entity("MESWebDev.Models.ProdPlan.CalendarModel", b =>
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.PC.CalendarModel", b =>
                 {
                     b.Property<DateTime>("date")
                         .HasColumnType("datetime2");
@@ -2055,7 +2055,7 @@ namespace MESWebDev.Migrations
                     b.ToTable("PP_Calendar_tbl");
                 });
 
-            modelBuilder.Entity("MESWebDev.Models.ProdPlan.ProdPlanModel", b =>
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.PC.ProdPlanModel", b =>
                 {
                     b.Property<int>("id")
                         .ValueGeneratedOnAdd()
@@ -2125,7 +2125,7 @@ namespace MESWebDev.Migrations
                     b.ToTable("PP_ProdPlan_tbl");
                 });
 
-            modelBuilder.Entity("MESWebDev.Models.ProdPlan.ProdPlanParaModel", b =>
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.PC.ProdPlanParaModel", b =>
                 {
                     b.Property<string>("name")
                         .HasColumnType("nvarchar(450)");
@@ -2140,6 +2140,368 @@ namespace MESWebDev.Migrations
                     b.HasKey("name");
 
                     b.ToTable("PP_Para_tbl");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTLineCalendarModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LineCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ShiftCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("WeekDayOrDate")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShiftCode");
+
+                    b.ToTable("UV_SMT_Mst_LineCalendar");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTLineMachineDataModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LineCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("MachineCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UsageDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("UsagePercent")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LineCode");
+
+                    b.HasIndex("MachineCode");
+
+                    b.ToTable("UV_SMT_LineMachineData");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTLineModel", b =>
+                {
+                    b.Property<string>("LineCode")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("DisplayColor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LineName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("LineCode");
+
+                    b.ToTable("UV_SMT_Mst_Line");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTLotPcbModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Lotno")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PCBNo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_SMT_Lot_PCB");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTMachineConditionModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChipMax")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ChipMin")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MachineCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MachineCode");
+
+                    b.ToTable("UV_SMT_Mst_MachineCondition");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTMachineModel", b =>
+                {
+                    b.Property<string>("MachineCode")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MachineName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("MachineCode");
+
+                    b.ToTable("UV_SMT_Mst_Machine");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTPlanModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Balance")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EndDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Lotno")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Size")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_SMT_Plan");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTProdPlanModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BModel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BackgroundColor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("BalanceQty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BorderColor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ComponentLot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EndDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ExcessStock")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IssuedQty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("KeyCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LineCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LotSize")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Machine")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Market")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OldId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PcbKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PcbNo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PcbPerModel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PcbType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("StartScheduleDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TargetPerHour85")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TargetPerShift")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TimeF")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Warning")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_SMT_Prod_Plan");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTShiftModel", b =>
+                {
+                    b.Property<string>("ShiftCode")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Pattern")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ShiftName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ShiftCode");
+
+                    b.ToTable("UV_SMT_Mst_Shift");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.REPAIR.UV_REPAIRRESULT", b =>
@@ -2689,6 +3051,50 @@ namespace MESWebDev.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("UV_SPO_MASTER_ALL", (string)null);
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.Setting.ProjectSettingModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Property")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_Common_Project_Setting");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.TELSTAR.TELSTAR_ASSY_Model", b =>
@@ -3759,6 +4165,47 @@ namespace MESWebDev.Migrations
                         .IsRequired();
 
                     b.Navigation("TimeStudyDtl");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTLineCalendarModel", b =>
+                {
+                    b.HasOne("MESWebDev.Models.ProdPlan.SMT.SMTShiftModel", "Shift")
+                        .WithMany()
+                        .HasForeignKey("ShiftCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Shift");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTLineMachineDataModel", b =>
+                {
+                    b.HasOne("MESWebDev.Models.ProdPlan.SMT.SMTLineModel", "Line")
+                        .WithMany()
+                        .HasForeignKey("LineCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MESWebDev.Models.ProdPlan.SMT.SMTMachineModel", "Machine")
+                        .WithMany()
+                        .HasForeignKey("MachineCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Line");
+
+                    b.Navigation("Machine");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTMachineConditionModel", b =>
+                {
+                    b.HasOne("MESWebDev.Models.ProdPlan.SMT.SMTMachineModel", "Machine")
+                        .WithMany()
+                        .HasForeignKey("MachineCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Machine");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.RolePermission", b =>

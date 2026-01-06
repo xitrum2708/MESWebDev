@@ -75,5 +75,10 @@ namespace MESWebDev.Services
             }
             _cache.Remove(cacheKey);
         }
+
+        public string Trans(string key)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

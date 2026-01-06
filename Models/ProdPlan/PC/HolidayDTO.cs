@@ -1,4 +1,4 @@
-﻿namespace MESWebDev.Models.ProdPlan
+﻿namespace MESWebDev.Models.ProdPlan.PC
 {
     public class HolidayDTO
     {

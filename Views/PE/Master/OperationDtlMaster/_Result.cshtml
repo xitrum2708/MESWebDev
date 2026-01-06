@@ -71,9 +71,9 @@
                                 }
                                 else
                                 {
-                                    <td class="body-text  @(CommonFormat.IsNumeric(col.DataType) ? "text-end" : "text-start")">
+                                    <td class="body-text @CommonFormat.FormatCss(col.DataType,Model.FormatRazorDTO)">
                                         @{
-                                            CommonFormat.FormatCell(item, col.DataType);
+                                            CommonFormat.FormatCell(item, col.DataType, Model.FormatRazorDTO);
                                         }
                                     </td>
                                 }

@@ -3,7 +3,7 @@ using MESWebDev.Models.Master;
 using MESWebDev.Models.Master.DTO;
 using MESWebDev.Models.PE;
 using MESWebDev.Models.PE.DTO;
-using MESWebDev.Models.ProdPlan;
+using MESWebDev.Models.ProdPlan.PC;
 
 namespace MESWebDev.Common
 {

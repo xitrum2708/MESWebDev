@@ -1,0 +1,52 @@
+﻿@using MESWebDev.Models.Setting
+@model ProjectSettingModel
+@{
+    int i = 0;
+}
+<form id="fAdd" method="post">
+    <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header table-success">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i>
+                        @TranslationService.Trans("Add")
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-success bg-opacity-25">
+
+                    <div class="row g-2">
+                        <div class="row g-2">
+                            <div class="col-4">@TranslationService.Trans("property")</div>
+                            <div class="col-8"><input type="text" class="form-control" asp-for="@Model.Property" /></div>
+
+                            <div class="col-4">@TranslationService.Trans("value")</div>
+                            <div class="col-8"><input type="text" class="form-control" asp-for="@Model.Value" /></div>
+
+                            <div class="col-4">@TranslationService.Trans("category")</div>
+                            <div class="col-8"><input type="text" class="form-control" asp-for="@Model.Category" /></div>
+
+                            <div class="col-4">@TranslationService.Trans("remark")</div>
+                            <div class="col-8"><input type="text" class="form-control" asp-for="@Model.Remark" /></div>
+
+                            <div class="col-4">@TranslationService.Trans("isActive")</div>
+                            <div class="col-8"><input type="checkbox" class="form-check-input p-2" asp-for="@Model.IsActive" /></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <a id="btnAdd" onclick="Add()" class="btn btn-sm btn-info">
+                        <i class="bi bi-floppy"></i>
+                        @TranslationService.Trans("save")
+                    </a>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa-regular fa-circle-xmark"></i>
+                        @TranslationService.Trans("close")
+                    </button>
+                </div>
+        </div>
+    </div>
+</div>
+</form>
