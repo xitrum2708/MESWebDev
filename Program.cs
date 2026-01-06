@@ -92,20 +92,42 @@ builder.Services.AddLogging(logging =>
 });
 
 // Add authentication services (example using cookie authentication)
-builder.Services.AddAuthentication("CookieAuth")
-    .AddCookie("CookieAuth", options =>
-    {
-        options.LoginPath = "/AccountNew/Login"; // Redirect unauthenticated users to /Account/Login
-        options.AccessDeniedPath = "/Account/AccessDenied"; // Optional: Redirect for access denied
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(SD.TimeOut);
-        options.SlidingExpiration = true;
-    });
+//builder.Services.AddAuthentication("CookieAuth")
+//    .AddCookie("CookieAuth", options =>
+//    {
+//        options.LoginPath = "/AccountNew/Login"; // Redirect unauthenticated users to /Account/Login
+//        options.AccessDeniedPath = "/AccountNew/AccessDenied"; // Optional: Redirect for access denied
+//        options.ExpireTimeSpan = TimeSpan.FromMinutes(SD.TimeOut);
+//        options.SlidingExpiration = true;
+//    });
 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "CookieAuth";
+    options.DefaultChallengeScheme = "CookieAuth";
+})
+.AddCookie("CookieAuth", options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(SD.TimeOut);
+    options.SlidingExpiration = true;
+});
+
+//builder.Services.AddControllersWithViews(options =>
+//{
+//    var policy = new AuthorizationPolicyBuilder()
+//        .RequireAuthenticatedUser()
+//        .Build();
+//    options.Filters.Add(new AuthorizeFilter(policy));
+//    options.Filters.Add(new AuthorizeFilter(policy));
+//});
 builder.Services.AddControllersWithViews(options =>
 {
-    var policy = new AuthorizationPolicyBuilder()
+    var policy = new AuthorizationPolicyBuilder("CookieAuth")
         .RequireAuthenticatedUser()
         .Build();
+
     options.Filters.Add(new AuthorizeFilter(policy));
 });
 

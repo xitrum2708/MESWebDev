@@ -48,18 +48,17 @@ namespace MESWebDev.Controllers
             }
 
             // Truy vấn user với kiểm tra NULL
-            var user = _context.Users
+            var user = _context.Auth_Master_User
                 .Where(u => u.Username == username && u.Password == password)
                 .Select(u => new
                 {
-                    u.UserId,
                     u.Username,
                     u.Password,
                     u.Email,
-                    u.FullName,
-                    u.LanguageId,
+                    u.Fullname,
+                    u.LangId,
                     u.IsActive,
-                    u.CreatedAt
+                    u.CreatedDt
                 })
                 .FirstOrDefault();
 
@@ -73,7 +72,7 @@ namespace MESWebDev.Controllers
             // Add cookie-based authentication
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Username.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
             };
 
@@ -86,20 +85,19 @@ namespace MESWebDev.Controllers
                 ExpiresUtc = DateTime.UtcNow.AddMinutes(30)
             });
             // Lưu thông tin vào session
-            HttpContext.Session.SetInt32("UserId", user.UserId);
+            //HttpContext.Session.SetInt32("UserId", user.Username);
             HttpContext.Session.SetString("Username", user.Username);
             HttpContext.Session.SetString("LanguageCode", languageCode);
 
             // 🔥 Save Menu Cache vào Session
-            await SaveMenuToSession(user.UserId);
-
+            await SaveMenuToSession(user.Username);
             // Cập nhật ngôn ngữ mặc định của user (nếu cần)
-            var userEntity = _context.Users.Find(user.UserId);
+            var userEntity = _context.Auth_Master_User.Find(user.Username);
             if (userEntity != null)
             {
-                userEntity.LanguageId = _context.Languages
-                    .Where(l => l.Code == languageCode)
-                    .Select(l => (int?)l.LanguageId)
+                userEntity.LangId = _context.Master_Language
+                    .Where(l => l.Culture == languageCode)
+                    .Select(l => (int?)l.Id)
                     .FirstOrDefault();
                 _context.SaveChanges();
             }
@@ -107,54 +105,52 @@ namespace MESWebDev.Controllers
             return RedirectToAction("IQCDashboard", "Admin");
         }
 
-
         // --- SAVE MENU TO SESSION ---
-        private async Task SaveMenuToSession(int userId)
+        private async Task SaveMenuToSession(string username)
         {
-            var menuTree = await GetUserMenuTree(userId);
+            var menuTree = await GetUserMenuTree(username);
 
             var jsonMenu = JsonSerializer.Serialize(menuTree);
 
-            HttpContext.Session.SetString($"UserMenu_{userId}", jsonMenu);
+            HttpContext.Session.SetString($"UserMenu_{username}", jsonMenu);
         }
 
         // --- GET USER MENU TREE ---
-        private async Task<List<MenuViewModel>> GetUserMenuTree(int userId)
+        private async Task<List<MenuViewModel>> GetUserMenuTree(string Username)
         {
             var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "en";
-            var languageId = await _context.Languages
-                .Where(l => l.Code == languageCode)
-                .Select(l => l.LanguageId)
+            var languageId = await _context.Master_Language
+                .Where(l => l.Culture == languageCode)
+                .Select(l => l.Id)
                 .FirstOrDefaultAsync();
 
-            var menus = await _context.UserRoles
-                .Where(ur => ur.UserId == userId)
-                .Join(_context.RolePermissions,
+            var menus = await _context.Auth_Master_User
+                .Where(ur => ur.Username == Username)
+                .Join(_context.Auth_Master_Role,
                     ur => ur.RoleId,
                     rp => rp.RoleId,
                     (ur, rp) => rp)
-                .Join(_context.Permissions,
-                    rp => rp.PermissionId,
-                    p => p.PermissionId,
+                .Join(_context.Auth_Mapping_Role_Func_Pms,
+                    rp => rp.RoleId,
+                    p => p.RoleId,
                     (rp, p) => p)
-                .Join(_context.Menus,
-                    p => p.PermissionKey,
-                    m => m.PermissionKey,
+                .Join(_context.Auth_Master_Function,
+                    p => p.FuncId,
+                    m => m.Id,
                     (p, m) => m)
                 .Where(m => m.IsActive)
-                .OrderBy(m => m.SortOrder)
+                .OrderBy(m => m.Order)
                 .Select(m => new MenuViewModel
                 {
-                    MenuId = m.MenuId,
-                    Url = m.Url,
-                    SortOrder = m.SortOrder,
+                    MenuId = m.Id,
+                    Url = Url.Action(m.Action,m.Controller),
+                    SortOrder = m.Order,
                     ParentId = m.ParentId,
-                    Icon = m.Icon,
-                    PermissionKey = m.PermissionKey,
+                    Icon = m.IconString,
                     IsActive = m.IsActive,
-                    Title = _context.MenuTranslations
-                        .Where(mt => mt.MenuId == m.MenuId && mt.LanguageId == languageId)
-                        .Select(mt => mt.Title)
+                    Title = _context.Master_Language_Dic
+                        .Where(mt => mt.Key == m.Id.ToString() && mt.LangId == languageId)
+                        .Select(mt => mt.Value)
                         .FirstOrDefault() ?? "No Translation"
                 })
                 .ToListAsync();
