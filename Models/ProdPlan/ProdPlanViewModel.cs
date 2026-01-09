@@ -1,4 +1,5 @@
 ﻿using MESWebDev.Models.ProdPlan.PC;
+using MESWebDev.Models.ProdPlan.SMT;
 using MESWebDev.Models.Setting;
 using MESWebDev.Models.Setting.DTO;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -9,13 +10,21 @@ namespace MESWebDev.Models.ProdPlan
     public class ProdPlanViewModel
     {
         public DataTable Data { get; set; }
-        public string error_msg { get; set; }
+        public string? error_msg { get; set; }
+
+        public List<SelectListItem>? SLI_Line { get; set; }
+        public List<SelectListItem>? SLI_Machine { get; set; }
+        public List<SelectListItem>? SLI_Shift { get; set; }
+
+        #region Master
+        public SMTMachineConditionModel? SMTMachineConditionModel { get; set; }
+        public SMTLineMachineDataModel? SMTLineMachineDataModel { get; set; }
+        public SMTLineModel? SMTLineModel { get; set; }
+        #endregion
 
         #region Setting
-        public ProjectSettingModel SettingModel { get; set; }
-
+        public ProjectSettingModel? SettingModel { get; set; }
         public FormatRazorDTO FormatRazorDTO { get; set; } = new FormatRazorDTO();
-
         #endregion
 
         #region SMT Production Plan

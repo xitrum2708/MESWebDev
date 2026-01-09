@@ -21,9 +21,13 @@ namespace MESWebDev.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue)
             {
+               // return RedirectToAction("Login", "Account");
+            }
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
+            {
                 return RedirectToAction("Login", "Account");
             }
-
             var languageCode = HttpContext.Session.GetString("LanguageCode") ?? "vi";
             var languageId = _context.Languages
                 .Where(l => l.Code == languageCode)

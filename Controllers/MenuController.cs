@@ -232,10 +232,14 @@ namespace MESWebDev.Controllers
         // GET: Menu/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            //var userId = HttpContext.Session.GetInt32("UserId");
+            //if (!userId.HasValue)
+            //    return RedirectToAction("Login", "Account");
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
+            {
                 return RedirectToAction("Login", "Account");
-
+            }
             var menu = await _context.Auth_Master_Function.FindAsync(id);
             if (menu == null)
                 return NotFound();

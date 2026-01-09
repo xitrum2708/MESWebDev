@@ -27,12 +27,12 @@
                             <div class="float-start d-flex justify-content-between align-items-center w-50">
                                 <h3 class="card-title fw-bold fs-5">
                                     <i class="bi bi-box"></i>
-                                    @TranslationService.Trans("74")
+                                    @TranslationService.Trans("77")
                                 </h3>
                                 <input class="form-control w-50 ms-3" placeholder="🔍 Quick Search..." id="quickSearch" onkeyup="QuickSearch()" />
                             </div>
                             <div class="float-end d-flex justify-content-center align-items-center">
-                                <button class="btn btn-sm btn-primary me-2" onclick="AddLine()">
+                                <button class="btn btn-sm btn-primary me-2" onclick="AddShift()">
                                     <i class="bi bi-plus-circle"></i>
                                     @TranslationService.Trans("add")
                                 </button>
@@ -40,7 +40,7 @@
                                     <i class="bi bi-download"></i>
                                     @TranslationService.Trans("Download")
                                 </a>
-                                <a class="btn btn-sm btn-light" href="~/Manual/Manual_Setting.xlsx">
+                                <a class="btn btn-sm btn-light" href="~/Manual/Manual_Shift.xlsx">
                                     <i class="bi bi-question-circle"></i>
                                 </a>
                             </div>
@@ -53,7 +53,7 @@
                                 }
                                 else
                                 {
-                                    <partial name="Master/Line/_Result" model="@Model" />
+                                    <partial name="Master/Shift/_Result" model="@Model" />
                                 }
                             </div>
 
@@ -61,10 +61,10 @@
                     </div>
                 </div>
             </div>
-            @* <partial name="ProdPlan/Master/Line/_Edit" /> *@
+            @* <partial name="ProdPlan/Master/Shift/_Edit" /> *@
             <Partial name="_LoadingPartial" />
-            <partial name="Master/Line/__Delete" />
-            @* <partial name="ProdPlan/Master/Line/__Add" model="@Model"/> *@
+            <partial name="Master/Shift/__Delete" />
+            @* <partial name="ProdPlan/Master/Shift/__Add" model="@Model"/> *@
             <div id="modalArea">
             </div>
         </div>
@@ -99,9 +99,9 @@ catch (Exception ex)
         function editItem(id) {
             //alert(id);
             $.ajax({
-                url: '@Url.Action("LineEdit")',
+                url: '@Url.Action("ShiftEdit")',
                 type: 'Get',
-                data: { lineId : id },
+                data: { ShiftId : id },
                 success: function (html) {
                     $('#modalArea').html(html);
                     $('#editModal').modal('show');
@@ -115,7 +115,7 @@ catch (Exception ex)
             if($('#fEdit').valid()){
                 var data = $('#fEdit').serialize();
                 $.ajax({
-                    url: '@Url.Action("LineEdit")',
+                    url: '@Url.Action("ShiftEdit")',
                     type: 'Post',
                     data: data,
                     success: function (html) {
@@ -144,9 +144,9 @@ catch (Exception ex)
 
         //------------------ ADD ------------------
         // Click Add Use off before on to prevent double click
-        function AddLine(){
+        function AddShift(){
             $.ajax({
-                url: '@Url.Action("LineAdd")',
+                url: '@Url.Action("ShiftAdd")',
                 type: 'Get',
                 success: function (html) {
                     $('#modalArea').html(html);
@@ -161,7 +161,7 @@ catch (Exception ex)
             if($('#fAdd').valid()){
                 var data = $('#fAdd').serialize();
                 $.ajax({
-                    url: '@Url.Action("LineAdd")',
+                    url: '@Url.Action("ShiftAdd")',
                     type: 'Post',
                     data: data,
                     success: function (html) {
@@ -196,9 +196,9 @@ catch (Exception ex)
         function Delete() {
             let index = $('#deleteId').val();
             $.ajax({
-                url: '@Url.Action("LineDelete")',
+                url: '@Url.Action("ShiftDelete")',
                 type: 'Post',
-                data: {lineId: index},
+                data: {ShiftId: index},
                 success: function (html) {
                     $('#ResultArea').html(html);
                     $('#deleteModal').modal('hide');
@@ -251,7 +251,7 @@ catch (Exception ex)
 
                 const now = new Date();
                 const pad = (n) => n.toString().padStart(2, '0');
-                const fileName = `LineMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+                const fileName = `ShiftMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
 
                 a.download = fileName;
                 document.body.appendChild(a);

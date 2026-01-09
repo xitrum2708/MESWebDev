@@ -1237,6 +1237,8 @@ namespace MESWebDev.Services
             var data = await _con.UV_SMT_LineMachineData.FirstOrDefaultAsync(i=> i.LineCode == line.LineCode && i.MachineCode == line.MachineCode);
             if (data == null)
             {
+                line.UsageDate = DateTime.Now;
+                line.CreatedBy = _hca.HttpContext.User.Identity.Name ?? "System";
                 await _con.UV_SMT_LineMachineData.AddAsync(line);
                 await _con.SaveChangesAsync();
                 return string.Empty;
@@ -1248,16 +1250,16 @@ namespace MESWebDev.Services
         {
             var check = await _con.UV_SMT_LineMachineData.FirstOrDefaultAsync(i => i.LineCode == line.LineCode && i.MachineCode == line.MachineCode && i.Id != line.Id);
 
-            if (check == null) return $"Line {line.LineCode} - {line.MachineCode} {_trans.Trans(SD.ErrorMsg.Existed)}";
+            if (check != null) return $"Line {line.LineCode} - {line.MachineCode} {_trans.Trans(SD.ErrorMsg.Existed)}";
             var data = await _con.UV_SMT_LineMachineData.FindAsync(line.Id);
             if (data == null) return $"ID: {line.Id.ToString()} {_trans.Trans(SD.ErrorMsg.Existed)}";
 
             data.LineCode = line.LineCode;
             data.MachineCode = line.MachineCode;
             data.Remark = line.Remark;
-            data.UsageDate = line.UsageDate;
             data.UsagePercent = line.UsagePercent;
-
+            data.UsageDate =  DateTime.Now;
+            data.CreatedBy = _hca.HttpContext.User.Identity.Name ?? "System";
             await _con.SaveChangesAsync();
             return string.Empty;
         }
@@ -1307,6 +1309,8 @@ namespace MESWebDev.Services
             data.Priority = shift.Priority;
             data.Remark = shift.Remark;
             data.Pattern = shift.Pattern;
+
+            await _con.SaveChangesAsync();
             return string.Empty;
         }
 
@@ -1317,6 +1321,32 @@ namespace MESWebDev.Services
             _con.UV_SMT_Mst_Shift.Remove(data);
             await _con.SaveChangesAsync();
             return string.Empty;
+        }
+
+        public async Task<List<SelectListItem>> SLILine()
+        {
+            var data = await _con.UV_SMT_Mst_Line
+                                .Where(i => i.IsActive == true)
+                                .OrderBy(i => i.DisplayOrder)
+                                .ToListAsync();
+            return data.Select(i => new SelectListItem { Text = i.LineCode, Value = i.LineCode }).ToList();   
+        }
+
+        public async Task<List<SelectListItem>> SLIMachine()
+        {
+            var data = await _con.UV_SMT_Mst_Machine
+                                .Where(i => i.IsActive == true)
+                                .OrderBy(i => i.MachineCode)
+                                .ToListAsync();
+            return data.Select(i => new SelectListItem { Text = i.MachineCode, Value = i.MachineCode }).ToList();
+        }
+
+        public async Task<List<SelectListItem>> SLIShift()
+        {
+            var data = await _con.UV_SMT_Mst_Shift
+                                .OrderBy(i => i.Priority)
+                                .ToListAsync();
+            return data.Select(i => new SelectListItem { Text = i.ShiftCode, Value = i.ShiftCode }).ToList();
         }
 
         #endregion

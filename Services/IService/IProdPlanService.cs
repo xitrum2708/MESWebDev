@@ -2,6 +2,7 @@
 using MESWebDev.Models.ProdPlan.PC;
 using MESWebDev.Models.ProdPlan.SMT;
 using MESWebDev.Models.Setting;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Data;
 
 namespace MESWebDev.Services.IService
@@ -10,6 +11,10 @@ namespace MESWebDev.Services.IService
     {
         #region Master
         
+        Task<List<SelectListItem>> SLILine();
+        Task<List<SelectListItem>> SLIMachine();
+        Task<List<SelectListItem>> SLIShift();
+
         //----- Machine -----
         Task<DataTable> MachineList(Dictionary<string, object> dic);
         Task<SMTMachineModel> MachineDetail(string machineId);
@@ -44,7 +49,6 @@ namespace MESWebDev.Services.IService
         Task<string> ShiftAdd(SMTShiftModel shift);
         Task<string> ShiftEdit(SMTShiftModel shift);
         Task<string> ShiftDelete(string shiftCode);
-
         #endregion
 
         #region SMT Prod Plan        

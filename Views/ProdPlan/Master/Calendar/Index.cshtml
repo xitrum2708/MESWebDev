@@ -27,12 +27,12 @@
                             <div class="float-start d-flex justify-content-between align-items-center w-50">
                                 <h3 class="card-title fw-bold fs-5">
                                     <i class="bi bi-box"></i>
-                                    @TranslationService.Trans("76")
+                                    @TranslationService.Trans("78")
                                 </h3>
                                 <input class="form-control w-50 ms-3" placeholder="🔍 Quick Search..." id="quickSearch" onkeyup="QuickSearch()" />
                             </div>
                             <div class="float-end d-flex justify-content-center align-items-center">
-                                <button class="btn btn-sm btn-primary me-2" onclick="AddMachineCondition()">
+                                <button class="btn btn-sm btn-primary me-2" onclick="AddCalendar()">
                                     <i class="bi bi-plus-circle"></i>
                                     @TranslationService.Trans("add")
                                 </button>
@@ -40,7 +40,7 @@
                                     <i class="bi bi-download"></i>
                                     @TranslationService.Trans("Download")
                                 </a>
-                                <a class="btn btn-sm btn-light" href="~/Manual/Manual_MachineCondition.xlsx">
+                                <a class="btn btn-sm btn-light" href="~/Manual/Manual_Calendar.xlsx">
                                     <i class="bi bi-question-circle"></i>
                                 </a>
                             </div>
@@ -53,7 +53,7 @@
                                 }
                                 else
                                 {
-                                    <partial name="Master/MachineCondition/_Result" model="@Model" />
+                                    <partial name="Master/Calendar/_Result" model="@Model" />
                                 }
                             </div>
 
@@ -63,7 +63,7 @@
             </div>
             @* <partial name="ProdPlan/Setting/_Edit" /> *@
             <Partial name="_LoadingPartial" />
-            <partial name="Master/MachineCondition/__Delete" />
+            <partial name="Master/Calendar/__Delete" />
             @* <partial name="ProdPlan/Setting/__Add" model="@Model"/> *@
             <div id="modalArea">
             </div>
@@ -82,15 +82,12 @@ catch (Exception ex)
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-    <script>
-         
-        
-
+    <script> 
         // Click Edit
         function editItem(id) {
             //alert(id);            
             $.ajax({
-                url: '@Url.Action("MachineConditionEdit")',
+                url: '@Url.Action("CalendarEdit")',
                 type: 'Get',
                 data: { Id: parseInt(id) },
                 success: function (html) {
@@ -112,7 +109,7 @@ catch (Exception ex)
             if($('#fEdit').valid()){
                 var data = $('#fEdit').serialize();
                 $.ajax({
-                    url: '@Url.Action("MachineConditionEdit")',
+                    url: '@Url.Action("CalendarEdit")',
                     type: 'Post',
                     data: data,
                     success: function (html) {
@@ -141,10 +138,10 @@ catch (Exception ex)
 
         //------------------ ADD ------------------
         // Click Add Use off before on to prevent double click
-        function AddMachineCondition(){
+        function AddCalendar(){
             //alert('Hi there!');
             $.ajax({
-                url: '@Url.Action("MachineConditionAdd")',
+                url: '@Url.Action("CalendarAdd")',
                 type: 'Get',
                 success: function (html) {
                     $('#modalArea').html(html);
@@ -166,7 +163,7 @@ catch (Exception ex)
                 var data = $('#fAdd').serialize();
                 alert(data);
                 $.ajax({
-                    url: '@Url.Action("MachineConditionAdd")',
+                    url: '@Url.Action("CalendarAdd")',
                     type: 'Post',
                     data: data,
                     success: function (html) {
@@ -202,7 +199,7 @@ catch (Exception ex)
         function Delete() {
             let index = parseInt($('#deleteId').val());
             $.ajax({
-                url: '@Url.Action("MachineConditionDelete")',
+                url: '@Url.Action("CalendarDelete")',
                 type: 'Post',
                 data: {Id: index},
                 success: function (html) {
@@ -257,7 +254,7 @@ catch (Exception ex)
 
                 const now = new Date();
                 const pad = (n) => n.toString().padStart(2, '0');
-                const fileName = `MachineConditionMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+                const fileName = `CalendarMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
 
                 a.download = fileName;
                 document.body.appendChild(a);

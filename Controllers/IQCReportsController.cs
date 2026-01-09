@@ -462,8 +462,13 @@ namespace MESWebDev.Controllers
         [HttpGet]
         public async Task<IActionResult> IQCReceiveLottag(int page = 1, int pageSize = 10, string searchTerm = null)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            //var userId = HttpContext.Session.GetInt32("UserId");
+            //if (!userId.HasValue)
+            //{
+            //    return RedirectToAction("Login", "Account");
+            //}
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -518,9 +523,14 @@ namespace MESWebDev.Controllers
         [HttpPost]
         public async Task<IActionResult> ScanLotTag([FromBody] LottagVM req)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
+            //var userId = HttpContext.Session.GetInt32("UserId");
             string username = HttpContext.Session.GetString("Username");
-            if (!userId.HasValue)
+            //if (!userId.HasValue)
+            //{
+            //    return RedirectToAction("Login", "Account");
+            //}
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
             {
                 return RedirectToAction("Login", "Account");
             }

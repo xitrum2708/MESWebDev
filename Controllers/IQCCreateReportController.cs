@@ -31,9 +31,14 @@ namespace MESWebDev.Controllers
         [HttpPost]
         public IActionResult ScanLottag([FromBody] string LottagId)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            string username = HttpContext.Session.GetString("Username");
-            if (!userId.HasValue)
+            //var userId = HttpContext.Session.GetInt32("UserId");
+            //string username = HttpContext.Session.GetString("Username");
+            //if (!userId.HasValue)
+            //{
+            //    return RedirectToAction("Login", "Account");
+            //}
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -471,9 +476,14 @@ namespace MESWebDev.Controllers
         [HttpPost]
         public async Task<IActionResult> SendForApproval([FromBody] string reportId)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            string username = HttpContext.Session.GetString("Username");
-            if (!userId.HasValue)
+            //var userId = HttpContext.Session.GetInt32("UserId");
+            //string username = HttpContext.Session.GetString("Username");
+            //if (!userId.HasValue)
+            //{
+            //    return RedirectToAction("Login", "Account");
+            //}
+            var Username = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(Username))
             {
                 return RedirectToAction("Login", "Account");
             }

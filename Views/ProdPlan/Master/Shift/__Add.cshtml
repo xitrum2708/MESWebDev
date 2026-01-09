@@ -1,5 +1,5 @@
 ﻿@using MESWebDev.Models.Setting
-@model SMTLineModel
+@model SMTShiftModel
 @{
     int i = 0;
 }
@@ -15,36 +15,22 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body bg-success bg-opacity-25">
-
                     <div class="row g-2">
-                        <div class="row g-2">
-                            <div class="col-4">@TranslationService.Trans("LineCode")</div>
-                            <div class="col-8"><input type="text" class="form-control" asp-for="@Model.LineCode" required /></div>
+                        <div class="col-4">@TranslationService.Trans("ShiftCode")</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="@Model.ShiftCode" /></div>
 
-                            <div class="col-4">@TranslationService.Trans("LineName")</div>
-                            <div class="col-8"><input type="text" class="form-control" asp-for="@Model.LineName" /></div>
+                        <div class="col-4">@TranslationService.Trans("ShiftName")</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="@Model.ShiftName" /></div>
 
-                            <div class="col-4">@TranslationService.Trans("DisplayColor")</div>
-                            @* <div class="col-8"><input type="text" class="form-control" asp-for="@Model.DisplayColor" /></div> *@
-                            <div class="col-8">
-                                <div class="input-group" style="position:relative;">
-                                    <input id="colorInput1" type="text" readonly class="form-control" asp-for="DisplayColor">
-                                    <a class="btn btn-outline-secondary" id="colorButton1">🎨</a>
-                                    <div id="colorPopup1" class="col ms-2"></div>
-                                </div>
-                            </div>
+                        <div class="col-4">@TranslationService.Trans("Pattern")</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="@Model.Pattern" /></div>
 
-                            <div class="col-4">@TranslationService.Trans("DisplayOther")</div>
-                            <div class="col-8"><input type="number" class="form-control" asp-for="@Model.DisplayOrder" /></div>
+                        <div class="col-4">@TranslationService.Trans("Remark")</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="@Model.Remark" /></div>
 
-                            <div class="col-4">@TranslationService.Trans("Remark")</div>
-                            <div class="col-8"><input type="text" class="form-control" asp-for="@Model.Remark" /></div>
-
-                            <div class="col-4">@TranslationService.Trans("isActive")</div>
-                            <div class="col-8"><input type="checkbox" class="form-check-input p-2" asp-for="@Model.IsActive" /></div>
-                        </div>
+                        <div class="col-4">@TranslationService.Trans("Priority")</div>
+                        <div class="col-8"><input type="number" class="form-control" asp-for="@Model.Priority" /></div>
                     </div>
-
                 </div>
                 <div class="modal-footer">
                     <a id="btnAdd" onclick="Add()" class="btn btn-sm btn-info">

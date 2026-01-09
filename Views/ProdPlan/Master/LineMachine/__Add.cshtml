@@ -18,24 +18,26 @@
 
                     <div class="row g-2">
                         <div class="row g-2">
-                            <div class="col-4">@TranslationService.Trans("MachineCode")</div>
+
+                            <div class="col-4">@TranslationService.Trans("LineCode")</div>
                             <div class="col-8">
-                                <select class="form-select" asp-for="@Model.SMTMachineConditionModel.MachineCode" asp-items="@Model.SLI_Machine" required>
+                                <select class="form-select" asp-for="@Model.SMTLineMachineDataModel.LineCode" asp-items="@Model.SLI_Line" required>
                                     <option></option>
                                 </select>
                             </div>
 
-                            <div class="col-4">@TranslationService.Trans("ChipMin")</div>
-                            <div class="col-8"><input type="number" class="form-control _ChipMin" asp-for="@Model.SMTMachineConditionModel.ChipMin" /></div>
+                            <div class="col-4">@TranslationService.Trans("MachineCode")</div>
+                            <div class="col-8">
+                                <select class="form-select" asp-for="@Model.SMTLineMachineDataModel.MachineCode" asp-items="@Model.SLI_Machine" required>
+                                    <option></option>
+                                </select>
+                            </div>
 
-                            <div class="col-4">@TranslationService.Trans("ChipMax")</div>
-                            <div class="col-8"><input type="number" class="form-control _ChipMax" asp-for="@Model.SMTMachineConditionModel.ChipMax" /></div>
-
-                            <div class="col-4">@TranslationService.Trans("Priority")</div>
-                            <div class="col-8"><input type="number" class="form-control" asp-for="@Model.SMTMachineConditionModel.Priority" /></div>
+                            <div class="col-4">@TranslationService.Trans("UsagePercent")</div>
+                            <div class="col-8"><input type="number" class="form-control" asp-for="@Model.SMTLineMachineDataModel.UsagePercent" /></div>
 
                             <div class="col-4">@TranslationService.Trans("Remark")</div>
-                            <div class="col-8"><input type="text" class="form-control" asp-for="@Model.SMTMachineConditionModel.Remark" /></div>
+                            <div class="col-8"><input type="text" class="form-control" asp-for="@Model.SMTLineMachineDataModel.Remark" /></div>
                         </div>
                     </div>
 

@@ -354,6 +354,79 @@ namespace MESWebDev.Controllers
 
         #endregion
 
+        #region Line Machine Data
+        [HttpGet]
+        public async Task<IActionResult> LineMachine()
+        {
+            ProdPlanViewModel ppv = await GetLineMachine();
+            return View("Master/LineMachine/Index", ppv);
+        }
+
+        // Add
+        [HttpGet]
+        public async Task<IActionResult> LineMachineAdd()
+        {
+            ProdPlanViewModel ppv = new();
+            ppv.SMTLineMachineDataModel = new();
+            ppv.SLI_Line = await _ppService.SLILine();  
+            ppv.SLI_Machine = await _ppService.SLIMachine();
+            return PartialView("Master/LineMachine/__Add", ppv);
+        }
+        [HttpPost]
+        public async Task<IActionResult> LineMachineAdd(ProdPlanViewModel ppv)
+        {
+            string msg = await _ppService.LineMachineAdd(ppv.SMTLineMachineDataModel?? new());
+
+            ppv = await GetLineMachine();
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+
+            return PartialView("Master/LineMachine/_Result", ppv);
+        }
+
+        // Edit
+        [HttpGet]
+        public async Task<IActionResult> LineMachineEdit(int Id)
+        {
+            ProdPlanViewModel ppv = new();
+            ppv.SMTLineMachineDataModel = await _ppService.LineMachineDetail(Id);
+            ppv.SLI_Line = await _ppService.SLILine();
+            ppv.SLI_Machine = await _ppService.SLIMachine();
+            return PartialView("Master/LineMachine/__Edit", ppv);
+        }
+        [HttpPost]
+        public async Task<IActionResult> LineMachineEdit(ProdPlanViewModel ppv)
+        {
+            string msg = await _ppService.LineMachineEdit(ppv.SMTLineMachineDataModel ?? new());
+            ppv = await GetLineMachine();
+
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+
+            return PartialView("Master/LineMachine/_Result", ppv);
+        }
+
+        // Delete
+        [HttpPost]
+        public async Task<IActionResult> LineMachineDelete(int Id)
+        {
+            string msg = await _ppService.LineMachineDelete(Id);
+            ProdPlanViewModel ppv = await GetLineMachine();
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+            return PartialView("Master/LineMachine/_Result", ppv);
+        }
+
+
+        [HttpGet]
+        public async Task<ProdPlanViewModel> GetLineMachine(Dictionary<string, object>? dic = null)
+        {
+            ProdPlanViewModel ppv = new();
+            ppv.FormatRazorDTO = await _settingService.GetFormatRazor();
+
+            ppv.Data = await _ppService.LineMachineList(dic ?? new Dictionary<string, object>());
+            return ppv;
+        }
+
+        #endregion
+
         #region Machine Condition
         [HttpGet]
         public async Task<IActionResult> MachineCondition()
@@ -366,15 +439,17 @@ namespace MESWebDev.Controllers
         [HttpGet]
         public async Task<IActionResult> MachineConditionAdd()
         {
-            SMTMachineConditionModel slm = new();
-            return PartialView("Master/MachineCondition/__Add", slm);
+            ProdPlanViewModel ppv = new();
+            ppv.SMTMachineConditionModel = new();
+            ppv.SLI_Machine = await _ppService.SLIMachine();
+            return PartialView("Master/MachineCondition/__Add", ppv);
         }
         [HttpPost]
-        public async Task<IActionResult> MachineConditionAdd(SMTMachineConditionModel slm)
+        public async Task<IActionResult> MachineConditionAdd(ProdPlanViewModel ppv)
         {
-            string msg = await _ppService.MachineConditionAdd(slm);
+            string msg = await _ppService.MachineConditionAdd(ppv.SMTMachineConditionModel ?? new());
 
-            ProdPlanViewModel ppv = await GetMachineCondition();
+            ppv = await GetMachineCondition();
             if (!string.IsNullOrEmpty(msg)) ppv.error_msg = $"{_translationService.Trans("existed")} {msg}";
 
             return PartialView("Master/MachineCondition/_Result", ppv);
@@ -420,74 +495,6 @@ namespace MESWebDev.Controllers
         }
 
         #endregion
-
-        #region Line Machine
-        [HttpGet]
-        public async Task<IActionResult> LineMachine()
-        {
-            ProdPlanViewModel ppv = await GetLineMachine();
-            return View("Master/LineMachine/Index", ppv);
-        }
-
-        // Add
-        [HttpGet]
-        public async Task<IActionResult> LineMachineAdd()
-        {
-            SMTLineMachineDataModel slm = new();
-            return PartialView("Master/LineMachine/__Add", slm);
-        }
-        [HttpPost]
-        public async Task<IActionResult> LineMachineAdd(SMTLineMachineDataModel slm)
-        {
-            string msg = await _ppService.LineMachineAdd(slm);
-
-            ProdPlanViewModel ppv = await GetLineMachine();
-            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = $"{_translationService.Trans("existed")} {msg}";
-
-            return PartialView("Master/LineMachine/_Result", ppv);
-        }
-
-        // Edit
-        [HttpGet]
-        public async Task<IActionResult> LineMachineEdit(int Id)
-        {
-            SMTLineMachineDataModel slm = await _ppService.LineMachineDetail(Id);
-            return PartialView("Master/LineMachine/__Edit", slm);
-        }
-        [HttpPost]
-        public async Task<IActionResult> LineMachineEdit(SMTLineMachineDataModel slm)
-        {
-            string msg = await _ppService.LineMachineEdit(slm);
-            ProdPlanViewModel ppv = await GetLineMachine();
-
-            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = $"{_translationService.Trans("not_existed")} {msg}";
-
-            return PartialView("Master/LineMachine/_Result", ppv);
-        }
-
-        // Delete
-        [HttpPost]
-        public async Task<IActionResult> LineMachineDelete(int Id)
-        {
-            string msg = await _ppService.LineMachineDelete(Id);
-            ProdPlanViewModel ppv = await GetLineMachine();
-            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = $"{_translationService.Trans("not_existed")} {msg}";
-            return PartialView("Master/LineMachine/_Result", ppv);
-        }
-
-
-        [HttpGet]
-        public async Task<ProdPlanViewModel> GetLineMachine(Dictionary<string, object>? dic = null)
-        {
-            ProdPlanViewModel ppv = new();
-            ppv.FormatRazorDTO = await _settingService.GetFormatRazor();
-
-            ppv.Data = await _ppService.LineMachineList(dic ?? new Dictionary<string, object>());
-            return ppv;
-        }
-
-        #endregion
-
 
         #region Shift Master
         [HttpGet]
