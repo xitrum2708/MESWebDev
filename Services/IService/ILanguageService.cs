@@ -8,12 +8,10 @@ namespace MESWebDev.Services.IService
     {
         // Get all languages
         Task<List<LanguageModel>> GetAllLanguagesAsync();
-
         Task<LanguageModel> GetLanguageById(int id);
         Task<string> CreateLanguageAsync(LanguageModel dic);
         Task<string> UpdateLanguageAsync(LanguageModel dic);
         Task<bool> DeleteLanguageAsync(int Id);
-
         Task<List<SelectListItem>> GetLangSL();
 
         // Dictionaries by language

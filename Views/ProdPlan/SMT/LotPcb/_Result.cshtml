@@ -1,0 +1,85 @@
+﻿
+@model ProdPlanViewModel
+
+@{
+    int i = 0;
+    DataTable dt = Model != null && Model.Data != null && Model.Data.Rows.Count > 0 ? Model.Data : new();
+}
+
+@if (dt.Rows.Count>0)
+{
+    <div style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative">
+        <table class="table table-bordered table-striped table-hover paginated" id="mytable">
+            <thead class="sticky-top">
+                <!-- Header Row -->
+                <tr>
+                    <th class="text-center table-info">
+                        <div class="d-flex justify-content-center align-content-center">
+                            <input class="_cbAll form-check form-check-input" type="checkbox" />
+                        </div>
+                    </th>
+                    <th class="text-center table-info header-text">No.</th>
+                    @foreach (DataColumn col in dt.Columns)
+                    {
+                        if(col.ColumnName.ToLower() != "id")
+                        {
+                            <th class="text-center table-info header-text"> @TranslationService.Trans(col.ColumnName)</th>
+                        }
+                    }
+                    <th class="table-info"></th>
+                    </tr>
+                </thead>
+
+                <tbody id="tbodyResult">
+                    @foreach (DataRow row in dt.Rows)
+                    {
+                        i++;
+                        var id = row["Id"].ToString();
+                        <tr>
+                            <td>
+                                <div class="d-flex justify-content-center align-content-center">
+                                    <input class="_cb form-check form-check-input" type="checkbox" />
+                                    <input hidden class="_id" value="@id" />
+                                </div>
+                            </td>
+                            <td class="body-text text-center">@i</td>
+      @*                       @foreach (var f in row.ItemArray)
+                            {
+                                <td class="@CommonFormat.FormatCss(f.GetType(), Model.FormatRazorDTO) body-text">@CommonFormat.FormatCell(f,f.GetType(),Model.FormatRazorDTO)</td>
+                            }
+ *@
+                            @for (int iCol = 0; iCol < dt.Columns.Count; iCol++)
+                            {
+                                if (dt.Columns[iCol].ColumnName.Equals("Id", StringComparison.OrdinalIgnoreCase))
+                                    continue;
+
+                                var value = row[iCol];
+                                var type = dt.Columns[iCol].DataType;
+
+                                <td class="@CommonFormat.FormatCss(type, Model.FormatRazorDTO) body-text">
+                                    @CommonFormat.FormatCell(value, type, Model.FormatRazorDTO)
+                                </td>
+                            }
+                            <td class="d-flex align-content-center justify-content-center">
+                                <button class="btn btn-sm btn-warning" onclick="editItem(@id)">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+
+        @if (!string.IsNullOrEmpty(Model.error_msg))
+        {
+            <div id="errorMsg" data-msg="@Model.error_msg"></div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-warning text-center">
+            No data available, pls add it.
+        </div>
+    }

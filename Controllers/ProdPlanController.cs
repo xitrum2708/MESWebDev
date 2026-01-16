@@ -3,6 +3,7 @@ using MESWebDev.Data;
 using MESWebDev.Extensions;
 using MESWebDev.Models.IQC;
 using MESWebDev.Models.IQC.VM;
+using MESWebDev.Models.PE;
 using MESWebDev.Models.ProdPlan;
 using MESWebDev.Models.ProdPlan.PC;
 using MESWebDev.Models.ProdPlan.SMT;
@@ -13,6 +14,7 @@ using MESWebDev.Services.IService;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.Drawing;
 using System.Threading.Tasks;
 using static MESWebDev.Common.Export2Excel;
 
@@ -562,6 +564,209 @@ namespace MESWebDev.Controllers
         }
 
         #endregion
+
+
+        #region LineCalendar
+        [HttpGet]
+        public async Task<IActionResult> LineCalendar()
+        {
+            ProdPlanViewModel ppv = await GetLineCalendar();
+            return View("Master/LineCalendar/Index", ppv);
+        }
+
+        // Add
+        [HttpGet]
+        public async Task<IActionResult> LineCalendarAdd()
+        {
+            ProdPlanViewModel ppv = new();
+            ppv.SMTLineCalendarModel = new();
+            ppv.SLI_Line = await _ppService.SLILine();
+            ppv.SLI_Shift = await _ppService.SLIShift();
+            return PartialView("Master/LineCalendar/__Add", ppv);
+        }
+        [HttpPost]
+        public async Task<IActionResult> LineCalendarAdd(ProdPlanViewModel ppv)
+        {
+            string msg = await _ppService.LineCalendarAdd(ppv.SMTLineCalendarModel ?? new());
+
+            ppv = await GetLineCalendar();
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = $"{_translationService.Trans("existed")} {msg}";
+
+            return PartialView("Master/LineCalendar/_Result", ppv);
+        }
+
+        // Edit
+        [HttpGet]
+        public async Task<IActionResult> LineCalendarEdit(int Id)
+        {
+            SMTLineCalendarModel slm = await _ppService.LineCalendarDetail(Id);
+            ProdPlanViewModel ppv = new();
+            ppv.SMTLineCalendarModel = slm;
+            ppv.SLI_Line = await _ppService.SLILine();
+            ppv.SLI_Shift = await _ppService.SLIShift();
+            return PartialView("Master/LineCalendar/__Edit", ppv);
+        }
+        [HttpPost]
+        public async Task<IActionResult> LineCalendarEdit(ProdPlanViewModel ppv)
+        {
+            string msg = await _ppService.LineCalendarEdit(ppv.SMTLineCalendarModel ?? new());
+            ppv = await GetLineCalendar();
+
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = $"{_translationService.Trans("not_existed")} {msg}";
+
+            return PartialView("Master/LineCalendar/_Result", ppv);
+        }
+
+        // Delete
+        [HttpPost]
+        public async Task<IActionResult> LineCalendarDelete(int Id)
+        {
+            string msg = await _ppService.LineCalendarDelete(Id);
+            ProdPlanViewModel ppv = await GetLineCalendar();
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = $"{_translationService.Trans("not_existed")} {msg}";
+            return PartialView("Master/LineCalendar/_Result", ppv);
+        }
+
+
+        [HttpGet]
+        public async Task<ProdPlanViewModel> GetLineCalendar(Dictionary<string, object>? dic = null)
+        {
+            ProdPlanViewModel ppv = new();
+            ppv.FormatRazorDTO = await _settingService.GetFormatRazor();
+
+            ppv.Data = await _ppService.LineCalendarList(dic ?? new Dictionary<string, object>());
+            return ppv;
+        }
+
+        #endregion
+
+        #endregion
+
+        #region SMT Production Plan
+        #region -- LOT - PCB - MODEL
+        [HttpGet]
+        public async Task<IActionResult> LotPcb()
+        {
+            ProdPlanViewModel ppv = await GetLotPcb();
+            return View("SMT/LotPcb/Index", ppv);
+        }
+
+        // Add
+        [HttpGet]
+        public async Task<IActionResult> LotPcbAdd()
+        {
+            SMTLotPcbModel ppv = new();
+            return PartialView("SMT/LotPcb/__Add", ppv);
+        }
+        [HttpPost]
+        public async Task<IActionResult> LotPcbAdd(SMTLotPcbModel slp)
+        {
+            string msg = await _ppService.SMTLotPcbAdd(slp ?? new());
+
+            ProdPlanViewModel ppv = await GetLotPcb();
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+
+            return PartialView("SMT/LotPcb/_Result", ppv);
+        }
+
+        // Edit
+        [HttpGet]
+        public async Task<IActionResult> LotPcbEdit(int Id)
+        {
+            SMTLotPcbModel ppv = await _ppService.SMTLotPcbDetail(Id);
+            return PartialView("SMT/LotPcb/__Edit", ppv);
+        }
+        [HttpPost]
+        public async Task<IActionResult> LotPcbEdit(SMTLotPcbModel slp)
+        {
+            string msg = await _ppService.SMTLotPcbEdit(slp ?? new());
+            ProdPlanViewModel ppv = await GetLotPcb();
+
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+
+            return PartialView("SMT/LotPcb/_Result", ppv);
+        }
+
+        //// Delete
+        //[HttpPost]
+        //public async Task<IActionResult> LotPcbDelete(int Id)
+        //{
+        //    string msg = await _ppService.SMTLotPcbDelete(Id);
+        //    ProdPlanViewModel ppv = await GetLotPcb();
+        //    if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+        //    return PartialView("SMT/LotPcb/_Result", ppv);
+        //}
+
+
+        [HttpGet]
+        public async Task<ProdPlanViewModel> GetLotPcb(Dictionary<string, object>? dic = null)
+        {
+            ProdPlanViewModel ppv = new();
+            ppv.FormatRazorDTO = await _settingService.GetFormatRazor();
+
+            ppv.Data = await _ppService.SMTLotPcbList(dic ?? new Dictionary<string, object>());
+            return ppv;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LotPcbUpload(IFormFile file1)
+        {
+            ProdPlanViewModel pev = new();
+            if (file1 == null)
+            {
+                pev.error_msg = "Please upload no file.";
+                return View("SMT/LotPcb/Index", pev);
+            }
+            try
+            {
+                pev = await _ppService.SMTLotPcbUpload(file1);
+                ViewBag.Success = "Files uploaded and processed successfully.";
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = $"An error occurred while processing the files: {ex.Message}";
+            }
+            return PartialView("SMT/LotPcb/_Result", pev);
+        }
+        [HttpGet]
+        public async Task<IActionResult> LotPcbSearch()
+        {
+            SMTLotPcbModel slp = new();
+            return PartialView("SMT/LotPcb/__Search", slp);
+        }
+        [HttpPost]
+        public async Task<IActionResult> LotPcbSearch(SMTLotPcbModel tsh)
+        {
+            ProdPlanViewModel pev = new();
+            Dictionary<string, object> dic = new();
+            if (tsh != null)
+            {
+                // Search dictionary base on tsh
+                dic.Add("@lot_no", tsh.Lotno ?? string.Empty);
+                dic.Add("@pcb_no", tsh.Model ?? string.Empty);
+                dic.Add("@model", tsh.Model ?? string.Empty);
+            }
+            pev.Data = await _ppService.SMTLotPcbList(dic);
+            return PartialView("SMT/LotPcb/_Result", pev);
+        }
+
+        // Delete
+        [HttpPost]
+        public async Task<IActionResult> LotPcbDelete([FromBody] List<int> ids)
+        {
+            string msg = string.Empty;
+            msg = await _ppService.SMTLotPcbDelete(ids);
+            if (!string.IsNullOrEmpty(msg))
+            {
+                return Json(new { success = false, error = msg });
+            }
+            return Json(new { success = true });
+        }
+
+        #endregion
+
+
+
 
         #endregion
 

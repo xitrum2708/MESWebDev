@@ -49,10 +49,25 @@ namespace MESWebDev.Services.IService
         Task<string> ShiftAdd(SMTShiftModel shift);
         Task<string> ShiftEdit(SMTShiftModel shift);
         Task<string> ShiftDelete(string shiftCode);
+
+        //----- Line Calendar -----
+        Task<DataTable> LineCalendarList(Dictionary<string, object> dic);
+        Task<SMTLineCalendarModel> LineCalendarDetail(int Id);
+        Task<string> LineCalendarAdd(SMTLineCalendarModel shift);
+        Task<string> LineCalendarEdit(SMTLineCalendarModel shift);
+        Task<string> LineCalendarDelete(int Id);
+
         #endregion
 
         #region SMT Prod Plan        
-
+        //----- LOT - MODEL - PCB -----
+        //spweb_UV_SMT_LOT_PCB
+        Task<DataTable> SMTLotPcbList(Dictionary<string, object> dic);
+        Task<SMTLotPcbModel> SMTLotPcbDetail(int Id);
+        Task<string> SMTLotPcbAdd(SMTLotPcbModel shift);
+        Task<ProdPlanViewModel> SMTLotPcbUpload(IFormFile file);
+        Task<string> SMTLotPcbEdit(SMTLotPcbModel shift);
+        Task<string> SMTLotPcbDelete(List<int> Ids);
 
         #endregion
 

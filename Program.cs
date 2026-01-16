@@ -165,6 +165,9 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 
+//this Middleware is used for going to Login page directly after session expired.
+//app.UseMiddleware<IdleTimeoutMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

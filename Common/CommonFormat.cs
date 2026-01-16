@@ -23,6 +23,7 @@ namespace MESWebDev.Common
         public static string FormatCell(object v, Type t, FormatRazorDTO fr)
         {
             if (v == null || v is DBNull) return "";
+            
             t = Nullable.GetUnderlyingType(t) ?? t;
             if (IsNumeric(t) && v is IFormattable f)
                 return f.ToString(fr.NumberFormat, culture);

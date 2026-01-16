@@ -1,0 +1,44 @@
+﻿@using MESWebDev.Models.Setting
+@model ProdPlanViewModel
+@{
+    int i = 0;
+}
+@try
+{
+    <form id="fAdd" method="post">
+        <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header table-success">
+                        <h5 class="modal-title">
+                            <i class="bi bi-plus-circle"></i>
+                            @TranslationService.Trans("Add")
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body bg-success bg-opacity-25">
+
+                        <partial name="Master/LineCalendar/___ModalBody" model="Model" />
+
+                    </div>
+                    <div class="modal-footer">
+                        <a id="btnAdd" onclick="Add()" class="btn btn-sm btn-info">
+                            <i class="bi bi-floppy"></i>
+                            @TranslationService.Trans("save")
+                        </a>
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                            <i class="fa-regular fa-circle-xmark"></i>
+                            @TranslationService.Trans("close")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+}
+catch(Exception ex)
+{
+    string t = ex.Message;
+}
+
+

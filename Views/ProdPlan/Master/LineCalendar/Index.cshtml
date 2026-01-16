@@ -29,20 +29,21 @@
                                     <i class="bi bi-box"></i>
                                     @TranslationService.Trans("78")
                                 </h3>
+                                <a class="btn btn-sm btn-light" href="~/Manual/Manual_LineCalendar.xlsx">
+                                    <i class="bi bi-question-circle"></i>
+                                </a>
                                 <input class="form-control w-50 ms-3" placeholder="🔍 Quick Search..." id="quickSearch" onkeyup="QuickSearch()" />
                             </div>
                             <div class="float-end d-flex justify-content-center align-items-center">
-                                <button class="btn btn-sm btn-primary me-2" onclick="AddCalendar()">
+                                <button class="btn btn-sm btn-primary me-2" onclick="AddLineCalendar()">
                                     <i class="bi bi-plus-circle"></i>
                                     @TranslationService.Trans("add")
                                 </button>
-                                <a class="btn btn-sm btn-secondary me-2" id="DownloadData">
+                                <a class="btn btn-sm btn-secondary" id="DownloadData">
                                     <i class="bi bi-download"></i>
                                     @TranslationService.Trans("Download")
                                 </a>
-                                <a class="btn btn-sm btn-light" href="~/Manual/Manual_Calendar.xlsx">
-                                    <i class="bi bi-question-circle"></i>
-                                </a>
+                                
                             </div>
                         </div>
                         <div class="card-body">
@@ -53,7 +54,7 @@
                                 }
                                 else
                                 {
-                                    <partial name="Master/Calendar/_Result" model="@Model" />
+                                    <partial name="Master/LineCalendar/_Result" model="@Model" />
                                 }
                             </div>
 
@@ -63,7 +64,7 @@
             </div>
             @* <partial name="ProdPlan/Setting/_Edit" /> *@
             <Partial name="_LoadingPartial" />
-            <partial name="Master/Calendar/__Delete" />
+            <partial name="Master/LineCalendar/__Delete" />
             @* <partial name="ProdPlan/Setting/__Add" model="@Model"/> *@
             <div id="modalArea">
             </div>
@@ -78,21 +79,58 @@ catch (Exception ex)
 
 @section Scripts {
     <link href="~/css/pecss.css" rel="stylesheet" />
+    <link href="~/css/pp_calendar.css" rel="stylesheet" />
     <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/PP_Calendar.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/PP_MultiSelect.js?@DateTime.Now.Ticks"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-    <script> 
-        // Click Edit
+
+    <script>
+
+        function iniSelect() {
+            $(".multi-select").each(function () {
+                const data = $(this)
+                    .find(".multi-select-menu")
+                    .data("items");
+
+                initMultiSelect($(this), data, "Select...");
+            });
+        }
+
+        // function iniSelect()
+        // {
+        //     // const line_data = @Html.Raw(Json.Serialize(Model.SLI_Line));
+        //     // const shift_data = @Html.Raw(Json.Serialize(Model.SLI_Shift));
+        //     const line_data = $('#lineDropdown').data('lines');
+        //     const shift_data = $('#shiftDropdown').data('shifts');
+        //     // Line MultiSelect
+        //     initMultiSelect(
+        //         $("#lineMultiSelect"),"#lineMultiSelect",
+        //         $("#lineDropdown"),"#lineDropdown",
+        //         line_data,
+        //         "Select line..."
+        //     );
+        //     initMultiSelect(
+        //         $("#shiftMultiSelect"),"#shiftMultiSelect",
+        //         $("#shiftDropdown"),"#shiftDropdown",
+        //         shift_data,
+        //         "Select shift..."
+        //     );
+        // }
+
         function editItem(id) {
             //alert(id);            
             $.ajax({
-                url: '@Url.Action("CalendarEdit")',
+                url: '@Url.Action("LineCalendarEdit")',
                 type: 'Get',
                 data: { Id: parseInt(id) },
                 success: function (html) {
                     $('#modalArea').html(html);
                     $('#editModal').modal('show');
+                    IniLineCalendar();
+                    iniSelect();
                 },
                 error: function () {
                     toastr.error('An error occurred while loading the edit form.');
@@ -100,16 +138,12 @@ catch (Exception ex)
             });
         }
         function Edit() {
-            let chipMin = parseInt($('._ChipMin').val()) ;
-            let chipMax = parseInt($('._ChipMax').val()) ;
-            if(chipMin > chipMax){
-                toastr.error("ChipMin cannot be greater than ChipMax !");
-                return;
-            }
+            //alert('Hi there !');
             if($('#fEdit').valid()){
                 var data = $('#fEdit').serialize();
+                //alert(data);
                 $.ajax({
-                    url: '@Url.Action("CalendarEdit")',
+                    url: '@Url.Action("LineCalendarEdit")',
                     type: 'Post',
                     data: data,
                     success: function (html) {
@@ -138,14 +172,16 @@ catch (Exception ex)
 
         //------------------ ADD ------------------
         // Click Add Use off before on to prevent double click
-        function AddCalendar(){
+        function AddLineCalendar(){
             //alert('Hi there!');
             $.ajax({
-                url: '@Url.Action("CalendarAdd")',
+                url: '@Url.Action("LineCalendarAdd")',
                 type: 'Get',
                 success: function (html) {
                     $('#modalArea').html(html);
                     $('#addModal').modal('show');
+                    IniLineCalendar();
+                    iniSelect();
                 },
                 error: function () {
                     toastr.error('An error occurred while loading the add form.');
@@ -153,17 +189,11 @@ catch (Exception ex)
             });
         }
         function Add() {
-            let chipMin = parseInt($('._ChipMin').val()) ;
-            let chipMax = parseInt($('._ChipMax').val()) ;
-            if(chipMin > chipMax){
-                toastr.error("ChipMin cannot be greater than ChipMax !");
-                return;
-            }
             if($('#fAdd').valid()){
                 var data = $('#fAdd').serialize();
-                alert(data);
+               // alert(data);
                 $.ajax({
-                    url: '@Url.Action("CalendarAdd")',
+                    url: '@Url.Action("LineCalendarAdd")',
                     type: 'Post',
                     data: data,
                     success: function (html) {
@@ -199,7 +229,7 @@ catch (Exception ex)
         function Delete() {
             let index = parseInt($('#deleteId').val());
             $.ajax({
-                url: '@Url.Action("CalendarDelete")',
+                url: '@Url.Action("LineCalendarDelete")',
                 type: 'Post',
                 data: {Id: index},
                 success: function (html) {
@@ -254,7 +284,7 @@ catch (Exception ex)
 
                 const now = new Date();
                 const pad = (n) => n.toString().padStart(2, '0');
-                const fileName = `CalendarMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+                const fileName = `LineCalendarMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
 
                 a.download = fileName;
                 document.body.appendChild(a);

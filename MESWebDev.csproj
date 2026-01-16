@@ -50,8 +50,4 @@
     </Content>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Views\ProdPlan\SMT\" />
-  </ItemGroup>
-
 </Project>

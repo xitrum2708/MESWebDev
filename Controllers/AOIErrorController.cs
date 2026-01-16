@@ -25,17 +25,19 @@ namespace MESWebDev.Controllers
         public IActionResult AOIMatrixHistory(string? SearchTerm, int page = 1, int pageSize = 10)
         {
             var query = _context.UVSMT_MODEL_MATRIX_MASTERs.AsQueryable();
+            var totalItems = query.Count();
+            var t = query.Take(2).ToList();
             if (!string.IsNullOrEmpty(SearchTerm))
             {
                 query = query.Where(d =>
                     d.Model.Contains(SearchTerm) ||
                     d.PCB_No.Contains(SearchTerm) ||
                     d.Program_Name.Contains(SearchTerm) ||
-                    d.Key_Work.Contains(SearchTerm)||
+                    d.Key_Work.Contains(SearchTerm) ||
                     d.PCB_TYPE.Contains(SearchTerm) ||
                     d.LotNo_1.Contains(SearchTerm) ||
                     d.LotNo_2.Contains(SearchTerm) 
-                    );                
+                );                
             }
             var resultPage = query
                 .OrderByDescending(x => x.CreatedDate)                
@@ -52,6 +54,7 @@ namespace MESWebDev.Controllers
                 ViewBag.Message = "NotFoundData";
             }
             return View(viewModel);
+            //return View("~/Views/AOIError/AOIMatrixHistory.cshtml", viewModel);
         }
         private int? TryParseInt(string val) => int.TryParse(val, out var i) ? i : null;
         private float? TryParseFloat(string val) => float.TryParse(val, out var f) ? f : null;
@@ -70,6 +73,25 @@ namespace MESWebDev.Controllers
             if (double.TryParse(val.ToString(), out var d)) return (float)d;
             return defaultValue;
         }
+        private decimal ToDecimal(object val, decimal defaultValue = 0m)
+        {
+            if (val == null || val == DBNull.Value)
+                return defaultValue;
+
+            // Nếu đã là decimal
+            if (val is decimal dec)
+                return dec;
+
+            // Nếu là số khác
+            if (val is IConvertible)
+                return Convert.ToDecimal(val);
+
+            // Fallback
+            return decimal.TryParse(val.ToString(), out var result)
+                ? result
+                : defaultValue;
+        }
+
 
         private static string ToStr(object val) => val?.ToString()?.Trim() ?? "";
         [HttpPost]
@@ -156,22 +178,22 @@ namespace MESWebDev.Controllers
                         Chips_Per_Board = ToInt(worksheet.Cells[row, 18].Value),
                         Chips_Per_Model = ToInt(worksheet.Cells[row, 19].Value),
 
-                        CPH = ToFloat(worksheet.Cells[row, 20].Value),
-                        GXH1_SIM_Time_Seconds = ToFloat(worksheet.Cells[row, 21].Value),
+                        CPH = ToDecimal(worksheet.Cells[row, 20].Value),
+                        GXH1_SIM_Time_Seconds = ToDecimal(worksheet.Cells[row, 21].Value),
 
                         // Ghép chuỗi theo yêu cầu
                         GXH3_SIM_Time_Seconds = $"{ToStr(worksheet.Cells[row, 1].Value)}{ToStr(worksheet.Cells[row, 4].Value)}-{ToStr(worksheet.Cells[row, 3].Value)}",
 
-                        TACT_Time_Seconds = ToFloat(worksheet.Cells[row, 23].Value),
+                        TACT_Time_Seconds = ToDecimal(worksheet.Cells[row, 23].Value),
                         SIM_OUT_PCS_Per_Hour = ToInt(worksheet.Cells[row, 24].Value),
                         Output_1h = ToInt(worksheet.Cells[row, 25].Value),
                         Output_2h = ToInt(worksheet.Cells[row, 26].Value),
                         Output_Day = ToInt(worksheet.Cells[row, 27].Value),
                         Output_Night = ToInt(worksheet.Cells[row, 28].Value),
 
-                        X_mm = ToFloat(worksheet.Cells[row, 29].Value),
-                        Y_mm = ToFloat(worksheet.Cells[row, 30].Value),
-                        T_mm = ToFloat(worksheet.Cells[row, 31].Value),
+                        X_mm = ToDecimal(worksheet.Cells[row, 29].Value),
+                        Y_mm = ToDecimal(worksheet.Cells[row, 30].Value),
+                        T_mm = ToDecimal(worksheet.Cells[row, 31].Value),
 
                         Mark_LotNo = ToStr(worksheet.Cells[row, 32].Value),
                         Paste_mg = ToInt(worksheet.Cells[row, 33].Value),

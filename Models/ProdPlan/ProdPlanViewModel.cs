@@ -20,6 +20,7 @@ namespace MESWebDev.Models.ProdPlan
         public SMTMachineConditionModel? SMTMachineConditionModel { get; set; }
         public SMTLineMachineDataModel? SMTLineMachineDataModel { get; set; }
         public SMTLineModel? SMTLineModel { get; set; }
+        public SMTLineCalendarModel? SMTLineCalendarModel { get; set; }
         #endregion
 
         #region Setting
@@ -28,7 +29,9 @@ namespace MESWebDev.Models.ProdPlan
         #endregion
 
         #region SMT Production Plan
-
+        public SMTLotPcbModel SMTLotPcbModel { get; set; } = new SMTLotPcbModel();
+        public List<SMTLotPcbModel>? SMTLotPcbList { get; set; }
+        public string? UploadedFile { get; set; }
         #endregion
 
 

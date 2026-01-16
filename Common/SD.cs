@@ -18,6 +18,9 @@
             public const string Existed = "existed";
             public const string NotExisted = "not_existed";
             public const string Duplicated = "duplicated";
+            public const string NotFound = "not_found";
+            public const string NoDataInUploadedFile = "No data found in the uploaded file.";
+            //"No data found in the uploaded file."
         }
         public class SessionParametter
         {

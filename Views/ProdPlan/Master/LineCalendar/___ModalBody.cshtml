@@ -1,0 +1,62 @@
+﻿@model ProdPlanViewModel
+<div class="row g-2">
+    <div class="row g-2">
+
+        @* ===== Choose line from Dropdown List ===== *@
+
+        <div class="col-4">@TranslationService.Trans("Lines")</div>
+        <div class="col-8">
+            <div class="dropdown multi-select">
+                <input class="form-select text-start multi-select-btn"
+                       asp-for="@Model.SMTLineCalendarModel.LineCode"
+                       placeholder="Select line..." />
+
+                <ul class="dropdown-menu overflow-auto multi-select-menu"
+                    style="max-height:200px"
+                    data-items='@Html.Raw(Json.Serialize(Model.SLI_Line))'>
+                </ul>
+            </div>
+        </div>
+
+        @* ===== Choose Calendar ===== *@
+        <div class="col-4">@TranslationService.Trans("DateOrDayOfWeek")</div>
+        <div class="col-8">
+            <div class="input-group">
+                <input type="text"
+                       class="form-control"
+                       id="calendarInput"
+                       asp-for="@Model.SMTLineCalendarModel.WeekDayOrDate">
+
+                <span class="input-group-text calendar-trigger" style="cursor:pointer">
+                    @* 📅 *@
+                    <i class="bi bi-calendar2-week"></i>
+                </span>
+                <partial name="Master/LineCalendar/___Calendar" />
+            </div>
+        </div>
+
+        @* ===== Choose Shift ===== *@
+        <div class="col-4">@TranslationService.Trans("Shifts")</div>
+        <div class="col-8">
+            <div class="dropdown multi-select">
+                <input class="form-select text-start multi-select-btn"
+                       asp-for="@Model.SMTLineCalendarModel.ShiftCode"
+                       placeholder="Select shift..." />
+
+                <ul class="dropdown-menu overflow-aut multi-select-menu"
+                    style="max-height:200px"
+                    data-items='@Html.Raw(Json.Serialize(Model.SLI_Shift))'>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-4">@TranslationService.Trans("Priority")</div>
+        <div class="col-8"><input type="number" class="form-control _ChipMax" asp-for="@Model.SMTLineCalendarModel.Priority" /></div>
+
+        <div class="col-4">@TranslationService.Trans("Remark")</div>
+        <div class="col-8"><input type="text" class="form-control _ChipMin" asp-for="@Model.SMTLineCalendarModel.Remark" /></div>
+
+        <div class="col-4">@TranslationService.Trans("isActive")</div>
+        <div class="col-8"><input type="checkbox" class="form-check-input p-2" asp-for="@Model.SMTLineCalendarModel.IsActive" /></div>
+    </div>
+</div>

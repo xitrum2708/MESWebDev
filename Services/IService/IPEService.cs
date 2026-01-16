@@ -17,6 +17,7 @@ namespace MESWebDev.Services.IService
         Task<string> EditManpower(ManpowerModel mm);
         Task<string> AddManpower(ManpowerModel mm);
         Task<ManpowerModel> GetManpowerDetail(int id);
+
         // Operation
         Task<List<OperationModel>> GetOperation();
         Task<string> DeleteOperation(int id);

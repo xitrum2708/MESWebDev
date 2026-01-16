@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using DocumentFormat.OpenXml.EMMA;
+using Microsoft.EntityFrameworkCore;
 
 namespace MESWebDev.Models.SMT
 {
@@ -28,18 +29,25 @@ namespace MESWebDev.Models.SMT
         public int Chips_Per_PCS { get; set; } = 0;
         public int Chips_Per_Board { get; set; } = 0;
         public int Chips_Per_Model { get; set; } = 0;
-        public double CPH { get; set; } = 0.0;
-        public double GXH1_SIM_Time_Seconds { get; set; } = 0.0;
+        [Precision(10,1)]
+        public decimal CPH { get; set; } = 0;
+        [Precision(10, 1)]
+        public decimal GXH1_SIM_Time_Seconds { get; set; } = 0;
         public string GXH3_SIM_Time_Seconds { get; set; } =string.Empty;
-        public double TACT_Time_Seconds { get; set; } = 0.0;
+        [Precision(10, 1)]
+        public decimal TACT_Time_Seconds { get; set; } = 0;
+        [Precision(10, 1)]
         public int SIM_OUT_PCS_Per_Hour { get; set; } = 0;
         public int Output_1h { get; set; } = 0;
         public int Output_2h { get; set; } = 0;
         public int Output_Day { get; set; } = 0;
         public int Output_Night { get; set; } = 0;
-        public double? X_mm { get; set; }
-        public double? Y_mm { get; set; }
-        public double? T_mm { get; set; }
+        [Precision(10, 4)]
+        public decimal? X_mm { get; set; }
+        [Precision(10, 4)]
+        public decimal? Y_mm { get; set; }
+        [Precision(10, 4)]
+        public decimal? T_mm { get; set; }
         public string Mark_LotNo { get; set; } = string.Empty;
         public int Paste_mg { get; set; } = 0;
         public int DIP_mg { get; set; } = 0;
