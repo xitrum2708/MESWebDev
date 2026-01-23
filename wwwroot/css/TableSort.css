@@ -1,0 +1,9 @@
+﻿.sort-icon {
+    font-size: .75rem;
+    opacity: .6;
+    margin-left: 4px;
+}
+
+th:hover .sort-icon {
+    opacity: 1;
+}

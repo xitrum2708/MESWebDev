@@ -2142,6 +2142,37 @@ namespace MESWebDev.Migrations
                     b.ToTable("PP_Para_tbl");
                 });
 
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTLineCalendarDtlModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConditionType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("HeaderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("WeekDay")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HeaderId");
+
+                    b.ToTable("UV_SMT_Mst_LineCalendar_Dtl");
+                });
+
             modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTLineCalendarModel", b =>
                 {
                     b.Property<int>("Id")
@@ -2262,6 +2293,10 @@ namespace MESWebDev.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PCB")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PCBNo")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -2345,7 +2380,7 @@ namespace MESWebDev.Migrations
                     b.Property<DateTime>("CreatedDt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("EndDt")
+                    b.Property<DateTime?>("EndDt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Lotno")
@@ -2362,7 +2397,7 @@ namespace MESWebDev.Migrations
                     b.Property<int>("Size")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("StartDt")
+                    b.Property<DateTime?>("StartDt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UpdatedBy")
@@ -2370,6 +2405,9 @@ namespace MESWebDev.Migrations
 
                     b.Property<DateTime?>("UpdatedDt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedFile")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -2384,10 +2422,6 @@ namespace MESWebDev.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BModel")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("BackgroundColor")
                         .HasColumnType("nvarchar(max)");
 
@@ -2397,10 +2431,6 @@ namespace MESWebDev.Migrations
                     b.Property<string>("BorderColor")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ComponentLot")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -2408,11 +2438,20 @@ namespace MESWebDev.Migrations
                     b.Property<DateTime>("CreatedDt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("EndDt")
+                    b.Property<string>("ETPCB")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndDt")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("ExcessStock")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("FinishedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsFinished")
+                        .HasColumnType("bit");
 
                     b.Property<int>("IssuedQty")
                         .HasColumnType("int");
@@ -2428,7 +2467,11 @@ namespace MESWebDev.Migrations
                     b.Property<int>("LotSize")
                         .HasColumnType("int");
 
-                    b.Property<string>("Machine")
+                    b.Property<string>("Lotno")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MachineCode")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -2436,31 +2479,35 @@ namespace MESWebDev.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("OldId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PcbKey")
+                    b.Property<string>("PCBKey")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PcbNo")
+                    b.Property<string>("PCBNo")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PcbPerModel")
+                    b.Property<int>("PCBPerModel")
                         .HasColumnType("int");
 
-                    b.Property<string>("PcbType")
+                    b.Property<string>("PCBType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Remark")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("StartDt")
+                    b.Property<DateTime?>("StartDt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("StartScheduleDate")
+                    b.Property<DateTime?>("StartScheduleDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("TargetPerHour85")
@@ -2474,12 +2521,49 @@ namespace MESWebDev.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("UVNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UploadedFile")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Warning")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("UV_SMT_Prod_Plan");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTShiftDtlModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EndMinute")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EndTime")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ShiftCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StartMinute")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StartTime")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_SMT_Mst_Shift_Dtl");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTShiftModel", b =>
@@ -2773,8 +2857,9 @@ namespace MESWebDev.Migrations
                     b.Property<int>("Board_Pcs_Per_Sheet")
                         .HasColumnType("int");
 
-                    b.Property<double>("CPH")
-                        .HasColumnType("float");
+                    b.Property<decimal>("CPH")
+                        .HasPrecision(10, 1)
+                        .HasColumnType("decimal(10,1)");
 
                     b.Property<int>("Chips_Per_Board")
                         .HasColumnType("int");
@@ -2798,8 +2883,9 @@ namespace MESWebDev.Migrations
                     b.Property<string>("Finish_Status")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("GXH1_SIM_Time_Seconds")
-                        .HasColumnType("float");
+                    b.Property<decimal>("GXH1_SIM_Time_Seconds")
+                        .HasPrecision(10, 1)
+                        .HasColumnType("decimal(10,1)");
 
                     b.Property<string>("GXH3_SIM_Time_Seconds")
                         .IsRequired()
@@ -2877,26 +2963,31 @@ namespace MESWebDev.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SIM_OUT_PCS_Per_Hour")
+                        .HasPrecision(10, 1)
                         .HasColumnType("int");
 
                     b.Property<string>("Solder_Type")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("TACT_Time_Seconds")
-                        .HasColumnType("float");
+                    b.Property<decimal>("TACT_Time_Seconds")
+                        .HasPrecision(10, 1)
+                        .HasColumnType("decimal(10,1)");
 
-                    b.Property<double?>("T_mm")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("T_mm")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("X_mm")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("X_mm")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
 
-                    b.Property<double?>("Y_mm")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("Y_mm")
+                        .HasPrecision(10, 4)
+                        .HasColumnType("decimal(10,4)");
 
                     b.HasKey("Id");
 
@@ -4166,6 +4257,17 @@ namespace MESWebDev.Migrations
                         .IsRequired();
 
                     b.Navigation("TimeStudyDtl");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTLineCalendarDtlModel", b =>
+                {
+                    b.HasOne("MESWebDev.Models.ProdPlan.SMT.SMTLineCalendarModel", "SMTLineCalendarHdrModel")
+                        .WithMany()
+                        .HasForeignKey("HeaderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SMTLineCalendarHdrModel");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTLineMachineDataModel", b =>

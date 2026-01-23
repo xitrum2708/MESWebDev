@@ -1,0 +1,68 @@
+﻿
+@model SMTPlanModel
+@{
+    int i = 0;
+}
+
+<form id="fEdit" method="post">
+    @Html.AntiForgeryToken()
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">@* " modal-lg"> *@
+            <div class="modal-content">
+                <div class="modal-header table-success">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil-square"></i>
+                        @TranslationService.Trans("Edit")
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-warning bg-opacity-25">
+
+                    <input type="hidden" asp-for="Id" />
+                    <div class="row g-2">
+                        <div class="col-4">@TranslationService.Trans("From")</div>
+                        <div class="col-8">
+                            <div class="input-group">
+                                <input class="form-control" type="text" id="startDate" placeholder="Start Date" asp-for="StartDt"
+                                       value="@Convert.ToDateTime(Model.StartDt).ToString("yyyy/MM/dd")" required/>                                
+                                <span class="input-group-text"><i class="bi bi-calendar-week-fill"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="col-4">@TranslationService.Trans("To")</div>
+                        <div class="col-8">
+                            <div class="input-group">
+                                <input class="form-control" type="text" id="endDate" placeholder="End Date" asp-for="EndDt"
+                                    value="@Convert.ToDateTime(Model.EndDt).ToString("yyyy/MM/dd")" />
+                                <span class="input-group-text"><i class="bi bi-calendar-week-fill"></i></span>
+                            </div>
+                        </div>
+                        <div class="col-4">@TranslationService.Trans("Model")</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="Model" disabled /></div>
+                        <div class="col-4">@TranslationService.Trans("Lotno")</div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="Lotno" disabled /></div>
+                        <div class="col-4">@TranslationService.Trans("Size")</div>
+                        <div class="col-8"><input type="number" class="form-control  _Size" asp-for="Size" required /></div>
+                        <div class="col-4">@TranslationService.Trans("Balance")</div>
+                        <div class="col-8"><input type="number" class="form-control  _Balance" asp-for="Balance" required /></div>
+                        
+                  
+                    </div>
+                
+                </div>
+                <div class="modal-footer">
+                    <a id="btnEdit" onclick="Edit()" class="btn btn-sm btn-info">
+                        <i class="bi bi-floppy"></i>
+                        @TranslationService.Trans("save")
+                    </a>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                        <i class="fa-regular fa-circle-xmark"></i>
+                        @TranslationService.Trans("close")
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</form>

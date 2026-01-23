@@ -1,0 +1,502 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.PE
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Services
+@using System.Data
+@using System.Globalization
+@model ProdPlanViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="float-start d-flex justify-content-between align-items-center w-50">
+                                <h3 class="card-title fw-bold fs-5">
+                                    <i class="bi bi-box"></i>
+                                    @TranslationService.Trans("81")
+                                </h3>
+
+                                <a class="btn btn-sm btn-light" href="~/Manual/Manual_UVPlan.xlsx">
+                                    <i class="bi bi-question-circle"></i>
+                                </a>
+                                <input class="form-control w-50 ms-3" placeholder="🔍 Quick Search..." id="quickSearch" onkeyup="QuickSearch()" />
+                            </div>
+                            <div class="float-end d-flex justify-content-center align-items-center">
+                                <a onclick="Search()" class="btn btn-warning btn-sm search-icon me-2">
+                                    <i class="bi bi-search" style="cursor: pointer;"></i>
+                                    @TranslationService.Trans("Search")                                    
+                                </a>
+                                <a class="btn btn-info btn-sm bt_upload me-2">
+                                    <i class="bi bi-file-earmark-arrow-up"></i>
+                                    @TranslationService.Trans("Upload")
+                                    
+                                </a>
+                                <button class="btn btn-sm btn-primary me-2" onclick="AddUVPlan()">
+                                    <i class="bi bi-plus-circle"></i>
+                                    @TranslationService.Trans("add")
+                                </button>
+                                <a class="btn btn-sm btn-secondary me-2" id="DownloadData">
+                                    <i class="bi bi-download"></i>
+                                    @TranslationService.Trans("Download")
+                                </a>
+                                <a id="DeleteData" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-trash3"></i>
+                                    @TranslationService.Trans("Delete")                                    
+                                </a>
+
+                            </div>
+                        </div>
+                        <div class="card-body">
+
+                            @* JUST FOR TESTING *@
+                            <!-- StartDate -->
+@*                             <div class="input-group mx-2 py-1" style="max-width: 180px;">
+                                <input class="form-control" type="text" id="startDate" placeholder="Start Date"  />
+                                <span class="input-group-text"><i class="bi bi-calendar-week-fill"></i></span>
+                            </div>
+                            <div>
+                                <font class="fs-6 fw-bold"> ~ </font>
+                            </div>
+                            <!-- EndDate -->
+                            <div class="input-group mx-2 py-1" style="max-width: 180px;">
+                                <input class="form-control" type="text" id="endDate" placeholder="End Date" />
+                                <span class="input-group-text"><i class="bi bi-calendar-week-fill"></i></span>
+                            </div> *@
+                            @* END TESTING *@
+
+                            <div class="result-area" id="ResultArea">
+                                @if (Model.Data == null)
+                                {
+                                    <h5 class="m-3">No data available.</h5>
+                                }
+                                else
+                                {
+                                    <partial name="SMT/UVPlan/_Result" model="@Model" />
+                                }
+                            </div>
+
+                        </div>
+                        @if (Model.Data != null && Model.Data.Rows.Count > 0)
+                        {
+                            <div class="card-footer pager p-0">
+
+                                <partial name="_PagingPartialView" />
+
+                            </div>
+                        }
+
+                    </div>
+                </div>
+            </div>
+            @* <partial name="ProdPlan/Setting/_Edit" /> *@
+            <Partial name="SMT/UVPlan/_Upload" />
+            <Partial name="_LoadingPartial" />
+            <partial name="SMT/UVPlan/__Delete" />
+            @* <partial name="ProdPlan/Setting/__Add" model="@Model"/> *@
+            <div id="modalArea">
+            </div>
+        </div>
+    </div>
+
+}
+catch (Exception ex)
+{
+    string t = ex.Message;
+}
+
+@section Scripts {
+    <link href="~/css/pecss.css" rel="stylesheet" />
+    <link href="~/css/bootstrap-icons.min.css" rel="stylesheet" />
+
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/panigation.js"></script>
+
+    @* -- DATE TIME PICKER -- *@
+    <link rel="stylesheet" href="~/css/DatetimePicker.css?@DateTime.Now.Ticks">
+    <script src="~/js/DatetimePicker-IU.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/DatetimePicker.js?@DateTime.Now.Ticks"></script>
+
+    @* SORT TABLE  *@
+    <link href="~/css/TableSort.css?@DateTime.Now.Ticks" rel="stylesheet" />
+    <script src="~/js/TableSort.js?@DateTime.Now.Ticks"></script>
+
+    <script>
+        $(document).ready(function(){
+            enableTableSort('mytable');
+        });
+
+        $(document).on("click", "#mytable thead th", function () {
+            sortTable("mytable", this);
+        });
+        // --- Show Upload Windows --- \\
+        $('.bt_upload').click( function(){
+             $('#uploadModal').modal('show');
+        });
+        $(document).on("click", "#btnUpload", function (e) {
+            e.preventDefault();
+
+            var form = $("#UploadForm")[0];      // get form element
+            var formData = new FormData(form);   // create FormData
+
+            $.ajax({
+                url: '@Url.Action("UVPlanUpload")',  // controller + action
+                type: 'POST',
+                data: formData,
+                processData: false, // important for FormData
+                contentType: false, // important for FormData
+                success: function (response) {
+                     $('#uploadModal').modal('hide');
+                     $('#ResultArea').html(response);
+                     $('.result-area').trigger("dataChanged");
+                     ResetQuickSearch();
+
+                    //Get error message if existed
+                    var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                    if (errorMsg) {
+                        toastr.error(errorMsg, "Error");
+                    }
+                    else
+                    toastr.success('Upload successfully !','Success')
+                },
+                error: function (xhr, status, error) {
+                    console.error("Upload error:", error);
+                    alert("Upload failed!");
+                }
+            });
+        });
+
+
+        // Click Edit
+        function editItem(id) {
+            //alert(id);            
+            $.ajax({
+                url: '@Url.Action("UVPlanEdit")',
+                type: 'Get',
+                data: { Id: parseInt(id) },
+                success: function (html) {
+                    $('#modalArea').html(html);
+                    $('#editModal').modal('show');
+                    IniDatetimePicker();
+
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the edit form.');
+                }
+            });
+        }
+        function Edit() {
+            let size = parseInt($('._Size').val());
+            let balance = parseInt($('._Balance').val());
+        
+            if(balance > size)
+            {
+                toastr.error("Balance cannot be greater than Size.")
+                return
+            }
+            if($('#fEdit').valid()){
+                var data = $('#fEdit').serialize();
+                $.ajax({
+                    url: '@Url.Action("UVPlanEdit")',
+                    type: 'Post',
+                    data: data,
+                    success: function (html) {
+                        $('#editModal').modal('hide');
+                        $('#ResultArea').html(html);
+                        $('.result-area').trigger("dataChanged");
+                        ResetQuickSearch();
+
+                        //Get error message if existed
+                        var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                        if (errorMsg) {
+                            toastr.error(errorMsg, "Error");
+                        }
+                        else {
+                            toastr.success('Edit successfully !','Success')
+                        }
+                    },
+                    error: function () {
+                        toastr.error('An error occurred while loading the edit form.');
+                    }
+
+                });
+            }
+            else{
+                toastr.error("Please fill all fields.","Error");
+                return;
+            }
+        }
+
+        //------------------ ADD ------------------
+        // Click Add Use off before on to prevent double click
+        function AddUVPlan(){
+            //alert('Hi there!');
+            $.ajax({
+                url: '@Url.Action("UVPlanAdd")',
+                type: 'Get',
+                success: function (html) {
+                    $('#modalArea').html(html);
+                    $('#addModal').modal('show');
+                    IniDatetimePicker();
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the add form.');
+                }
+            });
+        }
+        function Add() {
+            let size = parseInt($('._Size').val());
+            let balance = parseInt($('._Balance').val());
+            if(balance > size)
+            {
+                toastr.error("Balance cannot be greater than Size.")
+                return
+            }
+            if($('#fAdd').valid()){
+                var data = $('#fAdd').serialize();
+                
+                //alert(data);
+                $.ajax({
+                    url: '@Url.Action("UVPlanAdd")',
+                    type: 'Post',
+                    data: data,
+                    success: function (html) {
+                        $('#addModal').modal('hide');
+                        $('#ResultArea').html(html);
+                        $('.result-area').trigger("dataChanged");
+                        ResetQuickSearch();
+
+                        //Get error message if existed
+                        var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                        if (errorMsg) {
+                            toastr.error(errorMsg, "Error");
+                        }
+                        else
+                        toastr.success('Add successfully !','Success')
+                    },
+                    error: function () {
+                        toastr.error('An error occurred while loading the add form.');
+                    }
+                });
+            }
+            else{
+                toastr.error("Please fill all fields.","Error");
+                return;
+            }           
+        }
+        
+        
+        // DELETE
+        function deleteItem(id) {
+            $('#deleteId').val(id);
+            $('#deleteModal').modal('show');
+        }
+
+        function Delete() {
+            let index = parseInt($('#deleteId').val());
+            $.ajax({
+                url: '@Url.Action("UVPlanDelete")',
+                type: 'Post',
+                data: {Id: index},
+                success: function (html) {
+                    $('#ResultArea').html(html);
+                    $('#deleteModal').modal('hide');
+                    $('.result-area').trigger("dataChanged");
+                    ResetQuickSearch();
+                    //Get error message if existed
+                    var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
+                    if (errorMsg) {
+                        toastr.error(errorMsg, "Error");
+                    }
+                    else{
+                        toastr.success('Delete successfully !','Success')
+                    }
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the edit form.');
+                }
+            });            
+        }
+
+        //Download
+        $('#DownloadData').on('click', function () {
+            const headers = [];
+            $('table thead .header-text').each(function () {
+                //alert($(this).text().trim());
+                headers.push($(this).text().trim());
+            });
+
+            const rows = [];
+            $('table tbody tr:visible').each(function () {
+                const rowData = [];
+                $(this).find('td.body-text').each(function () {
+                    rowData.push($(this).text().trim());
+                });
+                rows.push(rowData);
+            });
+
+            const payload = { headers: headers, rows: rows };
+
+            $.ajax({
+                url: '@Url.Action("DownloadWeb")',
+                type: 'POST',
+                data: JSON.stringify(payload),
+                contentType: 'application/json',
+                xhrFields: { responseType: 'blob' }, // important to download file'
+                success: function (data) {
+                const blob = new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                //a.download = "FilteredData.xlsx";
+
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                const fileName = `UVPlanMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            }
+            });
+        });
+
+        // Quick Search
+        function QuickSearch(){
+            var query = $('#quickSearch').val().toUpperCase();
+            $('#mytable tbody tr').each(function(){
+                var row = $(this);
+                row.find('td').each(function(){
+                    var tdText = $(this).text().toUpperCase();
+                    if(tdText.indexOf(query) > -1){
+                        row.show(); return false;
+                    }
+                    else{
+                        row.hide();
+                    }
+                });
+            });
+        }
+
+        function ResetQuickSearch(){
+            $('#quickSearch').val("");
+        }
+
+        // Search
+        function Search(){
+             $.get('/ProdPlan/UVPlanSearch')
+              .done(function(html){
+                  $('#modalArea').html(html);
+                  $('#searchModal').modal('show');
+                  IniDatetimePicker();
+              })
+              .fail(function(){
+                  toastr.error('Error to load Search Modal','error');
+              });
+        }
+
+        $(document).on("click", "#btnSearch", function (e) {
+            e.preventDefault();
+             var data = $('#fSearch').serialize();
+            $.ajax({
+                url: '@Url.Action("UVPlanSearch")',  // controller + action
+                type: 'POST',
+                data: data,
+                success: function (response) {
+                    $('#searchModal').modal('hide');
+                    $('#ResultArea').html(response);
+                    $('.result-area').trigger("dataChanged");
+                    ResetQuickSearch();
+
+                },
+                error: function (xhr, status, error) {
+                    toastr.error('Error to search info, pls check again.','error')
+                }
+            });
+        });
+
+        // delete
+
+          // Delete data
+          $('#DeleteData').click(function(){
+              if($('._cb:checked').length > 0){
+                  $('#deleteModal').modal('show');
+              }
+              else{
+                  toastr.error('Please select at least one record to delete.');
+              }
+          });
+
+          $(document).on('click', '._cbAll', function () {
+            const isChecked = $(this).is(':checked');
+                $('._cb').prop('checked', isChecked);
+
+                if(isChecked) {
+                    $('._cb').closest('tr').css('text-decoration','line-through');
+                } else {
+                    $('._cb').closest('tr').css('text-decoration','none');
+                }
+              });
+
+              $(document).on('click', '._cb', function () {
+                const isChecked = $(this).is(':checked');
+                if(isChecked) {
+                    $(this).closest('tr').css('text-decoration','line-through');
+                } else {
+                    $(this).closest('tr').css('text-decoration','none');
+                }
+          });
+
+          function Delete()
+          {
+                const ids = [];
+                $('._cb:checked').each(function () {
+                    const id = parseInt($(this).siblings('._id').val());
+                    ids.push(id);
+                });
+
+                if (ids.length === 0) {
+                    toastr.error('Please select at least one record to delete.');
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("UVPlanDelete")', 
+                    type: 'POST',
+                    data: JSON.stringify(ids),
+                    contentType: 'application/json',
+                    success: function (response) {
+                        if (response.success) {
+                            toastr.success('Selected records deleted successfully.');
+                            // Optionally, refresh the table or remove deleted rows from the DOM
+                            window.location.href = '@Url.Action("UVPlan", "ProdPlan")';
+                        } else {
+                            toastr.error(response.message || 'An error occurred while deleting records.');
+                        }
+                    },
+                    error: function () {
+                        toastr.error('An error occurred while deleting records.');
+                    }
+                });
+          }
+
+    </script>
+
+}

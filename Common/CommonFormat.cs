@@ -76,8 +76,11 @@ namespace MESWebDev.Common
                 return "text-center";
             return "text-start";
         }
-
-        public static T GetValueOrDefault<T>(IDataReader reader, Dictionary<string, int> colMap, string colName, T defaultValue = default)
+        public static T GetValueOrDefault<T>(
+                                                IDataReader reader,
+                                                Dictionary<string, int> colMap,
+                                                string colName,
+                                                T defaultValue = default)
         {
             if (!colMap.TryGetValue(colName, out int idx))
                 return defaultValue;
@@ -86,8 +89,54 @@ namespace MESWebDev.Common
             if (val == DBNull.Value || val == null)
                 return defaultValue;
 
-            return (T)Convert.ChangeType(val, typeof(T));
+            try
+            {
+                // Nếu đã đúng type thì return luôn
+                if (val is T tVal)
+                    return tVal;
+
+                //// Special handle cho string -> number
+                //if (typeof(T) == typeof(int))
+                //{
+                //    if (int.TryParse(val.ToString(), out int i))
+                //        return (T)(object)i;
+                //    return defaultValue;
+                //}
+
+                //if (typeof(T) == typeof(decimal))
+                //{
+                //    if (decimal.TryParse(val.ToString(), out decimal d))
+                //        return (T)(object)d;
+                //    return defaultValue;
+                //}
+
+                //if (typeof(T) == typeof(double))
+                //{
+                //    if (double.TryParse(val.ToString(), out double db))
+                //        return (T)(object)db;
+                //    return defaultValue;
+                //}
+
+                return (T)Convert.ChangeType(val, typeof(T));
+            }
+            catch
+            {
+                // Bất kỳ giá trị bẩn nào như "200/900"
+                return defaultValue;
+            }
         }
+
+        //public static T GetValueOrDefault<T>(IDataReader reader, Dictionary<string, int> colMap, string colName, T defaultValue = default)
+        //{
+        //    if (!colMap.TryGetValue(colName, out int idx))
+        //        return defaultValue;
+
+        //    object val = reader.GetValue(idx);
+        //    if (val == DBNull.Value || val == null)
+        //        return defaultValue;
+
+        //    return (T)Convert.ChangeType(val, typeof(T));
+        //}
 
     }
 

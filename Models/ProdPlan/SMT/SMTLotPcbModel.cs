@@ -9,6 +9,7 @@ namespace MESWebDev.Models.ProdPlan.SMT
         public string Model { get; set; }
         public string Lotno { get; set; }
         public string PCBNo { get; set; }
+        public string PCB { get; set; }
         public string? UploadedFile { get; set; }
         public string? Remark { get; set; }
         public DateTime CreatedDt { get; set; }

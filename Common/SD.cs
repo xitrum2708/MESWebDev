@@ -22,8 +22,17 @@
             public const string NoDataInUploadedFile = "No data found in the uploaded file.";
             //"No data found in the uploaded file."
         }
-        public class SessionParametter
+        public class CalendarType
         {
+            public const string Weekday = "Weekday";
+            public const string Range = "Range";
+            public const string Date = "Date";
+        }
+        public static readonly string[] Weekdays = {  "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+
+
+        public class SessionParametter
+            {
             public const string SessionID = "ID";
             public const string SessionName = "Name";
 

@@ -16,6 +16,8 @@ namespace MESWebDev.Models.ProdPlan
         public List<SelectListItem>? SLI_Machine { get; set; }
         public List<SelectListItem>? SLI_Shift { get; set; }
 
+        public string? UploadedFile { get; set; }
+
         #region Master
         public SMTMachineConditionModel? SMTMachineConditionModel { get; set; }
         public SMTLineMachineDataModel? SMTLineMachineDataModel { get; set; }
@@ -31,7 +33,12 @@ namespace MESWebDev.Models.ProdPlan
         #region SMT Production Plan
         public SMTLotPcbModel SMTLotPcbModel { get; set; } = new SMTLotPcbModel();
         public List<SMTLotPcbModel>? SMTLotPcbList { get; set; }
-        public string? UploadedFile { get; set; }
+        
+        public SMTPlanModel SMTPlanModel { get; set; } = new SMTPlanModel();
+        public List<SMTPlanModel>? SMTPlanList { get; set; }
+
+        public SMTProdPlanModel SMTProdPlanModel { get; set; } = new SMTProdPlanModel();
+        public List<SMTProdPlanModel>? SMTProdPlanList { get; set; }
         #endregion
 
 

@@ -16,6 +16,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-2">
+
                     <div class="row">
                         <div class="col-10 my-2">
                             <a href="~/UploadTemplate/SMT/PCBUploadTemplate.xlsx">[Download Template]</a>
@@ -23,18 +24,18 @@
                         <div class="col-10 mb-2">
                             <input class="form-control form-control-sm" accept=".xls*,.csv" type="file" name="file1" required/>
                         </div>
-                    </div>
-                   
+                    </div>                   
                     <font id="result" class="text-danger fw-bold"></font>
+
                 </div>
                 <div class="modal-footer">
                     <a class="btn btn-primary btn-sm" id="btnUpload">
                         <i class='bx bx-upload'></i>
-                        Upload
+                        @TranslationService.Trans("Upload")
                     </a>
                     <button type="button" class="btn btn-warning btn-sm" data-bs-dismiss="modal">
                         <i class='bx bx-no-entry'></i>
-                        Cancel
+                        @TranslationService.Trans("Cancel")
                     </button>
                 </div>
             </div>

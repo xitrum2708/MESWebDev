@@ -160,3 +160,19 @@ tr.row-even td{
 tr.row-odd td{
     background-color: #1c2b88 !important;
 }
+
+.detail-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.2rem;
+}
+
+.detail {
+    height: 100px;
+    border: 2px solid #0dcaf0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+

@@ -69,6 +69,26 @@ namespace MESWebDev.Services.IService
         Task<string> SMTLotPcbEdit(SMTLotPcbModel shift);
         Task<string> SMTLotPcbDelete(List<int> Ids);
 
+        //UV Plan
+        Task<DataTable> UVPlanList(Dictionary<string, object> dic);
+        Task<SMTPlanModel> UVPlanDetail(int Id);
+        Task<string> UVPlanAdd(SMTPlanModel shift);
+        Task<ProdPlanViewModel> UVPlanUpload(IFormFile file);
+        Task<string> UVPlanEdit(SMTPlanModel shift);
+        Task<string> UVPlanDelete(List<int> Ids);
+
+
+        //SMT Completed Plan
+        Task<DataTable> SMTCompletedPlansList(Dictionary<string, object> dic);
+        Task<SMTProdPlanModel> SMTCompletedPlansDetail(int Id);
+        Task<string> SMTCompletedPlansAdd(SMTProdPlanModel shift);
+        Task<ProdPlanViewModel> SMTCompletedPlansUpload(IFormFile file);
+        Task<string> SMTCompletedPlansEdit(SMTProdPlanModel shift);
+        Task<string> SMTCompletedPlansDelete(List<int> Ids);
+
+
+        
+
         #endregion
 
         #region PC Prod Plan

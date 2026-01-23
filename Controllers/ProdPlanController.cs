@@ -121,7 +121,7 @@ namespace MESWebDev.Controllers
         public async Task<IActionResult> Index()
         {
             ProdPlanViewModel ppv = await _ppService.ViewProdPlan(new RequestDTO());
-            return View(ppv);
+            return View("PC/Index",ppv);
         }
 
         [HttpPost]
@@ -147,7 +147,7 @@ namespace MESWebDev.Controllers
                 ViewBag.Error = $"An error occurred while processing the files: {ex.Message}";
             }
             ppv.start_sch_dt = DateTime.Now;
-            return View("Index", ppv);
+            return View("PC/Index", ppv);
         }
 
         [HttpPost]
@@ -765,9 +765,256 @@ namespace MESWebDev.Controllers
 
         #endregion
 
+        #region -- UV PLAN
+        [HttpGet]
+        public async Task<IActionResult> UVPlan()
+        {
+            ProdPlanViewModel ppv = await GetUVPlan();
+            return View("SMT/UVPlan/Index", ppv);
+        }
+
+        // Add
+        [HttpGet]
+        public async Task<IActionResult> UVPlanAdd()
+        {
+            SMTPlanModel ppv = new();
+            return PartialView("SMT/UVPlan/__Add", ppv);
+        }
+        [HttpPost]
+        public async Task<IActionResult> UVPlanAdd(SMTPlanModel slp)
+        {
+            string msg = await _ppService.UVPlanAdd(slp ?? new());
+
+            ProdPlanViewModel ppv = await GetUVPlan();
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+
+            return PartialView("SMT/UVPlan/_Result", ppv);
+        }
+
+        // Edit
+        [HttpGet]
+        public async Task<IActionResult> UVPlanEdit(int Id)
+        {
+            SMTPlanModel ppv = await _ppService.UVPlanDetail(Id);
+            return PartialView("SMT/UVPlan/__Edit", ppv);
+        }
+        [HttpPost]
+        public async Task<IActionResult> UVPlanEdit(SMTPlanModel slp)
+        {
+            string msg = await _ppService.UVPlanEdit(slp ?? new());
+            ProdPlanViewModel ppv = await GetUVPlan();
+
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+
+            return PartialView("SMT/UVPlan/_Result", ppv);
+        }
+
+        //// Delete
+        //[HttpPost]
+        //public async Task<IActionResult> UVPlanDelete(int Id)
+        //{
+        //    string msg = await _ppService.UVPlanDelete(Id);
+        //    ProdPlanViewModel ppv = await GetUVPlan();
+        //    if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+        //    return PartialView("SMT/UVPlan/_Result", ppv);
+        //}
 
 
+        [HttpGet]
+        public async Task<ProdPlanViewModel> GetUVPlan(Dictionary<string, object>? dic = null)
+        {
+            ProdPlanViewModel ppv = new();
+            ppv.FormatRazorDTO = await _settingService.GetFormatRazor();
 
+            ppv.Data = await _ppService.UVPlanList(dic ?? new Dictionary<string, object>());
+            return ppv;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UVPlanUpload(IFormFile file1)
+        {
+            ProdPlanViewModel pev = new();
+            if (file1 == null)
+            {
+                pev.error_msg = "Please upload no file.";
+                return View("SMT/UVPlan/Index", pev);
+            }
+            try
+            {
+                pev = await _ppService.UVPlanUpload(file1);
+                ViewBag.Success = "Files uploaded and processed successfully.";
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = $"An error occurred while processing the files: {ex.Message}";
+            }
+            return PartialView("SMT/UVPlan/_Result", pev);
+        }
+        [HttpGet]
+        public async Task<IActionResult> UVPlanSearch()
+        {
+            SMTPlanModel slp = new();
+            return PartialView("SMT/UVPlan/__Search", slp);
+        }
+        [HttpPost]
+        public async Task<IActionResult> UVPlanSearch(SMTPlanModel tsh)
+        {
+            ProdPlanViewModel pev = new();
+            Dictionary<string, object> dic = new();
+            if (tsh != null)
+            {
+                // Search dictionary base on tsh
+                dic.Add("@lot_no", tsh.Lotno ?? string.Empty);
+                if(tsh.StartDt.HasValue)
+                    dic.Add("@start_dt", tsh.StartDt);
+                if(tsh.EndDt.HasValue)
+                    dic.Add("@end_dt", tsh.EndDt);
+                dic.Add("@model", tsh.Model ?? string.Empty);
+            }
+            pev.Data = await _ppService.UVPlanList(dic);
+            return PartialView("SMT/UVPlan/_Result", pev);
+        }
+
+        // Delete
+        [HttpPost]
+        public async Task<IActionResult> UVPlanDelete([FromBody] List<int> ids)
+        {
+            string msg = string.Empty;
+            msg = await _ppService.UVPlanDelete(ids);
+            if (!string.IsNullOrEmpty(msg))
+            {
+                return Json(new { success = false, error = msg });
+            }
+            return Json(new { success = true });
+        }
+
+        #endregion
+
+        #region -- COMPLETED PLANS
+        [HttpGet]
+        public async Task<IActionResult> SMTCompletedPlans()
+        {
+            ProdPlanViewModel ppv = await GetSMTCompletedPlans();
+            return View("SMT/CompletedPlans/Index", ppv);
+        }
+
+        // Add
+        [HttpGet]
+        public async Task<IActionResult> SMTCompletedPlansAdd()
+        {
+            SMTProdPlanModel ppv = new();
+            return PartialView("SMT/CompletedPlans/__Add", ppv);
+        }
+        [HttpPost]
+        public async Task<IActionResult> SMTCompletedPlansAdd(SMTProdPlanModel slp)
+        {
+            string msg = await _ppService.SMTCompletedPlansAdd(slp ?? new());
+
+            ProdPlanViewModel ppv = await GetSMTCompletedPlans();
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+
+            return PartialView("SMT/CompletedPlans/_Result", ppv);
+        }
+
+        // Edit
+        [HttpGet]
+        public async Task<IActionResult> SMTCompletedPlansEdit(int Id)
+        {
+            SMTProdPlanModel ppv = await _ppService.SMTCompletedPlansDetail(Id);
+            return PartialView("SMT/CompletedPlans/__Edit", ppv);
+        }
+        [HttpPost]
+        public async Task<IActionResult> SMTCompletedPlansEdit(SMTProdPlanModel slp)
+        {
+            string msg = await _ppService.SMTCompletedPlansEdit(slp ?? new());
+            ProdPlanViewModel ppv = await GetSMTCompletedPlans();
+
+            if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+
+            return PartialView("SMT/CompletedPlans/_Result", ppv);
+        }
+
+        //// Delete
+        //[HttpPost]
+        //public async Task<IActionResult> SMTCompletedPlansDelete(int Id)
+        //{
+        //    string msg = await _ppService.SMTCompletedPlansDelete(Id);
+        //    ProdPlanViewModel ppv = await GetSMTCompletedPlans();
+        //    if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
+        //    return PartialView("SMT/CompletedPlans/_Result", ppv);
+        //}
+
+
+        [HttpGet]
+        public async Task<ProdPlanViewModel> GetSMTCompletedPlans(Dictionary<string, object>? dic = null)
+        {
+            ProdPlanViewModel ppv = new();
+            ppv.FormatRazorDTO = await _settingService.GetFormatRazor();
+
+            ppv.Data = await _ppService.SMTCompletedPlansList(dic ?? new Dictionary<string, object>());
+            return ppv;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SMTCompletedPlansUpload(IFormFile file1)
+        {
+            ProdPlanViewModel pev = new();
+            if (file1 == null)
+            {
+                pev.error_msg = "Please upload no file.";
+                return View("SMT/CompletedPlans/Index", pev);
+            }
+            try
+            {
+                pev = await _ppService.SMTCompletedPlansUpload(file1);
+                ViewBag.Success = "Files uploaded and processed successfully.";
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = $"An error occurred while processing the files: {ex.Message}";
+            }
+            return PartialView("SMT/CompletedPlans/_Result", pev);
+        }
+        [HttpGet]
+        public async Task<IActionResult> SMTCompletedPlansSearch()
+        {
+            SMTProdPlanModel slp = new();
+            return PartialView("SMT/CompletedPlans/__Search", slp);
+        }
+        [HttpPost]
+        public async Task<IActionResult> SMTCompletedPlansSearch(SMTProdPlanModel tsh)
+        {
+            ProdPlanViewModel pev = new();
+            Dictionary<string, object> dic = new();
+            if (tsh != null)
+            {
+                // Search dictionary base on tsh
+                dic.Add("@lot_no", tsh.Lotno ?? string.Empty);
+                if (tsh.StartDt.HasValue)
+                    dic.Add("@start_dt", tsh.StartDt);
+                if (tsh.EndDt.HasValue)
+                    dic.Add("@end_dt", tsh.EndDt);
+                dic.Add("@model", tsh.Model ?? string.Empty);
+                dic.Add("@pcb_no", tsh.PCBNo ?? string.Empty);
+            }
+            pev.Data = await _ppService.SMTCompletedPlansList(dic);
+            return PartialView("SMT/CompletedPlans/_Result", pev);
+        }
+
+        // Delete
+        [HttpPost]
+        public async Task<IActionResult> SMTCompletedPlansDelete([FromBody] List<int> ids)
+        {
+            string msg = string.Empty;
+            msg = await _ppService.SMTCompletedPlansDelete(ids);
+            if (!string.IsNullOrEmpty(msg))
+            {
+                return Json(new { success = false, error = msg });
+            }
+            return Json(new { success = true });
+        }
+
+        #endregion
         #endregion
 
         #region COMMON

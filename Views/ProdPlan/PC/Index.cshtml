@@ -87,9 +87,9 @@
                                             </a>
                                         </li>
                                     </ul>
-                                    <partial name="__Holiday" model="@Model.holidays" />
-                                    <partial name="__Parameter" model="@Model" />
-                                    <partial name="__WorkingHour" model="@Model" />
+                                    <partial name="PC/__Holiday" model="@Model.holidays" />
+                                    <partial name="PC/__Parameter" model="@Model" />
+                                    <partial name="PC/__WorkingHour" model="@Model" />
                                 </div>
                             </div>
                         </div>
@@ -102,7 +102,7 @@
             </div>
         </div>
     </div>
-    <Partial name="_Upload" />
+    <Partial name="PC/_Upload" />
     <Partila name="_LoadingPartial" />
 }
 catch(Exception ex)

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Office2010.ExcelAc;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Vml;
 using ExcelDataReader;
@@ -1052,6 +1053,7 @@ namespace MESWebDev.Services
 
         #region SMT Production Plan
 
+        #region SMT Lot PCB Management
         public async Task<DataTable> SMTLotPcbList(Dictionary<string, object> dic)
         {
             DataTable dt = await _proc.Proc_GetDatatable("spweb_UV_SMT_ProdPlan_LotPcb", dic);
@@ -1065,7 +1067,8 @@ namespace MESWebDev.Services
 
         public async Task<string> SMTLotPcbAdd(SMTLotPcbModel slp)
         {
-            try {
+            try
+            {
                 var check = await _con.UV_SMT_Lot_PCB.FirstOrDefaultAsync(i => i.Lotno == slp.Lotno && i.Model == slp.Model);
                 if (check != null)
                 {
@@ -1076,7 +1079,7 @@ namespace MESWebDev.Services
                 await _con.UV_SMT_Lot_PCB.AddAsync(slp);
                 await _con.SaveChangesAsync();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return ex.Message;
             }
@@ -1111,7 +1114,7 @@ namespace MESWebDev.Services
                 }
                 else ppv.error_msg = SD.ErrorMsg.NoDataInUploadedFile;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ppv.error_msg = ex.Message;
             }
@@ -1145,6 +1148,7 @@ namespace MESWebDev.Services
                             if (count <= header_row) continue; // skip header
 
                             string pcbNo = CommonFormat.GetValueOrDefault(reader, colMap, "PcbNo", string.Empty);
+                            string pcb = CommonFormat.GetValueOrDefault(reader, colMap, "PcbNo", string.Empty);
                             pcbNo = pcbNo.Length >= 6
                                             ? pcbNo.Substring(1, 2) + pcbNo.Substring(4, 6)
                                             : pcbNo;
@@ -1154,12 +1158,13 @@ namespace MESWebDev.Services
                                             ? model.Substring(0, 6)
                                             : model;
                             string lotno = CommonFormat.GetValueOrDefault(reader, colMap, "LotNo", string.Empty);
-                            if(!lotno.Contains("FCST") && (model.StartsWith("BY2") || model.StartsWith("BY3") || !model.StartsWith("BY")))
+                            if (!lotno.Contains("FCST") && (model.StartsWith("UY2") || model.StartsWith("UY3") || !model.StartsWith("UY")))
                             {
                                 SMTLotPcbModel slp = new()
                                 {
                                     Lotno = lotno,
                                     PCBNo = pcbNo,
+                                    PCB = pcb,
                                     Model = model,
                                     UploadedFile = uploadedFile,
                                     Remark = "Data from IFS System",
@@ -1175,7 +1180,6 @@ namespace MESWebDev.Services
                         }
                     }
                 }
-
             }
             catch (Exception ex)
             {
@@ -1197,8 +1201,9 @@ namespace MESWebDev.Services
             }
             check.Model = slp.Model;
             check.PCBNo = slp.PCBNo;
+            check.PCB = slp.PCB;
             check.Lotno = slp.Lotno;
-            check.Remark = $"Updated by {_hca.HttpContext?.User?.Identity?.Name?? string.Empty} at {DateTime.Now:yyMMddHHmmss}";
+            check.Remark = $"Updated by {_hca.HttpContext?.User?.Identity?.Name ?? string.Empty} at {DateTime.Now:yyMMddHHmmss}";
             await _con.SaveChangesAsync();
             return string.Empty;
         }
@@ -1223,7 +1228,406 @@ namespace MESWebDev.Services
         }
 
         #endregion
-        
+
+        #region UV Plan
+        public async Task<DataTable> UVPlanList(Dictionary<string, object> dic)
+        {
+            DataTable dt = await _proc.Proc_GetDatatable("spweb_UV_SMT_ProdPlan_UVPlan", dic);
+            return dt;
+        }
+
+        public async Task<SMTPlanModel> UVPlanDetail(int Id)
+        {
+            return await _con.UV_SMT_Plan.FindAsync(Id) ?? new();
+        }
+
+        public async Task<string> UVPlanAdd(SMTPlanModel slp)
+        {
+            try
+            {
+                var check = await _con.UV_SMT_Plan.FirstOrDefaultAsync(i => i.Lotno == slp.Lotno && i.Model == slp.Model);
+                if (check != null)
+                {
+                    return "Duplicate Lot No. and Model";
+                }
+                slp.CreatedDt = DateTime.Now;
+                slp.CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system";
+                await _con.UV_SMT_Plan.AddAsync(slp);
+                await _con.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+
+            return string.Empty;
+        }
+
+        public async Task<ProdPlanViewModel> UVPlanUpload(IFormFile file)
+        {
+            ProdPlanViewModel ppv = new();
+            try
+            {
+                ppv = await GetUVPlanUploadData(file);
+                List<SMTPlanModel> lst = ppv.SMTPlanList ?? new();
+                if (lst.Count > 0)
+                {
+                    string LotnoString = string.Join(", ", lst.Select(i => i.Lotno));
+
+                    // delete all existing data
+                    await _con.UV_SMT_Plan
+                                            .Where(i => LotnoString.Contains(i.Lotno))
+                                            //.ForEachAsync(i => _con.UV_SMT_Plan.Remove(i));
+                                            .ExecuteDeleteAsync();
+                    await _con.SaveChangesAsync();
+                    // add new one
+                    await _con.UV_SMT_Plan.AddRangeAsync(lst);
+                    await _con.SaveChangesAsync();
+                    ppv.Data = await UVPlanList(new Dictionary<string, object>()
+                    {
+                        { "@upload_file", ppv.UploadedFile}
+                    });
+                }
+                else ppv.error_msg = SD.ErrorMsg.NoDataInUploadedFile;
+            }
+            catch (Exception ex)
+            {
+                ppv.error_msg = ex.Message;
+            }
+
+            return ppv;
+        }
+
+        public async Task<ProdPlanViewModel> GetUVPlanUploadData(IFormFile file)
+        {
+            ProdPlanViewModel ppv = new();
+            List<SMTPlanModel> lst = new();
+            string uploadedFile = $"{file.FileName} {DateTime.Now:yyMMddHHmmss}";
+            DateTime dt = DateTime.Now;
+
+            try
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await file.CopyToAsync(stream);
+                    List<UploadFileMaster> ufm = await _con.Master_UploadFile_mst
+                                                        .Where(i => i.file_name.ToUpper().Contains("UVPlan"))
+                                                        .ToListAsync();
+                    Dictionary<string, int> colMap = ufm.ToDictionary(i => i.db_col_name, i => i.col_index);
+                    int header_row = ufm.FirstOrDefault()?.header_row ?? 0;
+                    int count = 0;
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        while (reader.Read())
+                        {
+                            count++;
+                            if (count <= header_row) continue; // skip header
+                            string model = CommonFormat.GetValueOrDefault(reader, colMap, "Model", string.Empty);
+                            if (!string.IsNullOrEmpty(model) && !model.ToLower().Contains("adjust") && !model.StartsWith("%"))
+                            {
+                                DateTime defaultDt = new DateTime(1900, 1, 1);
+                                string lotno = CommonFormat.GetValueOrDefault(reader, colMap, "LotNo", string.Empty);
+                                DateTime startDt = CommonFormat.GetValueOrDefault(reader, colMap, "StartDt", defaultDt);
+                                DateTime endDt = CommonFormat.GetValueOrDefault(reader, colMap, "EndDt", defaultDt);
+                                int size = CommonFormat.GetValueOrDefault(reader, colMap, "Size", 0);
+                                int balance = CommonFormat.GetValueOrDefault(reader, colMap, "Balance", 0);
+                                if (startDt == defaultDt || endDt == defaultDt || string.IsNullOrEmpty(lotno) || balance == 0) continue; // skip if no date
+
+                                SMTPlanModel slp = new()
+                                {
+                                    StartDt = startDt,
+                                    EndDt = endDt,
+                                    Lotno = lotno,
+                                    Size = size,
+                                    Balance = balance,
+                                    //PCBNo = pcbNo,
+                                    Model = model,
+                                    UploadedFile = uploadedFile,
+                                    Remark = file.FileName,
+                                    CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system",
+                                    CreatedDt = dt
+                                };
+                                lst.Add(slp);
+                            }
+                            if (lst.Count > 0)
+                            {
+                                lst = lst.DistinctBy(i => new { i.Model, i.Lotno }).ToList();
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                ppv.error_msg = ex.Message;
+            }
+
+            ppv.SMTPlanList = lst;
+            ppv.UploadedFile = uploadedFile;
+            return ppv;
+        }
+
+        public async Task<string> UVPlanEdit(SMTPlanModel slp)
+        {
+            var check = await _con.UV_SMT_Plan.FindAsync(slp.Id);
+            if (check == null)
+            {
+                return SD.ErrorMsg.NotExisted;
+            }
+            check.Size = slp.Size;
+            check.Balance = slp.Balance;
+            check.StartDt = slp.StartDt;
+            check.EndDt = slp.EndDt;
+            check.UpdatedDt = DateTime.Now;
+            check.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system";
+            check.Remark = check.Remark;
+            await _con.SaveChangesAsync();
+            return string.Empty;
+        }
+
+        public async Task<string> UVPlanDelete(List<int> Ids)
+        {
+            string msg = string.Empty;
+            try
+            {
+                foreach (var item in Ids)
+                {
+                    var check = await _con.UV_SMT_Plan.FindAsync(item);
+                    _con.UV_SMT_Plan.Remove(check);
+                }
+                await _con.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message;
+            }
+            return msg;
+        }
+
+        #endregion
+
+        #region SMT Production Plan
+        public async Task<DataTable> SMTCompletedPlansList(Dictionary<string, object> dic)
+        {
+            DataTable dt = await _proc.Proc_GetDatatable("spweb_UV_SMT_CompletedPlans", dic);
+            return dt;
+        }
+
+        public async Task<SMTProdPlanModel> SMTCompletedPlansDetail(int Id)
+        {
+            return await _con.UV_SMT_Prod_Plan.FindAsync(Id) ?? new();
+        }
+
+        public async Task<string> SMTCompletedPlansAdd(SMTProdPlanModel slp)
+        {
+            try
+            {
+                var check = await _con.UV_SMT_Prod_Plan.FirstOrDefaultAsync(i => i.Lotno == slp.Lotno 
+                                                                            && i.Model == slp.Model 
+                                                                            && i.PCBNo == slp.PCBNo);
+                if (check != null)
+                {
+                    return "Duplicate Lot No. and Model and PcbNo.";
+                }
+                slp.CreatedDt = DateTime.Now;
+                slp.CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system";
+                await _con.UV_SMT_Prod_Plan.AddAsync(slp);
+                await _con.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+
+            return string.Empty;
+        }
+
+        public async Task<ProdPlanViewModel> SMTCompletedPlansUpload(IFormFile file)
+        {
+            ProdPlanViewModel ppv = new();
+            try
+            {
+                ppv = await GetSMTCompletedPlansUploadData(file);
+                List<SMTProdPlanModel> lst = ppv.SMTProdPlanList ?? new();
+                if (lst.Count > 0)
+                {
+                    string LotnoString = string.Join(", ", lst.Select(i => i.PCBKey));
+
+                    // delete all existing data
+                    await _con.UV_SMT_Prod_Plan
+                                            .Where(i => LotnoString.Contains(i.PCBKey))
+                                            //.ForEachAsync(i => _con.UV_SMT_Prod_Plan.Remove(i));
+                                            .ExecuteDeleteAsync();
+                    await _con.SaveChangesAsync();
+                    // add new one
+                    await _con.UV_SMT_Prod_Plan.AddRangeAsync(lst);
+                    await _con.SaveChangesAsync();
+                    ppv.Data = await SMTCompletedPlansList(new Dictionary<string, object>()
+                    {
+                        { "@upload_file", ppv.UploadedFile}
+                    });
+                }
+                else ppv.error_msg = SD.ErrorMsg.NoDataInUploadedFile;
+            }
+            catch (Exception ex)
+            {
+                ppv.error_msg = ex.Message;
+            }
+
+            return ppv;
+        }
+
+        public async Task<ProdPlanViewModel> GetSMTCompletedPlansUploadData(IFormFile file)
+        {
+            ProdPlanViewModel ppv = new();
+            List<SMTProdPlanModel> lst = new();
+            string uploadedFile = $"{file.FileName} {DateTime.Now:yyMMddHHmmss}";
+            DateTime dt = DateTime.Now;
+
+            try
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await file.CopyToAsync(stream);
+                    List<UploadFileMaster> ufm = await _con.Master_UploadFile_mst
+                                                        .Where(i => i.file_name.ToUpper().Contains("SMTProdPlan"))
+                                                        .ToListAsync();
+                    Dictionary<string, int> colMap = ufm.ToDictionary(i => i.db_col_name, i => i.col_index);
+                    int header_row = ufm.FirstOrDefault()?.header_row ?? 0;
+                    int count = 0;
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        while (reader.Read())
+                        {
+                            try
+                            {
+                                count++;
+                                if (count <= header_row) continue; // skip header
+                                string model = CommonFormat.GetValueOrDefault(reader, colMap, "Model", string.Empty);
+                                if (!string.IsNullOrEmpty(model) && model.ToUpper().StartsWith("U")
+                                    && (model.StartsWith("UY2") || model.StartsWith("UY3") || !model.StartsWith("UY"))
+                                    && !model.ToLower().Contains("adjust") && !model.StartsWith("%"))
+                                {
+                                    DateTime defaultDt = new DateTime(1900, 1, 1);
+                                    DateTime FinishedDt = CommonFormat.GetValueOrDefault(reader, colMap, "FinishedDt", defaultDt);
+
+                                    string LineCode = CommonFormat.GetValueOrDefault(reader, colMap, "LineCode", string.Empty);
+                                    string Market = CommonFormat.GetValueOrDefault(reader, colMap, "Market", string.Empty);
+                                    string Model = CommonFormat.GetValueOrDefault(reader, colMap, "Model", string.Empty);
+                                    string PCBKey = CommonFormat.GetValueOrDefault(reader, colMap, "PCBKey", string.Empty);
+                                    string Lotno = CommonFormat.GetValueOrDefault(reader, colMap, "Lotno", string.Empty);
+                                    string PCBType = CommonFormat.GetValueOrDefault(reader, colMap, "PCBType", string.Empty);
+                                    string PCBNo = CommonFormat.GetValueOrDefault(reader, colMap, "PCBNo", string.Empty);
+                                    string MachineCode = CommonFormat.GetValueOrDefault(reader, colMap, "MachineCode", string.Empty);
+                                    string KeyCode = CommonFormat.GetValueOrDefault(reader, colMap, "KeyCode", string.Empty);
+                                    int PCBPerModel = CommonFormat.GetValueOrDefault(reader, colMap, "PCBPerModel", 0);
+                                    int LotSize = CommonFormat.GetValueOrDefault(reader, colMap, "LotSize", 0);
+                                    int IssuedQty = CommonFormat.GetValueOrDefault(reader, colMap, "IssuedQty", 0);
+                                    int BalanceQty = CommonFormat.GetValueOrDefault(reader, colMap, "BalanceQty", 0);
+                                    int TargetPerHour85 = CommonFormat.GetValueOrDefault(reader, colMap, "TargetPerHour85", 0);
+                                    decimal TargetPerShift = CommonFormat.GetValueOrDefault(reader, colMap, "TargetPerShift", 0m);
+                                    decimal TimeF = CommonFormat.GetValueOrDefault(reader, colMap, "TimeF", 0m);
+                                    string Remark = CommonFormat.GetValueOrDefault(reader, colMap, "Remark", string.Empty);
+                                    string Warning = CommonFormat.GetValueOrDefault(reader, colMap, "Warning", string.Empty);
+                                    string UVNote = CommonFormat.GetValueOrDefault(reader, colMap, "UVNote", string.Empty);
+                                    string ETPCB = CommonFormat.GetValueOrDefault(reader, colMap, "ETPCB", string.Empty);
+
+
+                                    if (string.IsNullOrEmpty(Lotno) || string.IsNullOrEmpty(Model) || string.IsNullOrEmpty(PCBNo)) continue; // skip if no date
+
+                                    SMTProdPlanModel slp = new()
+                                    {
+                                        FinishedDt = FinishedDt,
+                                        LineCode = LineCode,
+                                        Market = Market,
+                                        Model = Model,
+                                        PCBKey = PCBKey,
+                                        Lotno = Lotno,
+                                        PCBType = PCBType,
+                                        PCBNo = PCBNo,
+                                        MachineCode = MachineCode,
+                                        KeyCode = KeyCode,
+                                        PCBPerModel = PCBPerModel,
+                                        LotSize = LotSize,
+                                        IssuedQty = IssuedQty,
+                                        BalanceQty = BalanceQty,
+                                        TargetPerHour85 = TargetPerHour85,
+                                        TargetPerShift = TargetPerShift,
+                                        TimeF = TimeF,
+                                        Remark = Remark,
+                                        Warning = Warning,
+                                        UVNote = UVNote,
+                                        ETPCB = ETPCB,
+
+                                        UploadedFile = uploadedFile,
+                                        CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system",
+                                        CreatedDt = dt
+                                    };
+                                    lst.Add(slp);
+                                }
+                            }
+                            catch
+                            {
+
+                            }
+                            
+                            
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ppv.error_msg = ex.Message;
+            }
+
+            ppv.SMTProdPlanList = lst;
+            ppv.UploadedFile = uploadedFile;
+            return ppv;
+        }
+
+        public async Task<string> SMTCompletedPlansEdit(SMTProdPlanModel slp)
+        {
+            var check = await _con.UV_SMT_Prod_Plan.FindAsync(slp.Id);
+            if (check == null)
+            {
+                return SD.ErrorMsg.NotExisted;
+            }
+            check.FinishedDt = slp.FinishedDt;
+            check.IssuedQty = slp.IssuedQty;
+            check.BalanceQty = slp.BalanceQty;
+            check.TargetPerHour85 = slp.TargetPerHour85;
+            check.Remark = slp.Remark;
+            check.Warning = slp.Warning;
+            check.ExcessStock = slp.ExcessStock;
+          
+            await _con.SaveChangesAsync();
+            return string.Empty;
+        }
+
+        public async Task<string> SMTCompletedPlansDelete(List<int> Ids)
+        {
+            string msg = string.Empty;
+            try
+            {
+                foreach (var item in Ids)
+                {
+                    var check = await _con.UV_SMT_Prod_Plan.FindAsync(item);
+                    _con.UV_SMT_Prod_Plan.Remove(check);
+                }
+                await _con.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message;
+            }
+            return msg;
+        }
+        #endregion
+
+        #endregion
+
         #region Master
 
         //-------- Machine --------//
@@ -1468,6 +1872,13 @@ namespace MESWebDev.Services
             {
                 await _con.UV_SMT_Mst_Shift.AddAsync(shift);
                 await _con.SaveChangesAsync();
+
+                List<SMTShiftDtlModel> lstDtl = await ParseShiftTime(shift.Pattern, shift.ShiftCode);
+                if (lstDtl.Count > 0)
+                {
+                    await _con.UV_SMT_Mst_Shift_Dtl.AddRangeAsync(lstDtl);
+                    await _con.SaveChangesAsync();
+                }
                 return string.Empty;
             }
             return $"{shift.ShiftCode} {_trans.Trans(SD.ErrorMsg.Existed)}";
@@ -1482,6 +1893,15 @@ namespace MESWebDev.Services
             data.Remark = shift.Remark;
             data.Pattern = shift.Pattern;
 
+            List<SMTShiftDtlModel> lstDtl = await ParseShiftTime(shift.Pattern, shift.ShiftCode);
+            if (lstDtl.Count > 0)
+            {
+                var existingDtl = _con.UV_SMT_Mst_Shift_Dtl.Where(i => i.ShiftCode == shift.ShiftCode);
+                _con.UV_SMT_Mst_Shift_Dtl.RemoveRange(existingDtl);
+                await _con.UV_SMT_Mst_Shift_Dtl.AddRangeAsync(lstDtl);
+                await _con.SaveChangesAsync();
+            }
+
             await _con.SaveChangesAsync();
             return string.Empty;
         }
@@ -1491,6 +1911,8 @@ namespace MESWebDev.Services
             var data = await _con.UV_SMT_Mst_Shift.FindAsync(shiftCode);
             if (data == null) return $"{shiftCode} {_trans.Trans(SD.ErrorMsg.NotExisted)}";
             _con.UV_SMT_Mst_Shift.Remove(data);
+            var existingDtl = _con.UV_SMT_Mst_Shift_Dtl.Where(i => i.ShiftCode == shiftCode);
+            _con.UV_SMT_Mst_Shift_Dtl.RemoveRange(existingDtl);
             await _con.SaveChangesAsync();
             return string.Empty;
         }
@@ -1520,7 +1942,71 @@ namespace MESWebDev.Services
                                 .ToListAsync();
             return data.Select(i => new SelectListItem { Text = i.ShiftCode, Value = i.ShiftCode }).ToList();
         }
+        public async Task<List<SMTShiftDtlModel>> ParseShiftTime(string timeArrange, string shiftCode)
+        {
+            List<SMTShiftDtlModel> lst = new();
+            if (string.IsNullOrEmpty(timeArrange))
+            {
+                lst.Add(new SMTShiftDtlModel()
+                {
+                    ShiftCode = shiftCode
+                    ,
+                    StartTime = string.Empty
+                    ,
+                    EndTime = string.Empty
+                    ,
+                    StartMinute = 0
+                    ,
+                    EndMinute = 0
+                });
+            }
+            else
+            {
+                string[] parts = timeArrange.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 0) return lst;
+                foreach (string part in parts)
+                {
+                    string[] range = part.Split('-', StringSplitOptions.RemoveEmptyEntries);
+                    if (range.Length == 2)
+                    {
+                        int startMinute = await ToMinute(range[0]);
+                        int endMinute = await ToMinute(range[1]);
+                        if (startMinute > endMinute) {
+                            lst.Add(new SMTShiftDtlModel()
+                            {
+                                ShiftCode = shiftCode
+                                ,
+                                StartTime = range[0]
+                                ,
+                                EndTime = range[1]
+                                ,
+                                StartMinute = startMinute
+                                ,
+                                EndMinute = endMinute
+                            });
+                        }
+                    }
+                }
+            }            
+            return lst;
+        }
 
+        public async Task<int> ToMinute(string timeStr)
+        {
+            int totalMinutes = 0;
+            try
+            {
+                string[] parts = timeStr.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 2)
+                {
+                    int hours = int.Parse(parts[0]);
+                    int minutes = int.Parse(parts[1]);
+                    totalMinutes = hours * 60 + minutes;
+                }
+            }
+            catch { }
+            return totalMinutes;
+        }
         #endregion
 
         //-------- Shift Master --------//
@@ -1544,6 +2030,14 @@ namespace MESWebDev.Services
             {
                 await _con.UV_SMT_Mst_LineCalendar.AddAsync(Calendar);
                 await _con.SaveChangesAsync();
+                
+                List<SMTLineCalendarDtlModel> lstDtl = await ParseCalendar(Calendar.WeekDayOrDate, Calendar.Id);
+                if (lstDtl.Count > 0)
+                {
+                    await _con.UV_SMT_Mst_LineCalendar_Dtl.AddRangeAsync(lstDtl);
+                    await _con.SaveChangesAsync();
+                }
+
                 return string.Empty;
             }
             return $"{Calendar.Id.ToString()} {_trans.Trans(SD.ErrorMsg.Existed)}";
@@ -1561,6 +2055,16 @@ namespace MESWebDev.Services
             data.Remark = Calendar.Remark;
             data.IsActive = Calendar.IsActive;
 
+            List<SMTLineCalendarDtlModel> lstDtl = await ParseCalendar(Calendar.WeekDayOrDate, Calendar.Id);
+            if (lstDtl.Count > 0)
+            {
+                var existingDtl = _con.UV_SMT_Mst_LineCalendar_Dtl.Where(i => i.HeaderId == Calendar.Id);
+                _con.UV_SMT_Mst_LineCalendar_Dtl.RemoveRange(existingDtl);
+
+                await _con.UV_SMT_Mst_LineCalendar_Dtl.AddRangeAsync(lstDtl);
+                await _con.SaveChangesAsync();
+            }
+
             await _con.SaveChangesAsync();
             return string.Empty;
         }
@@ -1569,14 +2073,93 @@ namespace MESWebDev.Services
         {
             var data = await _con.UV_SMT_Mst_LineCalendar.FindAsync(Id);
             if (data == null) return $"{Id.ToString()} {_trans.Trans(SD.ErrorMsg.NotExisted)}";
+
             _con.UV_SMT_Mst_LineCalendar.Remove(data);
+
+            var existingDtl = _con.UV_SMT_Mst_LineCalendar_Dtl.Where(i => i.HeaderId == Id);
+            _con.UV_SMT_Mst_LineCalendar_Dtl.RemoveRange(existingDtl);
+
             await _con.SaveChangesAsync();
             return string.Empty;
+        }
+
+        public async Task<List<SMTLineCalendarDtlModel>> ParseCalendar(string calendar, int headerId)
+        {
+            List<SMTLineCalendarDtlModel> lst = new();
+            string[] parts = calendar.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0) return lst;
+            foreach (string part in parts) {
+                if (part.Any(char.IsLetter))
+                {
+                    if (part.Contains("-"))
+                    {
+                        string[] range = part.Split('-', StringSplitOptions.RemoveEmptyEntries);
+                        if (range.Length == 2)
+                        {
+                            int start = Array.IndexOf(SD.Weekdays, range[0]);
+                            int end = Array.IndexOf(SD.Weekdays, range[1]);
+                            for(int i = start; i <= end; i++)
+                            {
+                                lst.Add(new SMTLineCalendarDtlModel()
+                                {
+                                    HeaderId = headerId
+                                    ,
+                                    ConditionType = SD.CalendarType.Weekday
+                                    ,
+                                    WeekDay = SD.Weekdays[i]
+                                });
+                            }
+                        }
+                    }
+                    else
+                    {
+                        lst.Add(new SMTLineCalendarDtlModel()
+                        {
+                            HeaderId = headerId
+                            ,
+                            ConditionType = SD.CalendarType.Weekday
+                            ,
+                            WeekDay = part
+                        });
+                    }
+                }
+                else if (part.Contains("-"))
+                {
+                    string[] range = part.Split('-', StringSplitOptions.RemoveEmptyEntries);
+                    if (range.Length == 2)
+                    {
+                        lst.Add(new SMTLineCalendarDtlModel()
+                        {
+                            HeaderId = headerId
+                            ,
+                            ConditionType = SD.CalendarType.Range
+                            ,
+                            StartDate = Convert.ToDateTime(range[0])
+                            ,
+                            EndDate = Convert.ToDateTime(range[1])
+                        });
+                    }
+
+                }
+                else
+                {
+                    lst.Add(new SMTLineCalendarDtlModel()
+                    {
+                        HeaderId = headerId
+                        ,
+                        ConditionType = SD.CalendarType.Date
+                        ,
+                        StartDate = Convert.ToDateTime(part)
+                    });
+                }
+
+            }
+            return lst;
         }
 
         #endregion
 
         #endregion
-               
+
     }
 }

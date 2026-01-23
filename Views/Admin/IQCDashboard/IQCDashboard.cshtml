@@ -199,9 +199,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     @* -- DATE TIME PICKER -- *@
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <script src="~/js/DatetimePicker.js?@DateTime.Now.Ticks"></script> 
+    @* -- DATE TIME PICKER -- *@
+    <link rel="stylesheet" href="~/css/DatetimePicker.css?@DateTime.Now.Ticks">
+    <script src="~/js/DatetimePicker-IU.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/DatetimePicker.js?@DateTime.Now.Ticks"></script>
 
     <script>
                 // Check date and show loading page
@@ -211,6 +212,7 @@
 
         //--------------------->> TABLE <<-------------------------------
           $(document).ready(function () {
+              IniDatetimePicker();
           $('table thead th').each(function (index) {
               $(this).css({
                   'background-color': '#00c0ff',

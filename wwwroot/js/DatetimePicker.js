@@ -1,4 +1,4 @@
-﻿$(function () {
+﻿function IniDatetimePicker() {
     if ($("#startDate").length > 0) {
         $("#startDate").datepicker({
             dateFormat: "yy/mm/dd",
@@ -35,4 +35,4 @@
             $input.focus();
         });
     }
-});
+};

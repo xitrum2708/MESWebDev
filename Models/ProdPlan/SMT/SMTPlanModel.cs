@@ -8,10 +8,11 @@ namespace MESWebDev.Models.ProdPlan.SMT
         public int Id { get; set; }
         public string Model { get; set; }
         public string Lotno { get; set; }
-        public DateTime StartDt { get; set; }
-        public DateTime EndDt { get; set; }
+        public DateTime? StartDt { get; set; }
+        public DateTime? EndDt { get; set; }
         public int Size { get; set; }
         public int Balance { get; set; }
+        public string? UploadedFile { get; set; }   
         public string? Remark { get; set; }
         public DateTime CreatedDt { get; set; }
         public string CreatedBy { get; set; }

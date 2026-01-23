@@ -1,0 +1,195 @@
+﻿/* ======================================================
+   jQuery UI DatePicker – Microsoft / ERP Style
+   ====================================================== */
+
+/* ===== Container ===== */
+.ui-datepicker {
+    width: 18rem;
+    padding: .5rem;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: .375rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,.12);
+    z-index: 1080 !important;
+    font-family: var(--bs-font-sans-serif);
+    font-size: 14px;
+}
+
+/* ===== Header ===== */
+.ui-datepicker-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 2.25rem;
+    padding: 0 .25rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* ===== Title (Center) ===== */
+.ui-datepicker-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: .25rem;
+    align-items: center;
+    font-weight: 600;
+    color: #212529;
+    white-space: nowrap;
+}
+
+/* ===== Month / Year select ===== */
+.ui-datepicker select.ui-datepicker-month,
+.ui-datepicker select.ui-datepicker-year {
+    height: 1.6rem;
+    font-size: .85rem;
+    padding: 0 .35rem;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    background-color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* ===== Prev / Next ===== */
+.ui-datepicker-prev,
+.ui-datepicker-next {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: .25rem;
+    transition: background-color .15s ease;
+}
+
+.ui-datepicker-prev {
+    margin-right: auto;
+}
+
+.ui-datepicker-next {
+    margin-left: auto;
+}
+
+    .ui-datepicker-prev:hover,
+    .ui-datepicker-next:hover {
+        background-color: #f1f3f5;
+    }
+
+/* ===== Icons (Bootstrap Icons) ===== */
+.ui-datepicker .ui-icon {
+    background: none !important;
+    text-indent: 0;
+}
+
+.ui-datepicker-prev .ui-icon::before {
+    content: "\f284"; /* chevron-left */
+    font-family: "bootstrap-icons";
+    font-size: .85rem;
+    color: #212529;
+}
+
+.ui-datepicker-next .ui-icon::before {
+    content: "\f285"; /* chevron-right */
+    font-family: "bootstrap-icons";
+    font-size: .85rem;
+    color: #212529;
+}
+
+/* ===== Calendar ===== */
+.ui-datepicker table {
+    width: 100%;
+    margin-top: .25rem;
+    border-collapse: collapse;
+}
+
+.ui-datepicker th {
+    padding: .4rem 0;
+    font-weight: 600;
+    font-size: .75rem;
+    text-transform: uppercase;
+    color: #6c757d;
+    text-align: center;
+}
+
+/* ===== Day cells ===== */
+.ui-datepicker td {
+    padding: 0;
+}
+
+    .ui-datepicker td a,
+    .ui-datepicker td span {
+        display: block;
+        padding: .4rem 0;
+        text-align: center;
+        line-height: 1.4;
+        text-decoration: none;
+        color: #212529;
+        border-radius: .25rem;
+        transition: background-color .15s ease, color .15s ease;
+    }
+
+        .ui-datepicker td a:hover {
+            background-color: #e9ecef;
+        }
+
+/* ===== Today ===== */
+.ui-datepicker .ui-datepicker-today a {
+    border-bottom: 2px solid #0d6efd;
+    font-weight: 600;
+}
+
+/* ===== Selected ===== */
+.ui-datepicker td a.ui-state-active {
+    background-color: #0d6efd;
+    color: #fff !important;
+    font-weight: 600;
+}
+
+/* ===== Disabled ===== */
+.ui-datepicker .ui-state-disabled span {
+    color: #adb5bd;
+}
+
+/* ===== Weekend colors ===== */
+
+/* Saturday */
+.ui-datepicker th:nth-child(6),
+.ui-datepicker td:nth-child(6) a {
+    color: #198754;
+}
+
+/* Sunday */
+.ui-datepicker th:nth-child(7),
+.ui-datepicker td:nth-child(7) a {
+    color: #dc3545;
+}
+
+/* Keep selected day white */
+.ui-datepicker td a.ui-state-active {
+    color: #fff !important;
+}
+
+
+/* ===== Hide Prev/Next Text and Remove Underline ===== */
+.ui-datepicker-prev,
+.ui-datepicker-next {
+    text-decoration: none !important; /* Removes the underline */
+    font-size: 0 !important; /* Hides the text "Prev" and "Next" */
+    color: transparent !important; /* Ensures no text color bleeds through */
+}
+
+    /* ===== Ensure Icons Stay Visible ===== */
+    .ui-datepicker-prev .ui-icon::before,
+    .ui-datepicker-next .ui-icon::before {
+        font-size: 1rem; /* Sets the icon size */
+        color: #212529; /* Sets the icon color */
+        display: block; /* Makes icon visible despite parent font-size: 0 */
+    }
+
+    /* Fix for potential hover underlines */
+    .ui-datepicker-prev:hover,
+    .ui-datepicker-next:hover {
+        text-decoration: none !important;
+    }

@@ -120,6 +120,10 @@ namespace MESWebDev.Data
         public DbSet<SMTPlanModel> UV_SMT_Plan { get; set; }
         public DbSet<ProjectSettingModel> UV_Common_Project_Setting { get; set; }
 
+        // 2026.01.20
+        public DbSet<SMTShiftDtlModel> UV_SMT_Mst_Shift_Dtl { get; set; }
+        public DbSet<SMTLineCalendarDtlModel> UV_SMT_Mst_LineCalendar_Dtl { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
