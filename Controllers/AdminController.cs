@@ -240,6 +240,7 @@ namespace MESWebDev.Controllers
 
                 //table 2: Detail data
                 model.detail_data = ds.Tables[2];
+               
 
                 //table 3: Detail data2
                 model.detail_data2 = ds.Tables[3];
@@ -255,9 +256,10 @@ namespace MESWebDev.Controllers
                      Label = row.Field<string>(0) ?? "",
                      Value1 = row.Field<int?>(4) ?? 0,
                      Value2 = row.Field<int?>(5) ?? 0,
-                     Rate = (row.Field<int?>(4) ?? 0) == 0
-                         ? 0
-                         : Math.Round((row.Field<int>(5) * 100.0) / row.Field<int>(4), 2)
+                     //Rate = (row.Field<int?>(4) ?? 0) == 0
+                     //    ? 0
+                     //    : Math.Round((row.Field<int>(5) * 100.0) / row.Field<int>(4), 2)
+                     Rate = Convert.ToDouble(row[7].ToString().Replace("%", ""))
                  }).ToList();
 
 

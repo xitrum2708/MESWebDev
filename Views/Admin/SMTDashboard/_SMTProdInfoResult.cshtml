@@ -7,17 +7,17 @@
     <!-- LEFT SIDE  -->
     <div class="col-7 d-flex flex-column">
         <!-- COMMON INFO -->
-        <div class="row">
+       @*  <div class="row">
             <div class="col-3">
                 <div class="row row-col-2 d-flex justify-content-center align-items-center detail-wrapper">
                     @* <div class="col detail py-3 border border-2 border-info d-flex flex-column justify-content-center align-items-center">
                         <font class="flabel">Date</font>
                         <font class="fvalue">@DateTime.Now.ToString("yyyy/MM/dd")</font>
-                    </div> *@
+                    </div> 
                     <div class="col detail py-3 border border-2 border-info d-flex flex-column justify-content-center align-items-center">
                         <font class="flabel">Line No</font>
                         <font class="fvalue" id="line">@Model.line</font>
-                    </div>
+                    </div> 
                 </div>
             </div>
             <div class="col-9">
@@ -28,8 +28,13 @@
                     </div>
                     <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
                         <font class="flabel">Lot No</font>
-                        <select class="form-select-sm sl_lot" style="font-size: 9px;" asp-items="@Model.lotList" asp-for="@Model.lot">
-                        </select>
+                        <div class="d-flex justify-content-center align-items-center" style="height: 100%;">
+                        <span class="fw-bold text-white" style="font-size: 16px;">
+                            @Model.lot
+                        </span>
+                     </div>
+@*                         <select class="form-select-sm sl_lot" style="font-size: 9px;" asp-items="@Model.lotList" asp-for="@Model.lot">
+                        </select> 
                         <!-- <font class="fvalue">01234883</font> -->
                     </div>
                     <div class="col detail py-3 border border-2 border-warning d-flex flex-column justify-content-center align-items-center">
@@ -47,11 +52,39 @@
                     <font class="flabel">Target/h</font>
                     <font class="fvalue">@Model.target1H</font>
                 </div>
-            </div> *@
+            </div> 
+        </div> *@
+            <div class="row px-1">
+        <div class="col d-flex justify-content-center align-items-center ms-0 detail-wrapper">
+            <div class="col detail py-1 border border-2 border-info d-flex flex-column justify-content-center align-items-center mx-1">
+                <font class="flabel">Line No</font>
+                <font class="fvalue" id="line">@Model.line</font>
+            </div> 
+
+            <div class="col detail py-1 border border-2 border-info d-flex flex-column justify-content-center align-items-center mx-1">
+                <font class="flabel">Model</font>
+                <font class="fvalue">@Model.model</font>
+            </div>
+
+            <div class="col detail py-1 border border-2 border-info d-flex flex-column justify-content-center align-items-center mx-1">
+                <font class="flabel">Lot No</font>
+                <font class="fvalue">@Model.lot</font>
+            </div>
+
+            <div class="col detail py-1 border border-2 border-info d-flex flex-column justify-content-center align-items-center mx-1">
+                <font class="flabel">Lot Size</font>
+                <font class="fvalue">@Model.lot_size.ToString("#,##0")</font>
+            </div>
+
+          <div class="col detail py-1 border border-2 border-info d-flex flex-column justify-content-center align-items-center mx-1">
+                <font class="flabel">Balance</font>
+                <font class="fvalue">@Model.balance.ToString("#,##0")</font>
+            </div>
         </div>
+    </div>
         <!-- TABLE DETAIL -->
         <div class="row mt-5 me-2">
-            <table class="table table-bordered">
+            <table class="table table-bordered" style="table-layout: fixed; width: 100%;">
                 <thead>
                     <tr>
                         @foreach (DataColumn column in Model.detail_data.Columns)
@@ -160,6 +193,7 @@ else
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script>
 
    
