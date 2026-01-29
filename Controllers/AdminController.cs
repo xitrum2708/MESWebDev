@@ -148,6 +148,7 @@ namespace MESWebDev.Controllers
             DashboardViewModel model = new();
             model.detail_data = await _dashboardService.GetSMTLines();
             return View("SMTDashboard/SMTLines", model);
+
         }
         [HttpGet]
         public async Task<IActionResult> SMTProdInfo(string line, string lot = "")
@@ -238,17 +239,14 @@ namespace MESWebDev.Controllers
                     }).ToList();
                 model.lotList = lotList;
 
-                //table 2: Detail data
+                //table 2: Detail data for target detail
                 model.detail_data = ds.Tables[2];
                
 
-                //table 3: Detail data2
+                //table 3: Detail data2 for Stop Log
                 model.detail_data2 = ds.Tables[3];
 
-
-
                 // this will save to http session
-                
 
                 model.bar_line_chart = ds.Tables[2].AsEnumerable()
                  .Select(row => new ChartItem3
@@ -263,12 +261,19 @@ namespace MESWebDev.Controllers
                  }).ToList();
 
 
-                //Chart data for pie chart
-                model.chart_data = ds.Tables[3].AsEnumerable()
+                ////Chart data for pie chart
+                //model.chart_data = ds.Tables[4].AsEnumerable()
+                //    .Select(row => new ChartItem
+                //    {
+                //        Label = row.Field<string>(0),
+                //        Value = row.Field<int>(1)
+                //    }).ToList();
+                model.chart_data = ds.Tables[4].AsEnumerable()
                     .Select(row => new ChartItem
                     {
-                        Label = row.Field<string>(0),
-                        Value = row.Field<int>(1)
+                        // Cách 1: Sử dụng kiểu Nullable <int?> để đọc, sau đó dùng ?? để lấy giá trị mặc định
+                        Label = row.Field<string>(0) ?? "",
+                        Value = (int)(row.Field<decimal?>(1) ?? 0)
                     }).ToList();
             }
             return model;

@@ -125,7 +125,7 @@
 
         <!-- LOST TIME ANALYSIS -->
         <div class="row mt-2">
-            <div class="col-5 d-flex flex-column">
+            @* <div class="col-5 d-flex flex-column">
                 <div class="row">
                     <div class="col-6 text-start">
                         Lostime Analyze:
@@ -162,7 +162,79 @@
 
                 </div>
 
-            </div>
+            </div> *@
+                     <style>
+                            .losttime-table {
+                                width: 100%;
+                                table-layout: fixed; /* Ép bảng tuân thủ chiều rộng cột */
+                            }
+
+                            /* Cột 1 & 2 (PIC & Reason): Cho phép giãn rộng */
+                            .losttime-table th:nth-child(1), .losttime-table td:nth-child(1) { width: 15%; }
+                            .losttime-table th:nth-child(2), .losttime-table td:nth-child(2) { 
+                                width: 55%; 
+                                text-align: left;
+                                white-space: normal; /* Cho phép xuống dòng ở Reason nếu quá dài */
+                            }
+
+                            /* Cột 3 (Losttime): Thu nhỏ lại */
+                            .losttime-table th:nth-child(3), .losttime-table td:nth-child(3) { 
+                                width: 15%; 
+                                text-align: center;
+                                white-space: nowrap; 
+                            }
+
+                            /* Cột 4 (Ratio): Thu nhỏ tối đa */
+                            .losttime-table th:nth-child(4), .losttime-table td:nth-child(4) { 
+                                width: 15%; 
+                                text-align: center;
+                                white-space: nowrap;
+                            }
+
+                            .losttime-table td {
+                                padding: 8px 4px;
+                                font-size: 12px; /* Giảm nhẹ size chữ bảng để tiết kiệm diện tích */
+                            }
+                        </style>
+
+                      <div class="row">
+                            <div class="col-7"> 
+                            <div class="row fw-bold mb-2">
+                                <div class="col-6 text-start">Lostime Analyze:</div>
+                                <div class="col-6 text-end text-warning">@Model.losttime</div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="losttime-table">
+                                    <thead>
+                                        <tr>
+                                            @foreach (DataColumn column in Model.detail_data2.Columns)
+                                            {
+                                                <th>@column.Caption</th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (DataRow row in Model.detail_data2.Rows)
+                                        {
+                                            <tr>
+                                                @foreach (var item in row.ItemArray)
+                                                {
+                                                    <td>@item</td>
+                                                }
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                      <div class="col-5 d-flex align-items-center justify-content-center">
+                            <div style="width: 100%; height: 320px;">
+                                <canvas id="myPieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
             <div class="col-7">
                 <!-- <div class="row">
                   <font class="text-start fs-6 text-light fw-bold">QUALITY ANOMANY OUTPUT</font>

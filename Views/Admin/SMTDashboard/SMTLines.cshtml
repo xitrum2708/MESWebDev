@@ -39,7 +39,7 @@
 
         <!-- SMT RUNNING LINE -->
    
-        <div class="row row-cols-6  mt-2 g-2">
+       @*  <div class="row row-cols-6  mt-2 g-2">
             @if (Model.detail_data != null && Model.detail_data.Rows.Count > 0)
             {
                 foreach (DataRow item in Model.detail_data.Rows)
@@ -49,6 +49,52 @@
                             <div class="row ">
                                 <div class="col-12 d-flex justify-content-center align-items-center">
                                     <h2 class="lineValue"> @item[0] </h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center">
+                    <p>No Line available</p>
+                </div>
+            }
+        </div> *@
+        <style>
+            /* Màu cam nhạt tùy chỉnh cho status = 0 */
+            .bg-orange-light {
+                background-color: #ffcc80 !important; /* Màu cam nhạt pastel */
+                border-color: #ffb74d !important; /* Viền cam đậm hơn một chút */
+                color: #5d4037 !important; /* Chữ màu nâu đậm cho dễ đọc trên nền cam */
+            }
+
+            /* Hiệu ứng hover để người dùng biết là nhấn được */
+            .divLine:hover .detail {
+                opacity: 0.8;
+                transform: scale(1.02);
+                transition: all 0.2s ease-in-out;
+            }
+        </style>
+        <div class="row row-cols-6 mt-2 g-2">
+            @if (Model.detail_data != null && Model.detail_data.Rows.Count > 0)
+            {
+                @foreach (DataRow item in Model.detail_data.Rows)
+                {
+                    var status = item[1]?.ToString();
+                    var isRunning = (status == "1");
+
+                    // Nếu chạy (1): Dùng class 'divLine' để click và 'border-info' để hiện màu xanh.
+                    // Nếu dừng (0): Dùng class 'line-disabled' để làm chìm và chặn click.
+                    var wrapperClass = isRunning ? "divLine" : "line-disabled";
+                    var statusStyle = isRunning ? "border-info" : "border-secondary opacity-50 bg-dark";
+
+                    <div class="@wrapperClass">
+                        <div class="col-12 detail py-3 border border-2 @statusStyle">
+                            <div class="row ">
+                                <div class="col-12 d-flex justify-content-center align-items-center">
+                                    <h2 class="lineValue @(isRunning ? "" : "text-secondary")"> @item[0] </h2>
                                 </div>
                             </div>
                         </div>
