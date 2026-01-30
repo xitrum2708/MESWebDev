@@ -275,6 +275,17 @@ namespace MESWebDev.Controllers
                         Label = row.Field<string>(0) ?? "",
                         Value = (int)(row.Field<decimal?>(1) ?? 0)
                     }).ToList();
+
+                decimal.TryParse(ds.Tables[5].Rows[0][1]?.ToString(), out decimal val1);
+                decimal.TryParse(ds.Tables[5].Rows[0][0]?.ToString(), out decimal val0);
+
+                // 2. Tính toán và khống chế: Nếu kết quả < 0 thì lấy 0
+                decimal totalLostTime = val1 - val0;
+                if (totalLostTime < 0) totalLostTime = 0;
+                // Hoặc dùng: decimal totalLostTime = Math.Max(0, val1 - val0);
+
+                // 3. Gán vào model để hiển thị lên Dashboard
+                model.lotstimeTotal =  totalLostTime.ToString();
             }
             return model;
         }
