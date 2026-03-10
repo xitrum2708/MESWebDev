@@ -2,6 +2,7 @@
 using ExcelDataReader.Log;
 using MESWebDev.Common;
 using MESWebDev.Models;
+using MESWebDev.Models.SMT;
 using MESWebDev.Repositories;
 using MESWebDev.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -291,12 +292,176 @@ namespace MESWebDev.Controllers
         }
 
 
+        
+
         [HttpPost]
         public async Task<IActionResult> ExportToExcel([FromBody] TableFilterRequest request)
         {
             // request contains the filtered rows sent from client (AJAX)
             var fileBytes = await _ee.AjaxExcelExport(request, "0");
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "FilteredData.xlsx");
+        }
+
+        //-------------------->> SMT DASHBOARD ALL LINE <<--------------------
+        [HttpGet]
+        public async Task<IActionResult> SMTDashboardAllLine()
+        {
+            SMT_DashboardAllLine_Model model = await GetSMTDashboardAllLine();
+            return View("SMTDashboard/SMTDashboardAllLine", model);
+        }
+
+        public async Task<SMT_DashboardAllLine_Model> GetSMTDashboardAllLine()
+        {
+            SMT_DashboardAllLine_Model model = new();
+
+            DataSet ds = await _dashboardService.GetSMTProdAllLine(new Dictionary<string, object>());
+
+            if (ds != null && ds.Tables.Count > 5)
+            {
+                // Table 0: Plan vs Actual (Line, PlanQty, OutputQty, Achievement)
+                model.PlanActualLines = ds.Tables[0] ?? new DataTable();
+
+                // Table 1: Total Achievement summary (TotalTarget, TotalOutput, Achievement)
+                if (ds.Tables[1].Rows.Count > 0)
+                {
+                    var row = ds.Tables[1].Rows[0];
+                    var achievementStr = row[2]?.ToString() ?? "0%";
+                    
+                    model.TotalAchievement = new List<TotalAchie>
+                    {
+                        new TotalAchie
+                        {
+                            Label = "Total",
+                            Value = row[1] == DBNull.Value ? 0 : Convert.ToInt32(row[1]),
+                            Target = row[0] == DBNull.Value ? 0 : Convert.ToInt32(row[0]),
+                            Achievement = achievementStr
+                        }
+                    };
+
+                    // ⭐ THÊM DÒNG NÀY - Gán GaugePercentage từ Achievement
+                    if (double.TryParse(achievementStr.Replace("%", ""), out double gaugeVal))
+                    {
+                        model.GaugePercentage = gaugeVal;
+                       // model.GaugePercentage=95; // Tạm thời gán cứng 95% để test giao diện, sau này sẽ dùng giá trị thực từ database
+                    }
+                }
+                else
+                {
+                    // Ngày nghỉ không có dữ liệu - set giá trị mặc định
+                    model.TotalAchievement = new List<TotalAchie>
+                    {
+                        new TotalAchie
+                        {
+                            Label = "Total",
+                            Value = 0,
+                            Target = 0,
+                            Achievement = "0%"
+                        }
+                    };
+                    model.GaugePercentage = 0;
+                }
+
+                // Table 2: Hourly Output (Hour, TotalOutput)
+                model.HourlyOutputs = ds.Tables[2].AsEnumerable()
+                    .Select(row => new HourOutput
+                    {
+                        Label = row[0]?.ToString()?.Trim() ?? "",
+                        Value = row[1] == DBNull.Value ? 0 : Convert.ToInt32(row[1]),
+                        AchievePercent = row[3] == DBNull.Value ? 0 : Convert.ToDecimal(row[3]) // Add Achieve_Percent column
+                    }).ToList();    
+
+                // Nếu không có dữ liệu hourly output
+                if (model.HourlyOutputs == null || model.HourlyOutputs.Count == 0)
+                {
+                    model.HourlyOutputs = new List<HourOutput>();
+                }
+
+                // Table 3: Quality Info Daily (ItemType, Output, NG, Achievement)
+                model.QualityInfos = ds.Tables[3] ?? new DataTable();
+
+                // Table 4: Quality Info MTD (ItemType, Today, ThisWeek, ThisMonth)
+                model.tbQualityOverviews = ds.Tables[4] ?? new DataTable();
+                model.QualityOverviews = ds.Tables[4].AsEnumerable()
+                    .Select(row => new QtyOverview
+                    {
+                        Label = row[0]?.ToString() ?? "",
+                        Today = row[1]?.ToString() ?? "0",
+                        ThisWeek = row[2]?.ToString() ?? "0",
+                        ThisMonth = row[3]?.ToString() ?? "0"
+                    }).ToList();
+
+                // Nếu không có dữ liệu quality overview
+                if (model.QualityOverviews == null || model.QualityOverviews.Count == 0)
+                {
+                    model.QualityOverviews = new List<QtyOverview>();
+                }
+
+                // Table 5: Line Running / Stop counts
+                if (ds.Tables[5].Rows.Count > 0)
+                {
+                    var row = ds.Tables[5].Rows[0];
+                    model.linerun = row[0] == DBNull.Value ? "0" : row[0]?.ToString() ?? "0";
+                    model.linestop = row[1] == DBNull.Value ? "0" : row[1]?.ToString() ?? "0";
+                    model.lotchangeover = row[2] == DBNull.Value ? "0" : row[2]?.ToString() ?? "0";
+                    //int.TryParse(model.linerun, out int runCount);
+                    //int.TryParse(model.linestop, out int stopCount);
+                    //model.lotchangeover = (runCount + stopCount).ToString();
+                }
+                else
+                {
+                    // Ngày nghỉ không có dữ liệu line status
+                    model.linerun = "0";
+                    model.linestop = "0";
+                    model.lotchangeover = "0";
+                }
+
+                if(ds.Tables[6].Rows.Count > 0)
+                {
+                  model.Stoplog = ds.Tables[6] ?? new DataTable();
+                }
+
+                if (ds.Tables[7].Rows.Count > 0)
+                {
+                    var row = ds.Tables[7].Rows[0];
+                    decimal.TryParse(row[0]?.ToString(), out decimal val1);
+                    // Tính toán và khống chế: Nếu kết quả < 0 thì lấy 0
+                    decimal totalLostTime = val1;
+                    if (totalLostTime < 0) totalLostTime = 0;
+                    model.lotstimeTotal = totalLostTime.ToString();
+                }
+                else
+                {
+                    model.lotstimeTotal = "0";
+                }
+                
+
+            }
+            else
+            {
+                // Không có dữ liệu từ database - set tất cả giá trị mặc định
+                model.PlanActualLines = new DataTable();
+                model.TotalAchievement = new List<TotalAchie>
+                {
+                    new TotalAchie
+                    {
+                        Label = "Total",
+                        Value = 0,
+                        Target = 0,
+                        Achievement = "0%"
+                    }
+                };
+                model.GaugePercentage = 0;
+                model.HourlyOutputs = new List<HourOutput>();
+                model.QualityInfos = new DataTable();
+                model.tbQualityOverviews = new DataTable();
+                model.QualityOverviews = new List<QtyOverview>();
+                model.linerun = "0";
+                model.linestop = "0";
+                model.lotchangeover = "0";
+
+            }
+
+            return model;
         }
     }
 

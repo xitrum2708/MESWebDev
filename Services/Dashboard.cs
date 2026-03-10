@@ -2,6 +2,7 @@
 using MESWebDev.Data;
 using System.Data;
 
+
 namespace MESWebDev.Services
 {
     public class Dashboard : IDashboard
@@ -50,5 +51,12 @@ namespace MESWebDev.Services
             ds = await _proc.Proc_GetDataset("Dashboard_SMT_ProdInfo", dic);
             return ds;
         }
+        public async Task<DataSet> GetSMTProdAllLine(Dictionary<string, object> dic = null)
+        {
+            DataSet ds = new();
+            ds = await _proc.Proc_GetDataset("Dashboard_SMT_ProdResult_Allline", dic);
+            return ds;
+        }
+
     }
 }
