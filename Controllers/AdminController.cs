@@ -303,6 +303,19 @@ namespace MESWebDev.Controllers
         }
 
         //-------------------->> SMT DASHBOARD ALL LINE <<--------------------
+
+        // THÊM MỚI: Action này được gọi ngầm mỗi 2 phút bằng AJAX
+        [HttpGet]
+        public async Task<IActionResult> ReloadAllLineData()
+        {
+            // Tận dụng lại hàm lấy dữ liệu siêu chuẩn của bạn
+            SMT_DashboardAllLine_Model model = await GetSMTDashboardAllLine();
+
+            // Trả về một Partial View (chỉ chứa ruột Dashboard, không chứa layout)
+            return PartialView("SMTDashboard/SMTDashboardAllLineContent", model);
+        }
+
+
         [HttpGet]
         public async Task<IActionResult> SMTDashboardAllLine()
         {
@@ -400,8 +413,8 @@ namespace MESWebDev.Controllers
                 if (ds.Tables[5].Rows.Count > 0)
                 {
                     var row = ds.Tables[5].Rows[0];
-                    model.linerun = row[0] == DBNull.Value ? "0" : row[0]?.ToString() ?? "0";
-                    model.linestop = row[1] == DBNull.Value ? "0" : row[1]?.ToString() ?? "0";
+                    model.linerun = row[1] == DBNull.Value ? "0" : row[1]?.ToString() ?? "0";
+                    model.linestop = row[0] == DBNull.Value ? "0" : row[0]?.ToString() ?? "0";
                     model.lotchangeover = row[2] == DBNull.Value ? "0" : row[2]?.ToString() ?? "0";
                     //int.TryParse(model.linerun, out int runCount);
                     //int.TryParse(model.linestop, out int stopCount);

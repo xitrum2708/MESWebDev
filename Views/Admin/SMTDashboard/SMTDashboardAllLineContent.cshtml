@@ -1,0 +1,665 @@
+﻿@model MESWebDev.Models.SMT.SMT_DashboardAllLine_Model
+
+@functions {
+    public dynamic GetSmoothColorObj(double percent)
+    {
+        var colors = new[] {
+            new { stop = 0.0,   r = 220, g = 38,  b = 38  },
+            new { stop = 15.0,  r = 239, g = 68,  b = 68  },
+            new { stop = 25.0,  r = 251, g = 146, b = 60  },
+            new { stop = 40.0,  r = 253, g = 224, b = 71  },
+            new { stop = 55.0,  r = 190, g = 242, b = 100 },
+            new { stop = 70.0,  r = 132, g = 204, b = 22  },
+            new { stop = 85.0,  r = 34,  g = 197, b = 94  },
+            new { stop = 100.0, r = 22,  g = 163, b = 74  }
+        };
+
+        var lower = colors[0];
+        var upper = colors[colors.Length - 1];
+
+        for (int i = 0; i < colors.Length - 1; i++)
+        {
+            if (percent >= colors[i].stop && percent <= colors[i + 1].stop)
+            {
+                lower = colors[i];
+                upper = colors[i + 1];
+                break;
+            }
+        }
+        double range = upper.stop - lower.stop;
+        double factor = range == 0 ? 0 : (percent - lower.stop) / range;
+
+        int r = (int)Math.Round(lower.r + (upper.r - lower.r) * factor);
+        int g = (int)Math.Round(lower.g + (upper.g - lower.g) * factor);
+        int b = (int)Math.Round(lower.b + (upper.b - lower.b) * factor);
+
+        return new
+        {
+            R = r,
+            G = g,
+            B = b,
+            FullRgb = $"rgb({r}, {g}, {b})",
+            RgbRaw = $"{r}, {g}, {b}",
+            RgbaColor = $"rgba({r}, {g}, {b}, 0.6)"
+        };
+    }
+}
+
+@{
+    var hourlyLabelsJson = System.Text.Json.JsonSerializer.Serialize(Model.HourlyOutputs?.Select(x => x.Label).ToList() ?? new List<string>());
+    var hourlyDataJson = System.Text.Json.JsonSerializer.Serialize(Model.HourlyOutputs?.Select(x => x.Value).ToList() ?? new List<int>());
+    var gaugeValue = Model.GaugePercentage;
+
+    var colorStopsJson = System.Text.Json.JsonSerializer.Serialize(new[] {
+        new { stop = 0,   r = 220, g = 38,  b = 38  },
+        new { stop = 15,  r = 239, g = 68,  b = 68  },
+        new { stop = 25,  r = 251, g = 146, b = 60  },
+        new { stop = 40,  r = 253, g = 224, b = 71  },
+        new { stop = 55,  r = 190, g = 242, b = 100 },
+        new { stop = 70,  r = 132, g = 204, b = 22  },
+        new { stop = 85,  r = 34,  g = 197, b = 94  },
+        new { stop = 100, r = 22,  g = 163, b = 74  }
+    });
+}
+
+<style>
+    /* ==================== ĐỊNH DẠNG CO GIÃN THÔNG MINH (RESPONSIVE) ==================== */
+
+    /* Đảm bảo layout ngoài cùng không sinh cuộn */
+    body, html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden !important;
+    }
+
+    /* Container chính: Chiều cao = Tổng chiều cao màn hình - (Menu trên + Footer dưới) */
+    .dashboard-wrapper {
+        background: #0a1428;
+        color: #e2e8f0;
+        font-family: 'Segoe UI', sans-serif;
+        height: calc(100vh - 135px); /* Tùy chỉnh số 110px nếu Menu/Footer nhà bạn to/nhỏ hơn */
+        overflow: hidden;
+        padding: 1vh 1vw; /* Padding co giãn theo màn hình */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 1vh;
+        flex: 0 0 auto; /* Header không co giãn */
+    }
+
+    /* Font chữ co giãn (vw: % chiều rộng màn hình, vh: % chiều cao) */
+    .header-title {
+        font-size: calc(1.5rem + 0.5vw);
+        font-weight: bold;
+        letter-spacing: 2px;
+        margin: 0;
+    }
+
+    .header-subtitle {
+        font-size: calc(0.8rem + 0.2vw);
+        color: #ffc107;
+        margin: 0;
+    }
+
+    /* Khung chứa các row - Tự động chia tỉ lệ */
+    .dashboard-content {
+        display: flex;
+        flex-direction: column;
+        flex: 1; /* Chiếm hết khoảng trống còn lại */
+        gap: 1vh; /* Khoảng cách giữa các hàng co giãn */
+    }
+
+    /* Mỗi row chiếm 1/3 chiều cao của Content */
+    .dashboard-row {
+        display: flex;
+        flex: 1;
+        gap: 1vw; /* Khoảng cách dọc giữa các cột co giãn */
+    }
+
+    /* Tỉ lệ cột: Col-7 chiếm ~58%, Col-5 chiếm ~42% */
+    .col-left {
+        flex: 7;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .col-right {
+        flex: 5;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Card giao diện */
+    .dashboard-card {
+        background: #1e2937;
+        border-radius: 8px;
+        padding: 1.2vh 1vw !important;
+        display: flex;
+        flex-direction: column;
+        height: 100%; /* Card luôn căng đầy row */
+        overflow: hidden;
+    }
+
+    .table-label {
+        color: #99CCFF;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        font-size: calc(0.9rem + 0.2vw);
+        margin-bottom: 0.5vh;
+        border-bottom: 1px solid #6c757d;
+        padding-bottom: 0.5vh;
+        flex: 0 0 auto;
+    }
+
+    /* Tinh chỉnh Bảng (Table) co giãn */
+    .table-responsive-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Đẩy 2 bảng cách xa nhau ra */
+        gap: 1.5vh; /* Tạo khe hở an toàn giữa 2 bảng */
+    }
+
+    .table-dark {
+        --bs-table-bg: transparent;
+        margin-bottom: 0 !important;
+        width: 100%;
+        /* QUAN TRỌNG: Đã xóa chữ height: 100% ở đây để bảng không bị tràn */
+    }
+
+        .table-dark th {
+            background: #1e4a6e !important;
+            color: #94a3b8 !important;
+            padding: 0.8vh !important; /* Tăng padding header lên 1 chút */
+            font-size: calc(0.75rem + 0.15vw);
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .table-dark td {
+            border-color: #1e4a6e;
+            padding: 0.8vh !important; /* Tăng khoảng không cho ô dữ liệu */
+            font-size: calc(0.85rem + 0.2vw);
+            text-align: center;
+            vertical-align: middle;
+        }
+
+    /* Chart Container - Căng đầy phần còn lại của Card */
+    .chart-container {
+        flex: 1;
+        position: relative;
+        width: 100%;
+        min-height: 0; /* Quan trọng để flexbox không bị tràn */
+    }
+
+    /* Gauge Chart đặc biệt */
+    .achievement-gauge {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+        .achievement-gauge canvas {
+            max-height: 100% !important;
+            max-width: 100% !important;
+        }
+
+    .gauge-text {
+        position: absolute;
+        top: 70%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    .gauge-val {
+        font-size: calc(1.8rem + 1vw);
+        font-weight: bold;
+        color: white;
+        margin: 0;
+        line-height: 1;
+    }
+
+    .gauge-separator {
+        width: 50%;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.6);
+        margin: 0.5vh auto;
+    }
+
+    .gauge-target-label {
+        font-size: calc(0.7rem + 0.2vw);
+        color: #94a3b8;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    /* Trạng thái Downtime */
+    .downtime-container {
+        display: flex;
+        height: 100%;
+        align-items: stretch;
+        gap: 1vw;
+    }
+
+    .downtime-left {
+        flex: 4;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .downtime-right {
+        flex: 6;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .status-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8vh;
+        flex: 1;
+        justify-content: end;
+    }
+
+    .status-box {
+        display: flex;
+        align-items: center;
+        padding: 0.8vh 1vw;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: calc(0.75rem + 0.2vw);
+        justify-content: start;
+    }
+
+        .status-box span:first-child {
+            width: 2vw;
+            display: inline-block;
+            text-align: center;
+        }
+
+    .status-running {
+        border: 2px solid #10b981;
+        background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+    }
+
+    .status-changeover {
+        background-color: rgba(255, 215, 0, 0.5);
+        border: 2px solid rgba(255, 215, 0, 1);
+    }
+
+    .status-stop {
+        background-color: rgba(255, 0, 0, 0.5);
+        border: 2px solid rgba(255, 0, 0, 1);
+    }
+
+    /* Achievement Cell màu mè */
+    .achievement-cell {
+        position: relative;
+        overflow: hidden;
+        color: #ffffff !important;
+        font-weight: bold;
+        text-align: center;
+        background-image: linear-gradient( 90deg, rgba(220, 38, 38, 0.3) 0%, rgba(245, 158, 11, 0.3) 20%, rgba(234, 179, 8, 0.4) 40%, rgba(132, 204, 22, 0.4) 60%, rgba(34, 197, 94, 0.5) 75%, rgba(22, 163, 74, 0.7) 95% );
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+        .achievement-cell::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: calc(100% - var(--p));
+            height: 100%;
+            background: rgba(10, 20, 40, 0.85);
+            z-index: 1;
+        }
+
+        .achievement-cell .value {
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+</style>
+
+<div class="dashboard-wrapper">
+    <div class="dashboard-header">
+        <h1 class="header-title text-white">SMT PRODUCTION DASHBOARD</h1>
+        <p class="header-subtitle">DAILY PERFORMANCE OVERVIEW</p>
+    </div>
+
+    <div class="dashboard-content">
+
+        <div class="dashboard-row">
+            <div class="col-left">
+                <div class="dashboard-card">
+                    <div class="table-label">PLAN VS ACTUAL</div>
+                    <div class="table-responsive-wrapper">
+                        <table class="table table-dark table-sm">
+                            <thead><tr><th>LINE NAME</th><th>PLAN</th><th>ACTUAL</th><th>ACHIEVEMENT</th></tr></thead>
+                            <tbody>
+                                @if (Model.PlanActualLines != null)
+                                {
+                                    @foreach (System.Data.DataRow row in Model.PlanActualLines.Rows)
+                                    {
+                                        var achievement = row[3]?.ToString() ?? "0%";
+                                        double.TryParse(achievement.Replace("%", ""), out var val);
+                                        <tr style="vertical-align: middle;">
+                                            <td>@row[0]</td>
+                                            <td>@row[1]</td>
+                                            <td>@row[2]</td>
+                                            <td class="achievement-cell" style="--p: @(Math.Min(100, val))%;"><span class="value">@achievement</span></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-right">
+                <div class="dashboard-card">
+                    <div class="table-label">QUALITY INFORMATION</div>
+                    <div class="table-responsive-wrapper" style="gap: 0.5vh;">
+                        <table class="table table-dark table-sm">
+                            <thead><tr><th class="text-start">TYPE</th><th>OUTPUT</th><th>NG</th><th>RATIO</th></tr></thead>
+                            <tbody>
+                                 @if (Model.QualityInfos != null)
+                                {
+                                    // 1. Bỏ dấu @{} đi vì đang nằm trong khối của @if rồi
+                                    int rowIndex = 0;
+
+                                    // 2. Bỏ dấu @ trước chữ foreach
+                                    foreach (System.Data.DataRow row in Model.QualityInfos.Rows)
+                                    {
+                                        var ach = row[3]?.ToString() ?? "0%";
+                                        double.TryParse(ach.Replace("%", ""), out var achVal);
+                                        var colorObj = GetSmoothColorObj(achVal);
+
+                                        <tr style="vertical-align: middle;">
+                                            <td class="text-start fw-bold">@row[0]</td>
+                                            <td>@string.Format("{0:N0}", row[1])</td>
+                                            <td>@row[2]</td>
+
+                                            @* Lúc này thẻ <tr> là HTML, nên muốn dùng lệnh IF ta lại cần dấu @ *@
+                                            @if (rowIndex == 1)
+                                            {
+                                                <td class="fw-bold text-info">
+                                                    @ach
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td class="achievement-cell" style="--p: 100%; --cell-rgb: @colorObj.RgbRaw;">
+                                                    <span class="value">@ach</span>
+                                                </td>
+                                            }
+                                        </tr>
+
+                                        rowIndex++; // 3. Tăng biến đếm bình thường
+                                    }
+                                }
+
+                            </tbody>
+                        </table>
+                        <table class="table table-dark table-sm">
+                            <thead><tr><th class="text-start">METRIC</th><th>TODAY</th><th>THIS WEEK</th><th>THIS MONTH</th></tr></thead>
+                            <tbody>
+                                @if (Model.QualityOverviews != null)
+                                {
+                                    @foreach (var item in Model.QualityOverviews)
+                                    {
+                                        <tr style="vertical-align: middle;"><td class="text-start fw-bold">@item.Label</td><td>@item.Today</td><td>@item.ThisWeek</td><td>@item.ThisMonth</td></tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-row">
+            <div class="col-left">
+                <div class="dashboard-card">
+                    <div class="table-label">HOURLY OUTPUT</div>
+                    <div class="chart-container">
+                        <canvas id="hourlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-right">
+                <div class="dashboard-card">
+                    <div class="table-label">QUALITY OVERVIEW</div>
+                    <div class="chart-container">
+                        <canvas id="qualityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-row">
+            <div class="col-left">
+                <div class="dashboard-card">
+                    <div class="table-label">ACHIEVEMENT RATE</div>
+                    <div class="achievement-gauge">
+                        <canvas id="achievementGauge"></canvas>
+                        <div class="gauge-text">
+                            <div class="gauge-val">@Model.GaugePercentage.ToString("F1")<span style="font-size: 50%;">%</span></div>
+                            <div class="gauge-separator"></div>
+                            <div class="gauge-target-label">TARGET: 85% </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-right">
+                <div class="dashboard-card">
+                    <div class="table-label">DOWNTIME</div>
+                    <div class="downtime-container">
+                        <div class="downtime-left">
+                            <div>
+                                <small class="text-muted" style="font-size: calc(0.7rem + 0.1vw);">TOTAL DOWNTIME</small>
+                                <div class="text-danger fw-bold" style="font-size: calc(1.3rem + 0.3vw);">@Model.lotstimeTotal <small style="font-size:60%">min</small></div>
+                            </div>
+                            <div class="status-container">
+                                <div class="status-box status-running"><span>▶</span><span><strong>@Model.linerun</strong> RUN</span></div>
+                                <div class="status-box status-changeover text-white"><span>🔧</span><span><strong>@Model.lotchangeover</strong> CHG</span></div>
+                                <div class="status-box status-stop text-white"><span>■</span><span><strong>@Model.linestop</strong> STOP</span></div>
+                            </div>
+                        </div>
+                        <div class="downtime-right">
+                            <div style="font-size: calc(0.7rem + 0.2vw); color: #ffc107; font-weight: 600; margin-bottom: 0.5vh;">TOP ISSUE</div>
+                            <div class="table-responsive-wrapper">
+                                <table class="table table-dark table-sm" style="table-layout: fixed;">
+                                    <tbody>
+                                        @if (Model.Stoplog != null)
+                                        {
+                                            @foreach (System.Data.DataRow row in Model.Stoplog.Rows)
+                                            {
+                                                <tr style="height: 33%">
+                                                    <td class="text-start fw-bold text-info text-truncate"><i class="bi bi-person-badge"></i> @row["PIC"]</td>
+                                                    <td class="text-end fw-bold">
+                                                        <span class="@(Convert.ToDecimal(row["Total_Losttime"]) > 500 ? "text-danger" : "text-warning")">
+                                                            @string.Format("{0:N0}", row["Total_Losttime"])
+                                                        </span> <small class="text-secondary">m</small>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>
+    (function() {
+        if (window.myHourlyChart) { window.myHourlyChart.destroy(); }
+        if (window.myQualityChart) { window.myQualityChart.destroy(); }
+
+        const colorStops = @Html.Raw(colorStopsJson);
+        function getSmoothColor(percent) {
+            let lower = colorStops[0], upper = colorStops[colorStops.length - 1];
+            for (let i = 0; i < colorStops.length - 1; i++) {
+                if (percent >= colorStops[i].stop && percent <= colorStops[i + 1].stop) {
+                    lower = colorStops[i]; upper = colorStops[i + 1]; break;
+                }
+            }
+            const range = upper.stop - lower.stop, factor = range === 0 ? 0 : (percent - lower.stop) / range;
+            return { rgb: `rgb(${Math.round(lower.r + (upper.r - lower.r) * factor)}, ${Math.round(lower.g + (upper.g - lower.g) * factor)}, ${Math.round(lower.b + (upper.b - lower.b) * factor)})` };
+        }
+
+       if (!Chart.registry.plugins.get('bar3D')) {
+            Chart.register({
+                id: 'bar3D',
+                beforeDatasetsDraw(chart) {
+                    if(chart.config.options.plugins.bar3D === false) return;
+                    const { ctx, chartArea: { bottom }, scales: { x, y } } = chart;
+                    const dataset = chart.data.datasets[0];
+
+                    ctx.save();
+                    dataset.data.forEach((value, index) => {
+                        const barX = x.getPixelForValue(index);
+                        const barY = y.getPixelForValue(value);
+                        const barWidth = chart.getDatasetMeta(0).data[index].width;
+
+                        // ĐIỂM MỚI: Cho bóng 3D tự to/nhỏ bằng 25% độ rộng thực tế của cột
+                        const offsetX = barWidth * 0.25;
+                        const offsetY = -barWidth * 0.25;
+
+                        const baseColor = dataset.backgroundColor[index] || dataset.backgroundColor;
+                        const m = baseColor.match(/\d+/g), r = m?parseInt(m[0]):100, g = m?parseInt(m[1]):100, b = m?parseInt(m[2]):200;
+                        const sc = `rgb(${Math.max(0, r-50)}, ${Math.max(0, g-50)}, ${Math.max(0, b-50)})`;
+                        const tc = `rgb(${Math.min(255, r+30)}, ${Math.min(255, g+30)}, ${Math.min(255, b+30)})`;
+
+                        ctx.beginPath(); ctx.moveTo(barX+barWidth/2, barY); ctx.lineTo(barX+barWidth/2+offsetX, barY+offsetY); ctx.lineTo(barX+barWidth/2+offsetX, bottom+offsetY); ctx.lineTo(barX+barWidth/2, bottom); ctx.fillStyle=sc; ctx.fill();
+                        ctx.beginPath(); ctx.moveTo(barX-barWidth/2, barY); ctx.lineTo(barX-barWidth/2+offsetX, barY+offsetY); ctx.lineTo(barX+barWidth/2+offsetX, barY+offsetY); ctx.lineTo(barX+barWidth/2, barY); ctx.fillStyle=tc; ctx.fill();
+                    });
+                    ctx.restore();
+                }
+            });
+        }
+
+        // HOURLY CHART
+        const hourlyLabels = @Html.Raw(hourlyLabelsJson), hourlyData = @Html.Raw(hourlyDataJson), hourlyAch = @Html.Raw(Json.Serialize(Model.HourlyOutputs?.Select(x => x.AchievePercent) ?? new List<decimal>()));
+        const yAxisMax = Math.ceil((hourlyData.length ? Math.max(...hourlyData) : 100) * 1.35);
+        const barColors1 = hourlyData.map((val, index) => {
+            if (val <= 0) return 'rgba(0, 0, 0, 0)';
+            return getSmoothColor(Math.min(100, hourlyAch[index])).rgb;
+        });
+       window.myHourlyChart = new Chart(document.getElementById('hourlyChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: hourlyLabels,
+                datasets: [{
+                    data: hourlyData,
+                    backgroundColor: barColors1,
+                    borderRadius: 0,
+                    barThickness: 35,
+                    maxBarThickness: 50
+                }]
+            },
+            options: {
+                tooltip: { enabled: false },
+                animations: false, responsive: true, maintainAspectRatio: false, layout: { padding: { top: 35, right: 10 } },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        display: true,
+                        color: '#fff',
+                        anchor: 'end',
+                        align: 'top',
+                        offset: 8,
+                        font: { weight: 'bold', size: 14 },
+                        // 2. Nếu data <= 0 thì không hiển thị số trên đỉnh cột
+                        // formatter: v => v <= 0 ? '0' : v
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, max: yAxisMax, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                }
+            },
+            plugins: [ChartDataLabels]
+        
+        });
+
+        // GAUGE CHART
+
+        const gaugeCtx = document.getElementById('achievementGauge').getContext('2d'), gaugePct = @gaugeValue;
+        function drawGauge() {
+            const cvs = gaugeCtx.canvas, rect = cvs.parentElement.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+            cvs.width = rect.width * dpr; cvs.height = rect.height * dpr; gaugeCtx.scale(dpr, dpr);
+
+            // --- CÔNG THỨC MỚI: PHÓNG TO HẾT CỠ ---
+            const cx = rect.width / 2;
+            const cy = rect.height * 0.95; // Hạ tâm xuống sát đáy (95% chiều cao) để lấy chỗ trống phía trên
+
+            // Theo toán học: Bề dày nét vẽ là 0.35r -> Mép ngoài sẽ phình thêm 0.175r.
+            // Để không chạm đỉnh và 2 cạnh bên, hệ số bán kính tối đa an toàn là 0.85.
+            const r = Math.min(cx * 0.85, cy * 0.85);
+            const lw = r * 0.35;
+            const sa = Math.PI, ea = 2*Math.PI, ar = ea-sa, fa = sa+(ar*gaugePct/100);
+
+            for(let i=0; i<360; i++) {
+                const a1 = sa+(ar*i/360), a2 = sa+(ar*(i+1)/360); if(a1>fa) break;
+                gaugeCtx.beginPath(); gaugeCtx.arc(cx, cy, r, a1, Math.min(a2, fa)+0.02); gaugeCtx.strokeStyle = getSmoothColor((i/360)*100).rgb; gaugeCtx.lineWidth = lw; gaugeCtx.stroke();
+            }
+            gaugeCtx.beginPath(); gaugeCtx.arc(cx, cy, r, fa, ea); gaugeCtx.strokeStyle = '#334155'; gaugeCtx.lineWidth = lw; gaugeCtx.stroke();
+        }
+        drawGauge();
+        window.addEventListener('resize', drawGauge); // Tự vẽ lại gauge khi kéo size màn hình
+
+        // QUALITY CHART
+          @{
+                var qInfo = Model.QualityOverviews?.FirstOrDefault();
+                double.TryParse(qInfo?.Today?.Replace("%", ""), out var tV); double.TryParse(qInfo?.ThisWeek?.Replace("%", ""), out var wV); double.TryParse(qInfo?.ThisMonth?.Replace("%", ""), out var mV);
+                var qD = System.Text.Json.JsonSerializer.Serialize(new[] { tV, wV > 100 ? 99.9 : wV, mV > 100 ? 99.9 : mV });
+            }
+            window.myQualityChart = new Chart(document.getElementById('qualityChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['TODAY', 'THIS WEEK', 'THIS MONTH'],
+                    datasets: [{
+                        data: @Html.Raw(qD),
+                        // SỬA Ở ĐÂY: Chuyển #1261A6 thành rgb(18, 97, 166)
+                        backgroundColor: ['rgb(18, 97, 166)','rgb(18, 97, 166)','rgb(18, 97, 166)'],
+                        borderRadius: 0,
+                        barThickness: 75,
+                        maxBarThickness: 85
+                    }]
+                },
+                options: {
+                    tooltip: { enabled: false },
+                    animations: false,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 35, right: 15 } },
+                    plugins: {
+                        legend: { display: false },
+                        bar3D: true, // THÊM DÒNG NÀY: Để bật plugin vẽ 3D cho biểu đồ này
+                        datalabels: { display: true, color: '#fff', anchor: 'end', align: 'top', offset: 15, font: { weight: 'bold', size: 14 }, formatter: v => v+'%' }
+                    },
+                    scales: {
+                        y: { min: 0, max: 120, grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 20, callback: v=>v+'%' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: {weight:'bold'} } }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+    })();
+</script>
