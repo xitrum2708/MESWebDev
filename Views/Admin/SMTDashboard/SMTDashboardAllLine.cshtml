@@ -1,0 +1,50 @@
+﻿@model MESWebDev.Models.SMT.SMT_DashboardAllLine_Model
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    <div class="app-content-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-12">
+                    <ol class="breadcrumb float-sm-end d-flex justify-content-center align-content-center" style="margin-bottom:0px !important">
+                        <li class="breadcrumb-item text-black fw-bold">HOME</li>
+                        <li class="breadcrumb-item active fw-bold" aria-current="page">SMT DASHBOARD ALL LINE</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-3d@1.0.3/dist/chartjs-plugin-3d.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+<div id="dashboard-container">
+    <partial name="~/Views/Admin/SMTDashboard/SMTDashboardAllLineContent.cshtml" model="@Model" />
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Hàm gọi AJAX lấy dữ liệu mới
+            function reloadDashboard() {
+                $.ajax({
+                    url: '@Url.Action("ReloadAllLineData", "Admin")',
+                    type: 'GET',
+                    success: function (res) {
+                        $('#dashboard-container').html(res);
+                        console.log("Cập nhật dữ liệu thành công: " + new Date().toLocaleTimeString());
+                    },
+                    error: function () {
+                        console.error("Lỗi kết nối server khi tải Dashboard.");
+                    }
+                });
+            }
+            // ĐẶT LỊCH 2 PHÚT (120,000 ms) GỌI 1 LẦN
+            setInterval(reloadDashboard, 120000);
+        });
+    </script>
+}

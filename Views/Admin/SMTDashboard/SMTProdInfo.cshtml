@@ -83,6 +83,7 @@
             // setTimeout(function () {
                 // window.location.href = '@Url.Action("SMTProdInfo", "Admin")?line=' + line + '&lot=' + lot;
             //}, 200); // 200ms is enough
+            
             $.ajax({
                 url:'@Url.Action("SMTProdInfoSearch", "Admin")',
                 type:'GET',
@@ -115,19 +116,36 @@
             setInterval(function(){
                 var lot = $('.sl_lot').val();
                 reloagPage(lot);
-            },30000);
+            },120000);
         });
 
         function MakeupTable(){
-        $('table thead th').each(function (index) {
+        // $('table thead th').each(function (index) {
+        //     $(this).css({
+        //         'background-color': '#00c0ff',
+        //         'padding': '10px 0px'
+        //     });
+        //     $(this).addClass('p-0 mx-2 py-2 fw-bold text-center');
+        //     $(this).css({'font-size':'16px'});
+
+        // });
+                $(this).css({
+            'background-color': '#0084b0',
+            'padding': '10px 0px',
+            'color': 'white',
+            'vertical-align': 'middle', // Căn giữa theo chiều dọc
+            'overflow': 'hidden',       // Không cho nội dung tràn ra
+            'white-space': 'normal'     // Cho phép tiêu đề dài tự xuống dòng
+        });
+              $('table thead th').each(function (index) {
             $(this).css({
                 'background-color': '#00c0ff',
-                'padding': '10px 0px'
+                'padding': '10px 0px',
+                'color': 'white' // <--- THÊM DÒNG NÀY ĐỂ CHỮ THÀNH MÀU TRẮNG
             });
-            $(this).addClass('p-0 mx-2 py-2 fw-bold text-center');
-            $(this).css({'font-size':'16px'});
-
-        });
+            $(this).addClass('p-0 mx-2 py-2 fw-bold text-center text-white'); // Thêm text-white vào class cho chắc chắn
+            $(this).css({'font-size':'14px'});
+             });
 
         $('table tbody tr').each(function (index) {
         if ((index + 1) % 2 === 0) {
@@ -180,30 +198,42 @@
                     datasets: [{
                         label: 'Colors',
                         data: pie_values,
-                        backgroundColor: [
-                            '#28a745', // green
-                            '#dc3545', // red
-                            '#ffc107', // yellow
-                            '#0dcaf0', // cyan
-                            '#6f42c1', // purple
-                            '#fd7e14', // orange
-                            '#20c997', // teal
-                            '#6610f2', // indigo
-                            '#198754', // dark green
-                            '#e83e8c', // pink
-                            '#17a2b8', // info blue
-                            '#343a40', // dark gray
-                            '#adb5bd', // light gray
-                            '#ff6384', // soft red
-                            '#36a2eb', // soft blue
-                            '#ff9f40', // soft orange
-                            '#4bc0c0', // turquoise
-                            '#9966ff', // violet
-                            '#c9cbcf', // light silver
-                            '#f94144', // coral red
-                        ],
-                        borderColor: '#fff',
-                        borderWidth: 1
+                                       backgroundColor: [
+                                                    'rgba(7, 157, 217, 1)',   // Xanh dương sáng (#079DD9)
+                                                    'rgba(224, 137, 99, 1)',  // Cam đất/Gạch (#E08963)
+                                                    'rgba(140, 198, 63, 0.8)',  // 01 - Xanh lá
+                                                    'rgba(255, 191, 163, 1)', // Cam san hô nhạt (#FFBFA3)
+                                                    'rgba(178, 235, 224, 1)', // Xanh Mint (#B2EBE0)
+                                                    'rgba(236, 216, 242, 0.9)',  // Hồng tím cực nhạt (#ECD8F2)
+                                                    'rgba(190, 182, 242, 1)', // Tím Lavender (#BEB6F2)
+                                                    'rgba(242, 171, 179, 0.8)', // 02 - Hồng san hô (#F2ABB3)
+                                                    'rgba(153, 217, 242, 1)', // Xanh da trời nhạt (#99D9F2)
+                                                    'rgba(56, 144, 143, 1)',  // Xanh Teal đậm (#38908F)
+                                                 ],
+                        // backgroundColor: [
+                        //     '#28a745', // green
+                        //     '#dc3545', // red
+                        //     '#ffc107', // yellow
+                        //     '#0dcaf0', // cyan
+                        //     '#6f42c1', // purple
+                        //     '#fd7e14', // orange
+                        //     '#20c997', // teal
+                        //     '#6610f2', // indigo
+                        //     '#198754', // dark green
+                        //     '#e83e8c', // pink
+                        //     '#17a2b8', // info blue
+                        //     '#343a40', // dark gray
+                        //     '#adb5bd', // light gray
+                        //     '#ff6384', // soft red
+                        //     '#36a2eb', // soft blue
+                        //     '#ff9f40', // soft orange
+                        //     '#4bc0c0', // turquoise
+                        //     '#9966ff', // violet
+                        //     '#c9cbcf', // light silver
+                        //     '#f94144', // coral red
+                        // ],
+                        borderColor: '#283593',//'#fff',
+                        borderWidth: 3
                     }]
                 },
                 options: {
@@ -216,7 +246,7 @@
                                 padding: 5,
                                 color: '#ffffff',
                                 font:{
-                                    size:8
+                                    size:12
                                 }
                             },
                             position: 'right'
@@ -265,133 +295,250 @@
             function ShowLineBarChart(bar_line){
 
             if( bar_line && bar_line.length > 0) {
+
                 const labels = bar_line.map(item => item.Label);
             const target = bar_line.map(item => item.Value1);
             const output = bar_line.map(item => item.Value2);
             const rate = bar_line.map(item => item.Rate);
-            const ctx = document.getElementById('chart_area').getContext('2d');
-            const chart = new Chart(ctx,
-            {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Target',
-                            type:'bar',
-                            data: target,
-                            backgroundColor: 'rgba(63, 114, 255,0.9)', //'rgba(71, 211, 89, 0.9)',
-                            datalabels: {
-                                color: 'rgba(63, 114, 255)',
-                                font: {
-                                    weight: 'bold'
-                                },
-                            formatter: Math.round
-                        }}
-                        ,
-                        {
-                            label: 'Output',
-                            type:'bar',
-                            data: output,
-                            backgroundColor: 'rgba(255, 161, 58,0.9)',// 'rgba(211,91,200,0.8)',
-                            datalabels: {
-                                color: 'rgba(255, 161, 58)',
-                                font: {
-                                    weight: 'bold'
-                                },
-                                formatter: Math.round
-                            },
 
-                        },
-                        {
-                            label: 'Achieve Rate',
-                            type: 'line',
-                            tension: 0.4,
-                            data: rate,
-                            backgroundColor: 'rgba(255, 206, 86, 0.5)',
-                            borderColor: 'yellow',//'rgba(255, 206, 86, 1)',
-                            fill: false,
-                            yAxisID: 'y2'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: 'white'   // axis labels
-                            },
-                            grid: {
-                                color: 'white'   // grid line color
-                            }
-                        },
-                        y: {
-                            ticks: {
-                                color: 'white'   // axis labels
-                            },
-                            grid: {
-                                color: 'white'   // grid line color
-                            },
-                            beginAtZero: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Target/Output',
-                                color: 'white'
-                            }
-                        },
-                        y2: {
-                            type: 'linear',
-                            position: 'right',
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Acheive Rate',
-                                color: 'white'
-                            },
-                            grid: {
-                                drawOnChartArea: false,
-                                color: 'white'
-                                },
-                            ticks: {
-                                autoSkip: false,
-                                maxRotation: 45,
-                                minRotation: 0,
-                                color: 'white'
-                            }
+            Chart.register(ChartDataLabels);
+            const ctx = document.getElementById('chart_area').getContext('2d');
+            // const chart = new Chart(ctx,
+            // {
+            //     type: 'bar',
+            //     data: {
+            //         labels: labels,
+            //         datasets: [
+            //             {
+            //                 label: 'Target',
+            //                 type:'bar',
+            //                 data: target,
+            //                 backgroundColor: 'rgba(63, 114, 255,0.9)', //'rgba(71, 211, 89, 0.9)',
+            //                 datalabels: {
+            //                     color: 'rgba(63, 114, 255)',
+            //                     font: {
+            //                         weight: 'bold'
+            //                     },
+            //                 formatter: Math.round
+            //             }}
+            //             ,
+            //             {
+            //                 label: 'Output',
+            //                 type:'bar',
+            //                 data: output,
+            //                 backgroundColor: 'rgba(255, 161, 58,0.9)',// 'rgba(211,91,200,0.8)',
+            //                 datalabels: {
+            //                     color: 'rgba(255, 161, 58)',
+            //                     font: {
+            //                         weight: 'bold'
+            //                     },
+            //                     formatter: Math.round
+            //                 },
+
+            //             },
+            //             {
+            //                 label: 'Achieve Rate',
+            //                 type: 'line',
+            //                 tension: 0.4,
+            //                 data: rate,
+            //                 backgroundColor: 'rgba(255, 206, 86, 0.5)',
+            //                 borderColor: 'yellow',//'rgba(255, 206, 86, 1)',
+            //                 fill: false,
+            //                 yAxisID: 'y2'
+            //             }
+            //         ]
+            //     },
+            //     options: {
+            //         responsive: true,
+            //         maintainAspectRatio: false,
+            //         scales: {
+            //             x: {
+            //                 ticks: {
+            //                     color: 'white'   // axis labels
+            //                 },
+            //                 grid: {
+            //                     color: 'white'   // grid line color
+            //                 }
+            //             },
+            //             y: {
+            //                 ticks: {
+            //                     color: 'white'   // axis labels
+            //                 },
+            //                 grid: {
+            //                     color: 'white'   // grid line color
+            //                 },
+            //                 beginAtZero: true,
+            //                 position: 'left',
+            //                 title: {
+            //                     display: true,
+            //                     text: 'Target/Output',
+            //                     color: 'white'
+            //                 }
+            //             },
+            //             y2: {
+            //                 type: 'linear',
+            //                 position: 'right',
+            //                 beginAtZero: true,
+            //                 title: {
+            //                     display: true,
+            //                     text: 'Acheive Rate',
+            //                     color: 'white'
+            //                 },
+            //                 grid: {
+            //                     drawOnChartArea: false,
+            //                     color: 'white'
+            //                     },
+            //                 ticks: {
+            //                     autoSkip: false,
+            //                     maxRotation: 45,
+            //                     minRotation: 0,
+            //                     color: 'white'
+            //                 }
+            //             }
+            //         },
+
+            //     plugins: {
+            //         datalabels: {
+            //         display: true,
+            //         color: 'rgba(255, 255, 0)',
+            //         anchor: 'end',
+            //         align: 'top',
+            //             formatter: function(value, context) {
+            //                 if(context.dataset.type === 'bar'){
+            //                     return typeof value === 'number' ? value.toLocaleString() : value;
+            //                 } else {
+            //                     return value.toFixed(2);
+            //                 }
+            //             }
+            //         },
+            //         legend: {
+            //             display: true,
+            //             labels: {
+            //                 color: 'white'   // <-- Legend text color
+            //             }
+            //         },
+            //         tooltip: {
+            //             enabled: true
+            //         }
+            //     }
+            //     },
+            // plugins: [ChartDataLabels]
+
+            // });
+                    // Đảm bảo bạn đã nhúng thư viện plugin datalabels trước đoạn code này
+        // Chart.register(ChartDataLabels); // Nếu dùng Chart.js v3+
+
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Target',
+                        type: 'bar',
+                        data: target,
+                        backgroundColor: 'rgba(63, 114, 255, 0.9)',
+                        order: 9,
+                        datalabels: {
+                            align: 'end',
+                            anchor: 'end',
+                            color: '#91ABED',//'rgba(63, 114, 255)', // Cấu hình riêng cho Target nếu muốn
+                            offset: 4
                         }
                     },
-
+                    {
+                        label: 'Output',
+                        type: 'bar',
+                        data: output,
+                        backgroundColor: 'rgba(255, 161, 58, 0.9)',
+                        order: 9,
+                        datalabels: {
+                            align: 'end',
+                            anchor: 'end',
+                            color: 'rgba(255, 161, 58)',
+                            offset: 4
+                        }
+                    },
+                    {
+                        label: 'Achieve Rate',
+                        type: 'line',
+                        tension: 0.4,
+                        data: rate,
+                        backgroundColor: 'rgba(255, 206, 86, 0.5)',
+                        borderColor: 'yellow',
+                        fill: false,
+                        yAxisID: 'y2',
+                        order: 1,
+                        datalabels: {
+                            align: 'top',
+                            anchor: 'end',
+                            color: 'yellow',
+                            offset: 8 // Đẩy nhãn của đường Line cao hơn một chút để tránh đè lên cột
+                        }
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 40 // Quan trọng: Tạo khoảng trống ở đỉnh để nhãn không bị mất
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: 'white' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        position: 'left',
+                        suggestedMax: Math.max(...target) * 1.3, // Tự động nới trần 20%
+                        ticks: { color: 'white' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        title: {
+                            display: true,
+                            text: 'Target/Output',
+                            color: 'white'
+                        }
+                    },
+                    y2: {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        suggestedMax: 110, // Nới trần trục phần trăm lên 110%
+                        grid: { drawOnChartArea: false },
+                        ticks: { color: 'white' },
+                        title: {
+                            display: true,
+                            text: 'Achieve Rate (%)',
+                            color: 'white'
+                        }
+                    }
+                },
                 plugins: {
                     datalabels: {
-                    display: true,
-                    color: 'rgba(255, 255, 0)',
-                    anchor: 'end',
-                    align: 'top',
+                        display: true,
+                        font: { weight: 'bold', size: 11 },
                         formatter: function(value, context) {
-                            if(context.dataset.type === 'bar'){
-                                return typeof value === 'number' ? value.toLocaleString() : value;
-                            } else {
-                                return value.toFixed(2);
+                            // Nếu là Dataset 'Achieve Rate' (Line)
+                            if (context.dataset.label === 'Achieve Rate') {
+                                return value.toFixed(1) + '%';
                             }
+                            // Nếu là Bar (Target/Output), định dạng phân cách hàng ngàn
+                            return value.toLocaleString();
                         }
                     },
                     legend: {
                         display: true,
-                        labels: {
-                            color: 'white'   // <-- Legend text color
-                        }
+                        labels: { color: 'white' }
                     },
-                    tooltip: {
-                        enabled: true
-                    }
+                    tooltip: { enabled: true }
                 }
-                },
-            plugins: [ChartDataLabels]
-
-            });
+            },
+            plugins: [ChartDataLabels] // Kích hoạt plugin
+        });
             }
             }
 

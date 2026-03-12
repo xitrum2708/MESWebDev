@@ -9,5 +9,6 @@ namespace MESWebDev.Services
         Task<DataSet> GetWHSDashboard(Dictionary<string, object> dic);
         Task<DataTable> GetSMTLines();
         Task<DataSet> GetSMTProdInfo(Dictionary<string, object> dic);
+        Task<DataSet> GetSMTProdAllLine(Dictionary<string, object> dic);
     }
 }

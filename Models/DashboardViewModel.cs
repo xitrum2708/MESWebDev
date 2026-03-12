@@ -23,6 +23,7 @@ namespace MESWebDev.Models
         public int balance { get; set; } = 0;
         public decimal target1H { get; set; } = 0;
         public decimal losttime { get; set; } = 0;
+        public string lotstimeTotal { get; set; } = "0";
 
         public DateTime? StartDate { get; set; } = null;
         public DateTime? EndDate { get; set; } = null;

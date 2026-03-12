@@ -53,21 +53,30 @@ namespace MESWebDev.Common
         public async Task<DataSet> Proc_GetDataset(string proc_name, Dictionary<string, object> dic)
         {
             DataSet ds = new();
-            using(var command = _con.Database.GetDbConnection().CreateCommand())
+            using (var command = _con.Database.GetDbConnection().CreateCommand())
             {
                 command.CommandText = proc_name;
                 command.CommandType = CommandType.StoredProcedure;
                 command.CommandTimeout = 0;
-                foreach(var d in dic)
-                {
-                    command.Parameters.Add(new SqlParameter (d.Key, d.Value));
-                }
 
-                _con.Database.OpenConnection();
+                // CÁCH 1: Kiểm tra dic trước khi lặp
+                if (dic != null)
+                {
+                    foreach (var d in dic)
+                    {
+                        // Xử lý thêm giá trị null của từng Parameter (nếu cần)
+                        var value = d.Value ?? DBNull.Value;
+                        command.Parameters.Add(new SqlParameter(d.Key, value));
+                    }
+                }
 
                 try
                 {
-                    using(SqlDataAdapter da = new SqlDataAdapter())
+                    // Mở kết nối an toàn
+                    if (_con.Database.GetDbConnection().State != ConnectionState.Open)
+                        await _con.Database.OpenConnectionAsync();
+
+                    using (SqlDataAdapter da = new SqlDataAdapter())
                     {
                         da.SelectCommand = (SqlCommand)command;
                         da.Fill(ds);
@@ -75,18 +84,19 @@ namespace MESWebDev.Common
                 }
                 catch (Exception ex)
                 {
+                    // Ghi log lỗi tại đây để dễ debug (ví dụ: _logger.LogError(ex.Message))
                     return null;
                 }
                 finally
                 {
-                    _con.Database.CloseConnection();
+                    await _con.Database.CloseConnectionAsync();
                 }
             }
             return ds;
         }
 
 
-        
+
         public async Task<string> Proc_GetString(string proc_name, Dictionary<string, object> dic)
         {
             string value = string.Empty;
