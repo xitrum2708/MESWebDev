@@ -1,5 +1,6 @@
 ﻿using MESWebDev.Models.ProdPlan.PC;
 using MESWebDev.Models.ProdPlan.SMT;
+using MESWebDev.Models.ProdPlan.SMT.DTO;
 using MESWebDev.Models.Setting;
 using MESWebDev.Models.Setting.DTO;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -27,18 +28,37 @@ namespace MESWebDev.Models.ProdPlan
 
         #region Setting
         public ProjectSettingModel? SettingModel { get; set; }
-        public FormatRazorDTO FormatRazorDTO { get; set; } = new FormatRazorDTO();
+        public FormatRazorDTO FormatRazorDTO { get; set; } = new();
         #endregion
 
         #region SMT Production Plan
-        public SMTLotPcbModel SMTLotPcbModel { get; set; } = new SMTLotPcbModel();
+        public SMTLotPcbModel SMTLotPcbModel { get; set; } = new();
         public List<SMTLotPcbModel>? SMTLotPcbList { get; set; }
         
-        public SMTPlanModel SMTPlanModel { get; set; } = new SMTPlanModel();
+        public SMTPlanModel SMTPlanModel { get; set; } = new();
         public List<SMTPlanModel>? SMTPlanList { get; set; }
 
-        public SMTProdPlanModel SMTProdPlanModel { get; set; } = new SMTProdPlanModel();
+        public SMTProdPlanModel SMTProdPlanModel { get; set; } = new();
         public List<SMTProdPlanModel>? SMTProdPlanList { get; set; }
+
+        public SMTProdPlanDtlModel SMTProdPlanDtlModel { get; set; } = new();
+        public List<SMTProdPlanDtlModel>? SMTProdPlanDtlList { get; set; }
+
+        public SMTProdPlanHdrModel SMTProdPlanHdrModel { get; set; } = new();
+        public List<SMTProdPlanHdrModel>? SMTProdPlanHdrList { get; set; }
+
+        public SMTProdPlanDTO SMTProdPlanDTO { get; set; } = new();
+        public List<SMTProdPlanDTO> SMTProdPlanDTOList { get; set; } = new();
+
+        public List<SMTEventsDTO>? SMTEventsList { get; set; }
+        public string? PrevPCBKey { get; set; }
+        public int? OverMinute { get; set; }
+        public int? SettingMinute { get; set; }
+
+        public List<SMTLineUtilizationDTO>? SMTLineUtilizationList { get; set; }
+
+        public bool HasChange { get; set; } = false;
+        public string dateFormat { get; set; } = "yyyy/MM/dd"; // default date format
         #endregion
 
 

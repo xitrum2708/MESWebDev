@@ -14,6 +14,77 @@ namespace MESWebDev.Common
 {
     public class Export2Excel
     {
+
+        public FileContentResult DownloadDataSetFormat(DataSet ds, string fileName)
+        {
+            using (var app = new ExcelPackage())
+            {
+                // Create excel sheet
+                if (ds != null && ds.Tables.Count > 0)
+                {
+                    foreach (DataTable dt in ds.Tables)
+                    {
+                        var sheet = app.Workbook.Worksheets.Add(dt.TableName);
+
+                        // set font
+                        sheet.Cells.Style.Font.Name = "Aptos Narrow";
+
+                        // set size 
+                        sheet.Cells.Style.Font.Size = 12;
+
+                        if (dt != null && dt.Rows.Count > 0)
+                        {
+                            sheet.Cells["A1"].LoadFromDataTable(dt, true);
+
+                            // format for datetime
+                            ApplyDateFormats(sheet, dt);
+                            sheet.Cells[sheet.Dimension.Address].AutoFitColumns();
+                        }
+                    }
+                }
+                else
+                {
+                    var sheet = app.Workbook.Worksheets.Add("NoData");
+                }
+
+                // convert excel data to array
+                var array = app.GetAsByteArray();
+                // return excel file $"Programs_{DateTime.Now.ToString("yyyyMMddhhmmss")}.xlsx"
+
+                return new FileContentResult(array, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                {
+                    FileDownloadName = $"{fileName}_{DateTime.Now.ToString("yyyyMMddHHmmss")}.xlsx"
+                };
+            }
+        }
+
+        public void ApplyDateFormats(ExcelWorksheet ws, DataTable dt)
+        {
+            //dt.TimeOfDay == TimeSpan.Zero
+            int isDateOnly = -1;
+            if (dt != null && dt.Rows.Count > 0)
+            {
+                for (int i = 0; i < dt.Columns.Count; i++)
+                {
+                    if (dt.Columns[i].DataType == typeof(DateTime))
+                    {
+
+                        for (int j = 0; j < dt.Rows.Count; j++)
+                        {
+                            if (dt.Rows[j][i] == DBNull.Value) ws.Cells[j + 2, i + 1].Value = "";
+                            else if (isDateOnly == -1)
+                                isDateOnly = Convert.ToDateTime(dt.Rows[j][i]).TimeOfDay.TotalSeconds == 0 ? 1 : 0;
+
+                        }
+                        ws.Column(i + 1).Style.Numberformat.Format = isDateOnly == 1 ? "yyyy/MM/dd" : "yyyy/MM/dd HH:mm:ss";
+                        isDateOnly = -1;
+                    }
+                }
+            }
+        }
+
+
+
         public FileContentResult DownloadData(DataTable dt, string fileName)
         {
             using (var app = new ExcelPackage())

@@ -1,0 +1,60 @@
+﻿<!-- CUSTOM TOOLBAR -->
+<div class="calendar-toolbar row">
+    <div class="toolbar-left col">
+        <div class="btn-group btn-group-sm view-group" role="group">
+            <button id="btnPrev"
+                    type="button"
+                    class="btn btn-outline-success">
+                <i class="bi bi-caret-left-fill"></i>
+            </button>
+            <button id="btnToday"
+                    type="button"
+                    class="btn btn-outline-success active">
+                Today
+            </button>
+            <button id="btnNext"
+                    type="button"
+                    class="btn btn-outline-success">
+                <i class="bi bi-caret-right-fill"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="toolbar-center col">
+        <span id="calendar-title" class="text-success"></span>
+    </div>
+
+    <div class="toolbar-right col">
+        <div class="btn-group btn-group-sm view-group" role="group">
+            <button type="button"
+                    class="btn btn-outline-success active"
+                    data-view="resourceTimelineDay">
+                Day
+            </button>
+
+            <button type="button"
+                    class="btn btn-outline-success"
+                    data-view="resourceTimelineWeek">
+                Week
+            </button>
+
+            <button type="button"
+                    class="btn btn-outline-success"
+                    data-view="resourceTimelineMonth">
+                Month
+            </button>
+
+
+            <button type="button"
+                    class="btn btn-outline-success"
+                    data-view="resourceTimelineYear">
+                Year
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- CALENDAR -->
+<div class="calendar-wrapper">
+    <div id="calendar"></div>
+</div>

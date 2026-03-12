@@ -21,6 +21,13 @@
             public const string NotFound = "not_found";
             public const string NoDataInUploadedFile = "No data found in the uploaded file.";
             //"No data found in the uploaded file."
+
+            //upload error
+            public const string InvalidFileType = "Invalid file type. Please upload an Excel file.";
+            public const string BlankValues = "Blank values.";      
+            public const string WrongFormat = "Wrong format.";
+            public const string CheckValue = "Check value of this row.";
+            public const string UploadedError = "Cannot upload this file.";
         }
         public class CalendarType
         {

@@ -1,0 +1,309 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Models.ProdPlan.PC
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model ProdPlanViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="float-start d-flex justify-content-center align-items-center">
+                                <h3 class="card-title fw-bold fs-6">
+                                    @* Production Plan *@
+                                    @if (Model.start_sch_dt != null)
+                                    {
+                                        <span class="lastRun badge bg-success fs-6 p-2">
+                                            Last run: @Convert.ToDateTime(Model.start_sch_dt).ToString("yyyy-MM-dd HH:mm:ss")
+                                        </span>
+                                    }
+                                </h3>
+                                <div class="btn-group ms-2 rounded-2" role="group">
+                                    <button id="zoomIn" class="btn btn-sm btn-outline-success fw-bold">
+                                        <i class="bi bi-zoom-in fw-bold"></i>
+                                    </button>
+                                    <button id="zoomOut" class="btn btn-sm btn-outline-success fw-bold">
+                                        <i class="bi bi-zoom-out fw-bold"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="float-end d-flex justify-content-center align-items-center">
+
+                                <a class="btn btn-info btn-sm me-2" asp-action="SMTIniProdPlan" asp-controller="ProdPlan">
+                                    <i class="bi bi-file-earmark-arrow-up"></i>
+                                    LoadPlan</a>
+                                <a class="btn btn-success btn-sm bt_reload me-2">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    Reload
+                                </a>
+                                @* <a class="btn btn-secondary btn-sm bt_master me-2">Master</a> *@
+                                <a class="btn btn-primary btn-sm bt_save me-2">
+                                    <i class="bi bi-floppy"></i>
+                                    Save</a>
+                                <a asp-action="DownloadProdPlan" asp-controller="ProdPlan" class="btn btn-secondary btn-sm me-2">
+                                    <i class="bi bi-download"></i>
+                                    Download
+                                </a>
+                              
+                            </div>
+                        </div>
+                        <div class="card-body" >
+                            @* <h2>Product Schedule (Resource Timeline View)</h2> *@
+
+                            <div class="enterprise-container">
+
+                                <!-- LEFT PANEL -->
+                                <div class="panel panel-left" id="schedulePanel">
+                                    <div class="panel-header">
+                                        <span>Production Schedule</span>
+                                        <div class="panel-actions">
+                                            <button class="btn-full fw-bold" data-target="schedulePanel" title="Fullsceen">
+                                                <i class="bi bi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="panel-body">
+                                        @* <div style="max-height: calc(100vh - 260px); overflow-y: auto; position:relative" id='calendar'></div> *@
+                                        <div class="calendar-toolbar"></div>
+                                        <div class="calendar-wrapper">
+                                            <div id="calendar"></div>
+                                        </div>
+                                        @* <div class="overflow-auto position-relative" id='calendar'></div> *@
+
+
+
+                                        <!-- CUSTOM TOOLBAR -->
+                                        <div class="calendar-toolbar">
+                                            <div class="toolbar-left">
+                                                <button id="btnPrev">◀</button>
+                                                <button id="btnToday">Today</button>
+                                                <button id="btnNext">▶</button>
+                                            </div>
+
+                                            <div class="toolbar-center">
+                                                <span id="calendar-title"></span>
+                                            </div>
+
+                                            <div class="toolbar-right">
+                                                <button data-view="resourceTimelineDay">Day</button>
+                                                <button data-view="resourceTimelineWeek">Week</button>
+                                                <button data-view="resourceTimelineMonth">Month</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- CALENDAR -->
+                                        <div class="calendar-wrapper">
+                                            <div id="calendar"></div>
+                                        </div>
+
+
+                                    </div>
+
+                                </div>
+
+                                <!-- DIVIDER -->
+                                <div class="divider"></div>
+
+                                <!-- RIGHT PANEL -->
+                                <div class="panel panel-right" id="utilPanel">
+                                    <div class="panel-header">
+                                        <span>Line Utilization</span>
+                                        <div class="panel-actions">
+                                            <button class="btn-full fw-bold" data-target="utilPanel" title="Fullscreen">
+                                                <i class="bi bi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div id="lineUtilization"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <Partial name="PC/_Upload" />
+    <Partila name="_LoadingPartial" />
+}
+catch(Exception ex)
+{
+    string t = ex.Message;
+}
+@*         /* ------+ 2025-07-08 +-------
+            Pending task:
+            1. save working hour settup
+            2. Bind it here
+            3. Calculate base on line/date/working hour
+        */ *@
+
+@section Scripts {
+    @* <link href="~/css/prodplan.css?@DateTime.Now.Ticks" rel="stylesheet" /> *@
+    <link href="~/css/smtprodplan.css?@DateTime.Now.Ticks" rel="stylesheet" />
+    <link href="~/css/PP_SMTEnterpriseLayout.css?@DateTime.Now.Ticks" rel="stylesheet" />
+    
+    <script src="~/js/index.global.min.js"></script>
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/pp_holidayCalendar.js?@DateTime.Now.Ticks"></script>
+    @* <script src="~/js/pp_prodPlanSchedule.js?@DateTime.Now.Ticks"></script> *@
+    <script src="~/js/pp_workingCalendar.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/pp_smtprodplanschedule.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/pp_SMTEnterpriseLayout.js?@DateTime.Now.Ticks"></script>
+    @using System.Text.Json
+    <script>
+        // --- Show Upload Windows --- \\
+        $(document).on('click','.bt_save',function(){
+             ProcessData('SMTSaveProdPlan');
+        });
+
+        $(document).on('click','.bt_reload',function(){
+            if(hasChanges)
+            {
+                ProcessData('SMTReloadProdPlan');
+            }
+            else{
+                toastr.error('Nothing changes !');
+            }
+        });
+
+       
+
+        // CHECK if UTC + 7 or not ???
+        const offsetMs = 7 * 60 * 60 * 1000;
+
+        function ProcessData(title) {
+            const events = calendar.getEvents(); // Get all current events
+            alert('Processing '+events.length+' events...');
+      
+            const updatedEvents = events.map(e => {
+                return {
+                    id: e.id,
+                    resourceId: e.getResources()[0]?.id,
+                    start: e.start.toLocaleString(),
+                    end: e.start.toLocaleString(),
+                    backgroundColor: e.backgroundColor,
+                    borderColor:e.borderColor,
+                    title: e.title,
+                     ...e.extendedProps ///Include extra data like model, lot_no, qty
+                };
+            });
+
+            const ppv = {
+                SMTEventsList: updatedEvents,
+                resources:resources,
+                start_sch_dt: start_sch_dt // Assuming this is a Date object
+            };
+        alert(JSON.stringify(ppv));
+        alert(title);
+
+            // Send to controller via AJAX
+            $.ajax({
+                url: '/ProdPlan/'+title,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(ppv),
+                success: function (data) {
+                    ReloadProdPlan(data)
+                },
+                error: function () {
+                    alert('Error reload events.');
+                }
+            });
+        }
+        
+        // Test Holidays
+        //const holidays = ["2025-06-20","2025-06-21","2025-06-22"];  
+
+        let holidays = @Html.Raw(JsonSerializer.Serialize(Model.holidays));
+        //alert(holidays);
+        const events = @Html.Raw(JsonSerializer.Serialize(Model.SMTEventsList));
+        let resources = @Html.Raw(JsonSerializer.Serialize(Model.resources));
+        let start_sch_dt = new Date(@Html.Raw(JsonSerializer.Serialize(Model.start_sch_dt?? DateTime.Now.Date)));
+        //alert(events);
+
+        let lastClickTime = 0;
+        let calendar; // Declare it in a higher scope
+        let hasChanges = false;
+        loadProPlanSchedule();
+
+        function ReloadProdPlan(data){
+            toastr.success(data.message,'',{
+                closeButton: true,
+                progressBar: true,
+                timeOut: 1000
+            });
+    alert(JSON.stringify(data.events));
+    alert(data.events);
+            // Reload calendar events
+            // Update holidays
+            // holidays = data.holidays;
+            // // resources = data.resources;
+            //     // Remove existing highlights
+            // document.querySelectorAll('.fc-day-holiday').forEach(cell => {
+            //     cell.classList.remove('fc-day-holiday');
+            // });
+            // holidays.forEach(dateStr => {
+            //     //alert(dateStr);
+            //     // document.querySelectorAll(`[data-date='${dateStr}']`).forEach(cell => {
+            //     document.querySelectorAll(`[data-date='${dateStr}'], [data-date^='${dateStr}T']`)
+            //         .forEach(cell => {
+            //             cell.classList.add('fc-day-holiday');
+            //         });
+            // });
+            calendar.removeAllEvents();
+            calendar.addEventSource(data.events);
+            $('.lastRun').html('Last run: '+data.start_sch_dt);
+            // Optional: Use start_sch_dt or resources
+            console.log("Start schedule date:", data.start_sch_dt);
+            // calendar.setOption("resources", data.resources); // if needed
+
+            hasChanges = false;
+            //alert(formatDateTime(start_sch_dt));
+        }
+        // initHolidayCalendarModal();
+
+        let zoomLevel = 1;
+        const minZoom = 0.5;
+        const maxZoom = 2;
+        const baseSlotWidth = 100; // base width in pixels
+
+        function applyZoom() {
+          const scaledWidth = baseSlotWidth * zoomLevel;
+          calendar.setOption('slotMinWidth', scaledWidth);
+          document.querySelector('#calendar').style.fontSize = `${zoomLevel}em`;
+          calendar.updateSize(); // apply layout update
+        }
+
+        document.getElementById('zoomIn').addEventListener('click', () => {
+          if (zoomLevel < maxZoom) {
+            zoomLevel += 0.1;
+            applyZoom();
+          }
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', () => {
+          if (zoomLevel > minZoom) {
+            zoomLevel -= 0.1;
+            applyZoom();
+          }
+        });
+    </script>
+}

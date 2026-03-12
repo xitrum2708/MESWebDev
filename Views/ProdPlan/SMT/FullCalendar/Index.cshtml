@@ -1,0 +1,363 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Models.ProdPlan.PC
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@using System.Globalization
+@model ProdPlanViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="float-start d-flex justify-content-center align-items-center">
+                                <h3 class="card-title fw-bold fs-6">
+                                    @* Production Plan *@
+                                    @if (Model.start_sch_dt != null)
+                                    {
+                                        <span class="lastRun badge bg-success fs-6 p-2">
+                                            Last run: @Convert.ToDateTime(Model.start_sch_dt).ToString("yyyy-MM-dd HH:mm:ss")
+                                        </span>
+                                    }
+                                </h3>
+   
+                            </div>
+                            <div class="float-end d-flex justify-content-center align-items-center">
+
+                                <a class="btn btn-info btn-sm bt_loadPlan me-2">
+                                    <i class="bi bi-gear"></i>
+                                    @TranslationService.Trans("StartSchedule")</a>
+
+                                <a class="btn btn-success btn-sm bt_reload me-2">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    @TranslationService.Trans("Reload")
+                                </a>
+                                @* <a class="btn btn-secondary btn-sm bt_master me-2">Master</a> *@
+                                <a class="btn btn-primary btn-sm bt_save me-2">
+                                    <i class="bi bi-floppy"></i>
+                                    @TranslationService.Trans("Save")
+                                </a>
+                                <a asp-action="DownloadSMTProdPlan" asp-controller="ProdPlan" class="btn btn-secondary btn-sm me-2">
+                                    <i class="bi bi-download"></i>
+                                    @TranslationService.Trans("Download")
+                                </a>
+                              
+                            </div>
+                        </div>
+                        <div class="card-body" >
+                            @* <h2>Product Schedule (Resource Timeline View)</h2> *@
+
+                            <div class="enterprise-container">
+
+                                <!-- LEFT PANEL -->
+                                <div class="panel panel-left" id="schedulePanel">
+                                    <div class="panel-header">
+                                        <span>Production Schedule</span>
+                                        <div class="btn-group ms-2 rounded-2" role="group">
+                                            <button id="zoomIn" class="btn btn-sm btn-outline-success fw-bold">
+                                                <i class="bi bi-zoom-in fw-bold"></i>
+                                            </button>
+                                            <button id="zoomOut" class="btn btn-sm btn-outline-success fw-bold">
+                                                <i class="bi bi-zoom-out fw-bold"></i>
+                                            </button>
+                                        </div>
+                                        <div class="panel-actions">
+                                            <button class="btn-full fw-bold" data-target="schedulePanel" title="Fullsceen">
+                                                <i class="bi bi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="panel-body">
+                                        <partial name="SMT/FullCalendar/_FullCalendar" />
+                                    </div>
+                                </div>
+
+                                <!-- DIVIDER -->
+                                <div class="divider"></div>
+
+                                <!-- RIGHT PANEL -->
+                                <div class="panel panel-right" id="utilPanel">
+                                    <div class="panel-header">
+                                        <span>Line Utilization</span>
+                                        <div class="panel-actions">
+                                            <button class="btn-full fw-bold" data-target="utilPanel" title="Fullscreen">
+                                                <i class="bi bi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="panel-body">
+                                        @* <div id="lineUtilization"> *@
+                                            <partial name="SMT/FullCalendar/_LineUtilization" />
+                                        @* </div> *@
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <Partial name="PC/_Upload" />
+    <Partial name="_LoadingPartial" />
+}
+catch(Exception ex)
+{
+    string t = ex.Message;
+}
+@*         /* ------+ 2025-07-08 +-------
+            Pending task:
+            1. save working hour settup
+            2. Bind it here
+            3. Calculate base on line/date/working hour
+        */ *@
+
+@section Scripts {
+    @* <link href="~/css/prodplan.css?@DateTime.Now.Ticks" rel="stylesheet" /> *@
+    <link href="~/css/smtprodplan.css?@DateTime.Now.Ticks" rel="stylesheet" />
+    <link href="~/css/PP_SMTEnterpriseLayout.css?@DateTime.Now.Ticks" rel="stylesheet" />
+    <link href="~/css/PP_SMTLineUtilization.css?@DateTime.Now.Ticks" rel="stylesheet" /> 
+    
+    <script src="~/js/index.global.min.js"></script>
+    
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/pp_holidayCalendar.js?@DateTime.Now.Ticks"></script>
+    @* <script src="~/js/pp_prodPlanSchedule.js?@DateTime.Now.Ticks"></script> *@
+    <script src="~/js/pp_workingCalendar.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/pp_smtprodplanschedule.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/pp_SMTEnterpriseLayout.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/pp_SMTLineUtilization.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/PP_DateFormat.js?@DateTime.Now.Ticks"></script>
+    @using System.Text.Json
+    <script>
+        // --- Nini --- \\
+        $(document).on('click','.bt_loadPlan',function(){
+             IniPlan();
+        });
+
+
+        // --- Show Upload Windows --- \\
+        $(document).on('click','.bt_save',function(){
+             ProcessData('SMTSaveProdPlan');
+        });
+
+        $(document).on('click','.bt_reload',function(){
+            if(hasChanges)
+            {
+                ProcessData('SMTReloadProdPlan');
+            }
+            else{
+                toastr.error('Nothing changes !');
+            }
+        });
+       
+
+        // CHECK if UTC + 7 or not ???
+        const offsetMs = 7 * 60 * 60 * 1000;
+
+        function ProcessData(title) {
+            const events = window.calendar.getEvents(); // Get all current events
+            //alert('Processing '+events.length+' events...');
+      
+            const updatedEvents = events.map(e => {
+                return {
+                    id: e.id,
+                    resourceId: e.getResources()[0]?.id,
+                    start: e.start.toLocaleString(),
+                    end: e.start.toLocaleString(),
+                    backgroundColor: e.backgroundColor,
+                    borderColor:e.borderColor,
+                    title: e.title,
+                     ...e.extendedProps ///Include extra data like model, lot_no, qty
+                };
+            });
+
+            const ppv = {
+                SMTEventsList: updatedEvents,
+                resources:resources,
+                HasChange: hasChanges,
+                start_sch_dt: start_sch_dt // Assuming this is a Date object
+            };
+
+            // Send to controller via AJAX
+            $.ajax({
+                url: '/ProdPlan/'+title,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(ppv),
+                success: function (data) {
+                    ReloadProdPlan(data)
+                },
+                error: function () {
+                    alert('Error reload events.');
+                }
+            });
+        }  
+        
+
+        /*-----------------------------------
+         Ini SMTEventsList ProPlan
+        -----------------------------------*/
+        function IniPlan(){
+            // $("#loading").show();
+            $.ajax({
+            url: '@Url.Action("SMTIniProdPlan")',
+            method: 'GET',
+            success: function (data) {
+                ReloadProdPlan(data)
+                // $("#loading").hide();
+            },
+            error: function () {
+                alert('Error reload events.');
+            }
+            });
+        }
+        /*-----------------------------------
+         FullCalendar 
+        -------------------------------------*/
+        //alert(holidays);
+        const events = @Html.Raw(JsonSerializer.Serialize(Model.SMTEventsList));
+        let resources = @Html.Raw(JsonSerializer.Serialize(Model.resources));
+        let start_sch_dt = new Date(@Html.Raw(JsonSerializer.Serialize(Model.start_sch_dt?? DateTime.Now.Date)));
+        //alert(events);
+
+        let lastClickTime = 0;
+        let calendar; // Declare it in a higher scope
+        let hasChanges = false;
+
+        loadProPlanSchedule();
+
+        function ReloadProdPlan(data){
+            toastr.success(data.message,'',{
+                closeButton: true,
+                progressBar: true,
+                timeOut: 1000
+            });
+
+            window.calendar.removeAllEvents();
+            window.calendar.addEventSource(data.events);
+            $('.lastRun').html('Last run: '+data.start_sch_dt);
+            // Optional: Use start_sch_dt or resources
+            console.log("Start schedule date:", data.start_sch_dt);
+            // calendar.setOption("resources", data.resources); // if needed
+            usageLineData = data.utilizationLine;
+            BindLineUtilization();
+            hasChanges = false;
+            //alert(formatDateTime(start_sch_dt));
+        }
+        
+        function ChangeHeaderDate(){
+               $('.fc-timeline-slot-cushion').each(function () {
+
+                    // Get current text
+                  let currentText = $(this).text().trim();
+
+                  // Parse with known format (DD/MM/YYYY)
+                  let formatted = dayjs(currentText, 'DD/MM/YYYY').format('YYYY/MM/DD');
+
+                  // Set new formatted text
+                  $(this).text(formatted);
+
+            });
+        }
+
+        /*------------------------------------
+            applyZoom
+        ------------------------------------*/
+
+        let zoomLevel = 1;
+        const minZoom = 0.5;
+        const maxZoom = 2;
+        const baseSlotWidth = 100; // base width in pixels
+
+        function applyZoom() {
+          const scaledWidth = baseSlotWidth * zoomLevel;
+            window.calendar.setOption('slotMinWidth', scaledWidth);
+            document.querySelector('#calendar').style.fontSize = `${zoomLevel}em`;
+            window.calendar.updateSize(); // apply layout update
+        }
+
+        document.getElementById('zoomIn').addEventListener('click', () => {
+          if (zoomLevel < maxZoom) {
+            zoomLevel += 0.1;
+            applyZoom();
+          }
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', () => {
+          if (zoomLevel > minZoom) {
+            zoomLevel -= 0.1;
+            applyZoom();
+          }
+        });
+
+        /*-----------------------------------
+          Validate Lot
+        -----------------------------------*/
+        async function validateLot(info) {
+          // ignore background events
+          alert('Im here')
+          if (info.event.display === 'background') return;
+
+          const ep = info.event.extendedProps || {};
+          const lotno = ep.Lotno;
+          const pcbNo = ep.PCBNo; //PCBNo
+          alert(pcbNo);
+          console.log(ep);
+
+          // collect current events for that lotno
+          const lotEvents = window.calendar.getEvents()
+            .filter(e => e.display !== 'background')
+            .filter(e => (e.extendedProps?.Lotno || '') === lotno && (e.extendedProps?.PCBNo || '') === pcbNo)
+            .map(e => ({
+              id: e.id,
+              lotno: e.extendedProps?.Lotno,
+              pcbKey: e.extendedProps?.PCBKey,
+              runOrder: e.extendedProps?.RunOrder,
+              pcbNo: e.extendedProps?.PCBNo,
+              lineCode: e.getResources?.()?.[0]?.id || e._def.resourceIds?.[0],
+              start: e.start?.toISOString(),
+              end: e.end?.toISOString()
+            }));
+
+          const res = await fetch('/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lotno, events: lotEvents })
+          });
+
+          const data = await res.json();
+          if (!data.ok) {
+            info.revert(); // rollback drag/resize
+            toastr.error(data.message || "Order Run is invalid !!!");
+            //alert(data.message || "Order Run is invalid !!!");
+          }
+        }
+        /*-----------------------------------
+          Line Utilization
+        -------------------------------------*/
+        const dateFormat = @Html.Raw(JsonSerializer.Serialize(Model.dateFormat.ToUpper()));
+        // alert(dateFormat);
+        let usageLineData = @Html.Raw(JsonSerializer.Serialize(Model.SMTLineUtilizationList));
+        BindLineUtilization();
+
+    </script>
+}

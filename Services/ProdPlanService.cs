@@ -1,25 +1,19 @@
 ﻿using AutoMapper;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Office2010.ExcelAc;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Vml;
 using ExcelDataReader;
 using MESWebDev.Common;
 using MESWebDev.Data;
 using MESWebDev.Models.COMMON;
-using MESWebDev.Models.PE;
 using MESWebDev.Models.ProdPlan;
 using MESWebDev.Models.ProdPlan.PC;
 using MESWebDev.Models.ProdPlan.SMT;
-using MESWebDev.Models.Setting;
+using MESWebDev.Models.ProdPlan.SMT.DTO;
 using MESWebDev.Services.IService;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 using System.Data;
-using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Text.RegularExpressions;
+using static MESWebDev.Models.ProdPlan.SMT.DTO.FullCalendarDTO;
 
 namespace MESWebDev.Services
 {
@@ -30,6 +24,7 @@ namespace MESWebDev.Services
         private readonly Procedure _proc;
         private readonly IHttpContextAccessor _hca;
         private readonly ITranslationService _trans;
+        private readonly DatatableListMap _dlm;
 
         public ProdPlanService(AppDbContext con, IMapper mapper, IHttpContextAccessor hca, ITranslationService translation)
         {
@@ -38,6 +33,7 @@ namespace MESWebDev.Services
             _proc = new Procedure(_con);
             _hca = hca;
             _trans = translation;
+            _dlm = new();
         }
 
 
@@ -433,239 +429,6 @@ namespace MESWebDev.Services
         }
 
 
-        // Hàm đệ quy
-        public async Task<ProdPlanViewModel> _CalProdPlan2(ProdPlanViewModel ppv)  //!!!!!!!!!! thay đổi model + 30 phút
-        {
-            ProdPlanModel pp = new();
-            ProdPlanModel p = ppv.prodPlanModel;
-            DateTime start_sch_date = Convert.ToDateTime(ppv.start_sch_dt);
-
-            int new_model_rate = ppv.new_model_rate ?? 65; // default = 65% for new model
-            DateTime dt = GetDate(ppv.sch_dt ?? DateTime.Now, ppv.holidays).Date;
-            DateTime start_break = dt.AddHours(ppv.break_working_time ?? 12);
-            DateTime start_run = dt.AddHours(ppv.start_hour ?? 8);
-            int start_working_time = ppv.start_working_time ?? 8;
-
-            // Check start_run
-            bool is_other_model = ppm.Count() > 0 && ppm.Last().model == (ppv.prodPlanModel?.model ?? string.Empty) ? false : ppv.is_other_model ?? false;
-            int model_stransfer_time = ppv.model_stransfer_time ?? 30;
-
-
-            // working hours in a day
-            int working_hour = ppv.working_hour ?? 8;
-
-            // end of working hour
-            DateTime endOfWorking = dt.AddHours(working_hour + 1 + start_working_time);
-
-            // IF FPP and Run first time:
-            if (p?.is_fpp == true && ppv.is_first_run_fpp_model == true && p.lot_size == p.bal_qty)
-            {
-                if (ppv.start_hour == 8 && is_other_model)
-                {
-
-                    pp = new()
-                    {
-                        line = ppv.line
-                        ,
-                        id = p.id
-                        ,
-                        working_hour = working_hour
-                        ,
-                        qty = Math.Min(p.capa_qty, p.qty)// p.bal_qty <= p.capa_qty ? p.bal_qty : p.capa_qty
-                        ,
-                        start = start_run
-                        ,
-                        end = endOfWorking
-                        ,
-                        model = p.model
-                        ,
-                        lot_no = p.lot_no
-                        ,
-                        lot_size = p.lot_size
-                        ,
-                        capa_qty = p.capa_qty
-                        ,
-                        bal_qty = p.bal_qty
-                        ,
-                        backgroundColor = p.backgroundColor
-                        ,
-                        borderColor = p.borderColor
-                        ,
-                        is_fpp = p.is_fpp
-                        ,
-                        is_new = p.is_new
-                        ,
-                        start_sch_dt = start_sch_date
-                    };
-                    ppm.Add(pp);
-
-                    //GET NEW ppv here
-                    ppv.sch_dt = start_run.Date.AddDays(1);
-                    ppv.start_hour = 8;
-                    ppv.prodPlanModel.bal_qty = p.bal_qty - pp.qty;
-                    ppv.is_other_model = p.bal_qty <= p.capa_qty ? true : false;
-                    ppv.is_first_run_fpp_model = false; // reset first run fpp model
-
-                    // CALL RECURSIVE FUNCTION -- gọi hàm đệ quy
-                    if (p.bal_qty > p.capa_qty)
-                        await _CalProdPlan(ppv);
-                }
-                else
-                {
-                    ppv.sch_dt = ppm.Count() == 0 ? start_run : start_run.AddDays(1); // is_other_model == false in case other model and 
-                    ppv.start_hour = 8;
-                    ppv.is_other_model = true; // void the case next day but alreay set this is FALSE 
-                    await _CalProdPlan(ppv);
-                }
-            }
-            else
-            {
-
-                // If transfer to new model, add more time
-                if (is_other_model)
-                    start_run = start_run.AddMinutes(model_stransfer_time);
-
-                // check if start run in Break time or not ??
-                DateTime end_break = start_break.AddHours(1); // 1 hour break time
-                if (start_run >= start_break && start_run < end_break)
-                {
-                    start_run = start_run.AddHours(1);
-                }
-
-                if (start_run >= endOfWorking)
-                {
-                    ppv.sch_dt = start_run.AddDays(1);
-                    ppv.start_hour = 8 + (start_run - endOfWorking).TotalHours;
-                    ppv.is_other_model = false; // already + 0.5 hour so change to false
-                    await _CalProdPlan(ppv);
-                }
-                else
-                {
-                    try
-                    {
-                        // Check is new model and run the first time
-                        double finish = ((double)p.bal_qty * 8) / (double)p.capa_qty;
-                        double minus = start_run >= start_break ? 0 : 1;
-                        int qty = (int)Math.Round(((endOfWorking - start_run).TotalHours - minus) / 8 * p.capa_qty);
-                        if (p.is_new && ppv.is_first_run_new_model == true)
-                        {
-                            finish = (finish * 100) / (double)new_model_rate; // 65% is the rate of new model, can be changed
-                            ppv.is_first_run_new_model = false;
-                            qty = (int)Math.Round(((((endOfWorking - start_run).TotalHours - minus) / 8 * p.capa_qty) * new_model_rate) / 100);
-                        }
-
-                        DateTime finish_run = start_run.AddHours(finish);
-
-                        // + 1 hour if break time in [start_run] && [finish_run]
-                        if (start_run < start_break && finish_run > start_break)
-                        {
-                            finish_run = finish_run.AddHours(1);
-                        }
-
-                        if (finish_run > endOfWorking) // run a model more than 1 day
-                        {
-                            pp = new()
-                            {
-                                line = ppv.line
-                                ,
-                                id = p.id
-                                ,
-                                working_hour = working_hour
-                                ,
-                                qty = qty
-                                ,
-                                start = start_run
-                                ,
-                                end = endOfWorking
-                                ,
-                                model = p.model
-                                ,
-                                lot_no = p.lot_no
-                                ,
-                                lot_size = p.lot_size
-                                ,
-                                capa_qty = p.capa_qty
-                                ,
-                                bal_qty = p.bal_qty
-                                ,
-                                backgroundColor = p.backgroundColor
-                                ,
-                                borderColor = p.borderColor
-                                ,
-                                is_fpp = p.is_fpp
-                                ,
-                                is_new = p.is_new
-                                ,
-                                start_sch_dt = start_sch_date
-                            };
-                            ppm.Add(pp);
-
-                            //GET NEW ppv here
-                            ppv.sch_dt = start_run.Date.AddDays(1);
-                            ppv.start_hour = 8;
-                            ppv.prodPlanModel.bal_qty = p.bal_qty - pp.qty;
-                            ppv.is_other_model = false;
-                            // CALL RECURSIVE FUNCTION -- gọi hàm đệ quy
-                            await _CalProdPlan(ppv);
-                        }
-                        else
-                        {
-                            // Check is new model
-                            pp = new()
-                            {
-                                line = ppv.line
-                                ,
-                                id = p.id
-                                ,
-                                working_hour = working_hour
-                                ,
-                                qty = p.bal_qty
-                                ,
-                                start = start_run
-                                ,
-                                end = finish_run
-                                ,
-                                model = p.model
-                                ,
-                                lot_no = p.lot_no
-                                ,
-                                lot_size = p.lot_size
-                                ,
-                                capa_qty = p.capa_qty
-                                ,
-                                bal_qty = p.bal_qty
-                                ,
-                                backgroundColor = p.backgroundColor
-                                ,
-                                borderColor = p.borderColor
-                                ,
-                                is_fpp = p.is_fpp
-                                ,
-                                is_new = p.is_new
-                                ,
-                                start_sch_dt = start_sch_date
-                            };
-
-                            ppm.Add(pp);
-                            //GET NEW ppv here
-                            ppv.sch_dt = start_run.Date;
-                            ppv.start_hour = (finish_run - start_run.Date).TotalHours;
-                            ppv.is_other_model = true;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        string t = ex.Message;
-                    }
-
-
-                }
-            }
-
-            return ppv;
-        }
-
-
         public async Task<ProdPlanViewModel> ReloadProdPlan(ProdPlanViewModel ppv)
         {
             try
@@ -855,7 +618,6 @@ namespace MESWebDev.Services
             {
                 string t = ex.Message;
             }
-
             return ppv;
         }
 
@@ -1167,7 +929,7 @@ namespace MESWebDev.Services
                                     PCB = pcb,
                                     Model = model,
                                     UploadedFile = uploadedFile,
-                                    Remark = "Data from IFS System",
+                                    //Remark = "Data from IFS System",
                                     CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system",
                                     CreatedDt = dt
                                 };
@@ -1203,7 +965,9 @@ namespace MESWebDev.Services
             check.PCBNo = slp.PCBNo;
             check.PCB = slp.PCB;
             check.Lotno = slp.Lotno;
-            check.Remark = $"Updated by {_hca.HttpContext?.User?.Identity?.Name ?? string.Empty} at {DateTime.Now:yyMMddHHmmss}";
+            check.Remark = slp.Remark;
+            check.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system";
+            check.UpdatedDt = DateTime.Now;
             await _con.SaveChangesAsync();
             return string.Empty;
         }
@@ -1408,18 +1172,18 @@ namespace MESWebDev.Services
         #endregion
 
         #region SMT Production Plan
-        public async Task<DataTable> SMTCompletedPlansList(Dictionary<string, object> dic)
+        public async Task<DataTable> SMTPlanTrackingList(Dictionary<string, object> dic)
         {
-            DataTable dt = await _proc.Proc_GetDatatable("spweb_UV_SMT_CompletedPlans", dic);
+            DataTable dt = await _proc.Proc_GetDatatable("spweb_UV_SMT_PlanTracking", dic);
             return dt;
         }
 
-        public async Task<SMTProdPlanModel> SMTCompletedPlansDetail(int Id)
+        public async Task<SMTProdPlanModel> SMTPlanTrackingDetail(int Id)
         {
             return await _con.UV_SMT_Prod_Plan.FindAsync(Id) ?? new();
         }
 
-        public async Task<string> SMTCompletedPlansAdd(SMTProdPlanModel slp)
+        public async Task<string> SMTPlanTrackingAdd(SMTProdPlanModel slp)
         {
             try
             {
@@ -1443,12 +1207,12 @@ namespace MESWebDev.Services
             return string.Empty;
         }
 
-        public async Task<ProdPlanViewModel> SMTCompletedPlansUpload(IFormFile file)
+        public async Task<ProdPlanViewModel> SMTPlanTrackingUpload(IFormFile file)
         {
             ProdPlanViewModel ppv = new();
             try
             {
-                ppv = await GetSMTCompletedPlansUploadData(file);
+                ppv = await GetSMTPlanTrackingUploadData(file);
                 List<SMTProdPlanModel> lst = ppv.SMTProdPlanList ?? new();
                 if (lst.Count > 0)
                 {
@@ -1463,7 +1227,7 @@ namespace MESWebDev.Services
                     // add new one
                     await _con.UV_SMT_Prod_Plan.AddRangeAsync(lst);
                     await _con.SaveChangesAsync();
-                    ppv.Data = await SMTCompletedPlansList(new Dictionary<string, object>()
+                    ppv.Data = await SMTPlanTrackingList(new Dictionary<string, object>()
                     {
                         { "@upload_file", ppv.UploadedFile}
                     });
@@ -1478,7 +1242,7 @@ namespace MESWebDev.Services
             return ppv;
         }
 
-        public async Task<ProdPlanViewModel> GetSMTCompletedPlansUploadData(IFormFile file)
+        public async Task<ProdPlanViewModel> GetSMTPlanTrackingUploadData(IFormFile file)
         {
             ProdPlanViewModel ppv = new();
             List<SMTProdPlanModel> lst = new();
@@ -1550,7 +1314,7 @@ namespace MESWebDev.Services
                                         KeyCode = KeyCode,
                                         PCBPerModel = PCBPerModel,
                                         LotSize = LotSize,
-                                        IssuedQty = IssuedQty,
+                                        IssuedQty = LotSize - BalanceQty > 0 ? LotSize - BalanceQty : 0,//IssuedQty,
                                         BalanceQty = BalanceQty,
                                         TargetPerHour85 = TargetPerHour85,
                                         TargetPerShift = TargetPerShift,
@@ -1559,6 +1323,7 @@ namespace MESWebDev.Services
                                         Warning = Warning,
                                         UVNote = UVNote,
                                         ETPCB = ETPCB,
+                                        IsFinished = BalanceQty > 0 ? false : true,
 
                                         UploadedFile = uploadedFile,
                                         CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system",
@@ -1587,7 +1352,7 @@ namespace MESWebDev.Services
             return ppv;
         }
 
-        public async Task<string> SMTCompletedPlansEdit(SMTProdPlanModel slp)
+        public async Task<string> SMTPlanTrackingEdit(SMTProdPlanModel slp)
         {
             var check = await _con.UV_SMT_Prod_Plan.FindAsync(slp.Id);
             if (check == null)
@@ -1601,12 +1366,14 @@ namespace MESWebDev.Services
             check.Remark = slp.Remark;
             check.Warning = slp.Warning;
             check.ExcessStock = slp.ExcessStock;
-          
+            check.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system";
+            check.UpdatedDt = DateTime.Now;
+
             await _con.SaveChangesAsync();
             return string.Empty;
         }
 
-        public async Task<string> SMTCompletedPlansDelete(List<int> Ids)
+        public async Task<string> SMTPlanTrackingDelete(List<int> Ids)
         {
             string msg = string.Empty;
             try
@@ -1921,7 +1688,7 @@ namespace MESWebDev.Services
         {
             var data = await _con.UV_SMT_Mst_Line
                                 .Where(i => i.IsActive == true)
-                                .OrderBy(i => i.DisplayOrder)
+                                .OrderBy(i => i.DisplayOrder).ThenBy(i=>i.LineCode)
                                 .ToListAsync();
             return data.Select(i => new SelectListItem { Text = i.LineCode, Value = i.LineCode }).ToList();   
         }
@@ -1971,7 +1738,7 @@ namespace MESWebDev.Services
                     {
                         int startMinute = await ToMinute(range[0]);
                         int endMinute = await ToMinute(range[1]);
-                        if (startMinute > endMinute) {
+                        if (startMinute < endMinute) {
                             lst.Add(new SMTShiftDtlModel()
                             {
                                 ShiftCode = shiftCode
@@ -2156,6 +1923,875 @@ namespace MESWebDev.Services
             }
             return lst;
         }
+
+
+        public async Task<ProdPlanViewModel> IniSMTProdPlan(DateTime start, DateTime end)
+        {
+            ProdPlanViewModel pr = new();
+
+            DataSet ds = await _proc.Proc_GetDataset("spweb_UV_SMT_ProdPlan_GeneratePreview_CO", new Dictionary<string, object>()
+            {
+                //{ "@StartDate", start },
+                //{ "@EndDate", end },
+                { "@Debug", 0}
+            });
+
+            if (ds.Tables.Count < 2)
+            {
+                return pr;
+            }
+            DataTable data = ds.Tables[ds.Tables.Count - 1];
+
+            List<SMTProdPlanDTO> lstPlan = new();
+            lstPlan = _dlm.ConvertToList<SMTProdPlanDTO>(data);// DataTableToList<SMTProdPlanDTO>(data);
+
+            pr.SMTProdPlanDTOList = lstPlan;
+            pr = await SMTProdPlanViewModel(pr);            
+            return pr;
+        }
+
+ 
+
+        //----------------- SMT Production Plan -----------------//
+
+        public async Task<ProdPlanViewModel> SMTViewProdPlan(RequestDTO _request)
+        {
+            ProdPlanViewModel ppv = new();
+            try
+            {
+                // Get all production plans
+                var prodPlans = _con.UV_SMT_Prod_Plan_Dtl.Include(i=>i.SMTProdPlanHdrModel);
+                
+                if (prodPlans.Any())
+                {
+                    DateTime date = prodPlans.OrderByDescending(i => i.SMTProdPlanHdrModel.CreatedDt).First().SMTProdPlanHdrModel.CreatedDt;
+                    ppv.start_sch_dt = date;
+                    ppv.SMTProdPlanDtlList = prodPlans.Where(i => i.SMTProdPlanHdrModel.CreatedDt == date).ToList();
+                    ppv.SMTProdPlanDTOList = _mapper.Map<List<SMTProdPlanDTO>>(ppv.SMTProdPlanDtlList);
+
+                    List<SMTProdPlanDTO> lstPlan = _mapper.Map<List<SMTProdPlanDTO>>(prodPlans);
+
+                    ppv = await SMTProdPlanViewModel(ppv);   
+
+                }
+                // Get all holidays
+            }
+            catch (Exception ex)
+            {
+                string t = ex.Message;
+            }
+            return ppv;
+        }
+
+        public async Task<string> SMTSaveProdPlan(ProdPlanViewModel ppv)
+        {
+            string msg = string.Empty;
+            List<SMTProdPlanDtlModel> prodPlans = _mapper.Map<List<SMTProdPlanDtlModel>>(ppv.SMTProdPlanDTOList);// ppv.SMTProdPlanDtlList ?? new();            
+            if (prodPlans.Count == 0)
+            {
+                msg = "No production plan data to save.";
+                return msg;
+            }
+
+            List<SMTProdPlanHdrModel> prodPlansHdr = ppv.SMTProdPlanDTOList.GroupBy(i => new {i.StartScheduleDate, i.LineCode, i.Lotno, i.PCBKey })
+                                                        .Select(g => new SMTProdPlanHdrModel
+                                                        {   
+                                                            LineCode = g.Key.LineCode,
+                                                            Market = g.First().StartScheduleDate.ToString("dd/MM/yyyy"),
+                                                            PlanStartDt = g.First().PlanStartDt,
+                                                            Model = g.First().Model,
+                                                            Lotno = g.Key.Lotno,
+                                                            PCBKey = g.Key.PCBKey,
+                                                            PCBType = g.First().PCBType,
+                                                            PCBNo = g.First().PCBNo,
+                                                            MachineCode = g.First().MachineCode,
+                                                            KeyCode = g.Key.PCBKey + g.First().MachineCode + g.First().Model,
+                                                            PCBPerModel = g.First().PCBPerModel,
+                                                            LotSize = g.First().LotSize,
+                                                            IssuedQty = g.First().LotSize - g.First().BalanceQty ?? 0,// g.Min(i=>i.BalQty)??0,
+                                                            BalanceQty = g.First().BalanceQty??0,
+                                                            TargetPerHour85 = g.First().TargetPerHour85??0,
+                                                            TargetPerShift = (g.First().TargetPerHour85 ?? 0) * (g.Sum(i=>i.ShiftWindowMinutes)/60),
+                                                            TimeF = (g.First().BalanceQty ?? 0)/ (g.First().TargetPerHour85??1),
+                                                            CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system",
+                                                            CreatedDt = ppv.start_sch_dt?? DateTime.Now
+                                                        }).ToList();
+
+
+            // This will avoid the case: delete --> timeout --> not add data yet
+            using var transaction = await _con.Database.BeginTransactionAsync();
+
+            try
+            {
+                // Step 1: Delete existing data
+                var date = Convert.ToDateTime(ppv.start_sch_dt).Date;
+                await _con.UV_SMT_Prod_Plan_Dtl.Where(i => i.SMTProdPlanHdrModel.CreatedDt.Date ==  date )
+                        .ExecuteDeleteAsync();
+
+                await _con.UV_SMT_Prod_Plan_Hdr.Where(i => i.CreatedDt.Date == date)
+                        .ExecuteDeleteAsync();
+
+                try
+                {
+                    var maxId = await _con.UV_SMT_Prod_Plan_Hdr.MaxAsync(p => (int?)p.Id) ?? 1;
+                    maxId = maxId == 1 ? 1 : maxId + 1;
+                    await _con.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT ('UV_SMT_Prod_Plan_Hdr', RESEED, {maxId})");
+                    maxId = await _con.UV_SMT_Prod_Plan_Dtl.MaxAsync(p => (int?)p.Id) ?? 1;
+                    maxId = maxId == 1 ? 1 : maxId + 1;
+                    await _con.Database.ExecuteSqlRawAsync($"DBCC CHECKIDENT ('UV_SMT_Prod_Plan_Dtl', RESEED, {maxId})");
+                }
+                catch { }
+
+                await _con.SaveChangesAsync();
+
+                // Step 2: Prepare new data
+
+                // Step 3: Insert new data
+                await _con.UV_SMT_Prod_Plan_Hdr.AddRangeAsync(prodPlansHdr);
+                await _con.SaveChangesAsync();
+
+                // Map HeaderId to details
+                //--------------->>>>>>>>>>> CHECKIT <<<<<<<<<<----------------
+                var headerMap = prodPlansHdr.ToDictionary(i => (i.Lotno, i.PCBKey, i.Market), i => i.Id);
+                foreach (var d in prodPlans)
+                {
+                    if (headerMap.TryGetValue((d.Lotno, d.PCBKey, d.StartScheduleDate.ToString("dd/MM/yyyy")), out var headerId))
+                    {
+                        d.HeaderId = headerId;
+                    }
+                    d.OldId = d.Id;
+                    d.Id = 0;                    
+                }
+                await _con.UV_SMT_Prod_Plan_Dtl.AddRangeAsync(prodPlans);
+                await _con.SaveChangesAsync();
+
+                // Step 4: Commit transaction
+                await transaction.CommitAsync();
+
+                msg = "Production plan saved successfully.";
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                msg = "Error saving production plan: " + ex.Message;
+            }
+            return msg;
+        }
+
+        public async Task<DataSet> SMTExportProdPlan(Dictionary<string, object> dic)
+        {
+            DataSet ds = new();
+            DataSet dset = await _proc.Proc_GetDataset("spweb_UV_SMT_ProdPlan_ExportData", dic);
+            if (dset != null && dset.Tables.Count >0)
+            {
+                DataTable tb1 = new();// dset.Tables[0];
+                if (dset.Tables[0] != null && dset.Tables[0].Rows.Count > 0)
+                {
+                    tb1 = dset.Tables[0].Copy();
+                    tb1.TableName = "Running";
+                    ds.Tables.Add(tb1);
+
+                    DataTable tb2 = new();
+                    if (dset.Tables[1] != null && dset.Tables[1].Rows.Count > 0)
+                    {
+                        tb2 = dset.Tables[1].Copy();
+                        tb2.TableName = "CompletedData";
+                        ds.Tables.Add(tb2);
+
+                        DataTable tb3 = new();
+                        if (dset.Tables[2] != null && dset.Tables[2].Rows.Count > 0)
+                        {
+                            tb3 = dset.Tables[2].Copy();
+                            tb3.TableName = "UV Plan";
+                            ds.Tables.Add(tb3);
+
+                            DataTable tb4 = new();
+                            if (dset.Tables[3] != null && dset.Tables[3].Rows.Count > 0)
+                            {
+                                tb4 = dset.Tables[3].Copy();
+                                tb4.TableName = "Matrix Data";
+                                ds.Tables.Add(tb4);
+                            }
+
+                            DataTable tb5 = new();
+                            if (dset.Tables[4] != null && dset.Tables[4].Rows.Count > 0)
+                            {
+                                tb5 = dset.Tables[4].Copy();
+                                tb5.TableName = "Lot PCB";
+                                ds.Tables.Add(tb5);
+                            }
+                        }
+                    }
+                }
+            }
+            return ds;
+        }
+        public async Task<ProdPlanViewModel> SMTReloadProdPlan(ProdPlanViewModel ppv)
+        {
+            try
+            {
+                // Step 1: Identify changes (line or start time)
+                var changeLineDict = ppv.SMTEventsList
+                    .Where(i => i.resourceId != i.LineCode || Convert.ToDateTime(i.start).AddHours(7).ToString("yyyy-MM-dd HH:mm:ss") != Convert.ToDateTime(i.OldStartDt).ToString("yyyy-MM-dd HH:mm:ss"))
+                    .GroupBy(i => i.id)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => new SMTEventsDTO
+                        {
+                            id = g.Key,
+                            LineCode = g.First().resourceId,
+                            start = g.Min(j => j.start)
+                        }
+                    );
+
+                // Step 2: Build main event list
+                var ev = ppv.SMTEventsList
+                    .GroupBy(i => new
+                    {
+                        i.Model,
+                        i.Lotno,
+                        i.PCBNo,
+                        i.PCBKey,
+                        i.PCBType,
+                        i.PCBPerModel,
+
+                        i.TargetPerHour85,
+                        i.LotSize,
+                        i.IssuedQty,
+                        i.SortOrder,
+                        i.backgroundColor,
+                        i.borderColor
+                    })
+                    .Select(g =>
+                    {
+                        var first = g.First();
+                        return new SMTEventsDTO
+                        {
+                            LineCode = first.resourceId,
+                            MachineCode = first.MachineCode,
+                            id = g.Max(k=>k.id),
+                            SortOrder = g.Key.SortOrder,    
+                            Model = g.Key.Model,
+                            Lotno = g.Key.Lotno,
+                            PCBNo = g.Key.PCBNo,
+                            PCBKey = g.Key.PCBKey,
+                            PCBType = g.Key.PCBType,
+                            PCBPerModel = g.Key.PCBPerModel,
+                            LotSize = g.Key.LotSize,
+                            BalanceQty = g.Max(k => k.BalanceQty),
+                            TargetPerHour85 = g.Key.TargetPerHour85,
+                            start = g.Min(k => k.start),
+                            StartDt = Convert.ToDateTime((g.Min(k => k.start))),
+                            backgroundColor = g.Key.backgroundColor,
+                            borderColor = g.Key.borderColor
+                        };
+                    })
+                    .Select(e =>
+                    {
+                        if (changeLineDict.TryGetValue(e.id, out var change))
+                        {
+                            e.LineCode = change.LineCode;
+                            e.start = change.start;
+                        }
+                        return e;
+                    })
+                    .ToList();
+
+
+                List<SMTProdPlanDTO> prodPlans = _mapper.Map<List<SMTProdPlanDTO>>(ev);
+                
+                ppv.SMTProdPlanDTOList = prodPlans.OrderBy(i => i.LineCode).ThenBy(i => i.StartDt).ToList();
+                ppv = await SMTCalProdPlan_AfterDragDrop(ppv);
+                ppv = await SMTProdPlanViewModel(ppv);
+
+            }
+            catch (Exception ex)
+            {
+                return ppv;
+            }
+
+            return ppv;
+        }
+
+        public async Task<ProdPlanViewModel> SMTProdPlanViewModel(ProdPlanViewModel ppv)
+        {
+            //ppv = await CalProdPlan(ppv);
+
+            //ppv.prod_plans = ppm;
+            List<SMTProdPlanDTO> ppm = ppv.SMTProdPlanDTOList ?? new();
+            int IncludingSettingTime = 0;
+            var data = _con.UV_Common_Project_Setting.Where(i => i.Property.ToLower().Contains("includingsettingtime"));
+            if(data.Any())
+            {
+                try
+                {
+                    IncludingSettingTime = Convert.ToInt32(data.First().Value);
+                }
+                catch { }
+            }
+
+            if (ppm.Count>0)
+            {
+                ppv.resources = ppm.GroupBy(i => i.LineCode).Select(i => new ResourcesDTO
+                {
+                    id = i.Key,
+                    title = i.Key
+                }).ToList();
+
+
+                ppv.SMTEventsList = _mapper.Map<List<SMTEventsDTO>>(ppm);
+                //ppv.SMTEventsList.ForEach(i =>
+                //{
+                //    i.start =  i.StartDt.ToString("yyyy-MM-ddTHH:mm:ss");
+                //    i.end =  i.EndDt.ToString("yyyy-MM-ddTHH:mm:ss");
+                //    i.id = i.Id;
+                //    i.resourceId = i.LineCode;
+                //    i.OldStartDt = i.StartDt;
+                //}); // set resourceId for each event
+                ppv.line_items = ppv.resources
+                    .Select(i => new SelectListItem
+                    {
+                        Value = i.id,
+                        Text = i.title
+                    }).ToList();
+                ppv.SMTLineUtilizationList = ppm.GroupBy(i => new { i.LineCode, i.StartScheduleDate })
+                    .Select(g =>
+                        {
+                            //var actualMinutes = g.Sum(i => i.TimeTotal + i.SetupMinute);
+                            var actualMinutes = IncludingSettingTime == 0 ?
+                                                g.Sum(i => i.TimeTotal) :
+                                                g.Sum(i=> i.TimeTotal + i.SetupMinute);
+                            var availableMinutes = g.Select(i=> new { i.ShiftWindowMinutes, i.WinStartDt }).Distinct().Sum(x => x.ShiftWindowMinutes);
+                            return new SMTLineUtilizationDTO
+                            {
+                                UsageDate = g.Key.StartScheduleDate,
+                                LineCode = g.Key.LineCode,
+                                UsagePercent =  (decimal)actualMinutes/availableMinutes * 100
+                            };
+                        }                    
+
+                    )
+                    .ToList();
+                ppv.dateFormat = _con.UV_Common_Project_Setting.Where(x => x.Property == "Format Date")
+                    .Select(x => x.Value)
+                    .FirstOrDefault() ?? "yyyy/MM/dd";
+            }
+            return ppv;
+        }
+        public async Task<ProdPlanViewModel> SMTCalProdPlan_AfterDragDrop(ProdPlanViewModel ppv)
+        {
+            var input = ppv.SMTProdPlanDTOList ?? new List<SMTProdPlanDTO>();
+            if (!input.Any()) return ppv;
+
+            // Setup minute
+            ppv.SettingMinute = Convert.ToInt32(_con.UV_Common_Project_Setting
+                .Where(x => x.Property == "SettingTime")
+                .Select(x => x.Value)
+                .First());
+
+            // preload shift segments
+            var shiftSegs = await _con.UV_SMT_Mst_Shift_Dtl.AsNoTracking()
+                .Select(x => new SMTShiftSeg
+                {
+                    ShiftCode = x.ShiftCode,
+                    StartMinute = x.StartMinute,
+                    EndMinute = x.EndMinute
+                })
+                .OrderBy(x => x.StartMinute)
+                .ToListAsync();
+
+            var allShiftCodes = shiftSegs.Select(x => x.ShiftCode).Distinct().ToList();
+
+            var lines = input.Select(x => x.LineCode).Distinct().ToList();
+
+            var baseStart = (ppv.start_sch_dt ?? ppv.sch_dt ?? DateTime.Now.Date).Date;
+
+            var result = new List<SMTProdPlanDTO>();
+
+            int maxLookAheadDays = 180; // add this property if needed
+
+            // foreach (trong SMTCalProdPlan_AfterDragDrop)
+            //var pcbLineMap = new Dictionary<(string Lotno, string PCBKey), string>(StringComparer.OrdinalIgnoreCase);
+            var pcbLineMap = new Dictionary<(string Lotno, string PCBKey), string>();
+
+            foreach (var line in lines)
+            {
+                // Expand line calendar
+                var lcExpanded = await BuildLineCalendarExpandedAsync(line);
+                if (!lcExpanded.Any()) continue;
+
+                // Line state (shared per line, so all reqs on same line share same cursor & PrevPCBKey)
+                var st = new LineState
+                {
+                    Cursor = baseStart,
+                    PrevPCBKey = null,
+                    SetupMinute = ppv.SettingMinute ?? 0,
+                    OverMinute = 0
+                };
+
+                // Cache windows by date for this line
+                var windowsCache = new Dictionary<DateTime, List<ShiftWindow>>();
+
+                // Get reqs in the UI order (drag-drop), but preserve RunOrder precedence within same Lot
+                var reqs = input
+                    .Where(x => x.LineCode == line)
+                    .GroupBy(x => new { x.Lotno, x.PCBKey }) // keep unique Lot+Key if UI duplicates
+                    .Select(g =>
+                    {
+                        var first = g.OrderBy(x => x.SortOrder).First();
+                        first.BalanceQty = g.Max(x => x.BalanceQty) ?? 0;
+                        return first;
+                    })
+                    .OrderBy(x => x.SortOrder) // keep UI order
+                    .ThenBy(x => x.RunOrder)   // but prefer smaller RunOrder if same SortOrder
+                    .ToList();
+
+                // iterate in UI order but we'll skip scheduling items that violate RunOrder precedence
+                for (int iReq = 0; iReq < reqs.Count; iReq++)
+                {
+                    var req = reqs[iReq];
+                    int remaining = req.BalanceQty ?? 0;
+                    if (remaining <= 0) continue;
+
+                    // RULE: if this PCBKey already assigned to another line => skip this req
+                    var key = (req.Lotno, req.PCBKey);
+                    if (pcbLineMap.TryGetValue(key, out var assignedLine))
+                    {
+                        if (!string.Equals(assignedLine, line, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // PCBKey taken by other line -> skip (we keep order, do not reassign)
+                            continue;
+                        }
+                        // else assigned to this line -> ok continue
+                    }
+                    else
+                    {
+                        // not assigned yet -> tentatively lock to this line now
+                        pcbLineMap[key] = line;
+                    }
+
+                    // RULE: RunOrder precedence across all input (ensure smaller RunOrder in same Lot with remaining >0
+                    // are scheduled before this one. If any earlier RunOrder still has remaining in global input,
+                    // skip this req for now (we preserve UI order but enforce RO).
+                    bool hasSmallerROAnywhere = input.Any(x =>
+                        string.Equals(x.Lotno, req.Lotno, StringComparison.OrdinalIgnoreCase)
+                        && (x.RunOrder < req.RunOrder)
+                        && ((x.BalanceQty ?? 0) > 0)
+                    );
+                    if (hasSmallerROAnywhere)
+                    {
+                        // If smaller RO exists and it still has balance (maybe assigned to another line), we skip scheduling this one for now.
+                        // This preserves order-precedence. You may choose to re-try later or let other lines consume it.
+                        continue;
+                    }
+
+                    // Ensure cursor on allowed date/time for this line
+                    st.Cursor = GetNextAllowedDate(st.Cursor.Date, lcExpanded) > st.Cursor ? GetNextAllowedDate(st.Cursor.Date, lcExpanded) : st.Cursor;
+
+                    // Now schedule this req across windows until remaining = 0
+                    while (remaining > 0)
+                    {
+                        var day = st.Cursor.Date;
+                        if (!windowsCache.TryGetValue(day, out var windows))
+                        {
+                            var allowed = PickAllowedShifts(line, day, lcExpanded, allShiftCodes);
+                            windows = BuildWindowsForDate(day, shiftSegs, allowed);
+                            windowsCache[day] = windows;
+                        }
+
+                        // find the next window that ends after cursor
+                        var win = windows.FirstOrDefault(w => w.End > st.Cursor);
+                        if (win == null)
+                        {
+                            // move to next day allowed
+                            st.Cursor = GetNextAllowedDate(st.Cursor.Date.AddDays(1), lcExpanded);
+                            continue;
+                        }
+
+                        // compute window start for this cursor (respect setup if PCBKey changed)
+                        DateTime startCandidate = st.Cursor < win.Start ? win.Start : st.Cursor;
+
+                        // if PCBKey changed compared to previous on this line, add setup time BEFORE production starts
+                        int setupToApply = 0;
+                        if (!string.IsNullOrEmpty(st.PrevPCBKey) &&
+                            !string.Equals(st.PrevPCBKey, req.PCBKey, StringComparison.OrdinalIgnoreCase))
+                        {
+                            setupToApply = st.SetupMinute;
+                        }
+                        else
+                        {
+                            // same PCBKey as previous, no setup needed
+                            setupToApply = 0;
+                        }
+
+                        // apply setup: it must fit inside the window; if not, go to next window (or move cursor forward)
+                        var withSetupStart = startCandidate.AddMinutes(setupToApply);
+                        if (withSetupStart >= win.End)
+                        {
+                            // not enough time in this window for setup + production -> move to next window
+                            st.Cursor = win.End; // jump to end and loop to find next window
+                            continue;
+                        }
+
+                        // available production minutes in this window after setup
+                        double availMin = (win.End - withSetupStart).TotalMinutes;
+                        if (availMin <= 0)
+                        {
+                            st.Cursor = win.End;
+                            continue;
+                        }
+
+                        // compute max producible qty in this window (FLOOR to avoid overproduction)
+                        int outPerHour = Math.Max(1, req.TargetPerHour85 ?? 1);
+                        int maxQtyInWindow = (int)Math.Floor(availMin * outPerHour / 60.0);
+                        if (maxQtyInWindow <= 0)
+                        {
+                            // no capacity to produce even 1 unit -> advance cursor to next window
+                            st.Cursor = win.End;
+                            continue;
+                        }
+
+                        // choose qty to produce this segment: not exceed remaining and optionally cap
+                        int segQty = Math.Min(remaining, maxQtyInWindow);
+
+                        // compute actual minutes used for segQty
+                        double useMin = segQty / (double)outPerHour * 60.0;
+
+                        // compute segment start and end
+                        var segStart = withSetupStart;
+                        var segEnd = segStart.AddMinutes(useMin);
+
+                        // make sure segEnd does not exceed window end due to rounding issues (clamp)
+                        if (segEnd > win.End) segEnd = win.End;
+
+                        // create schedule DTO and add to result (use your SMTCreateProdPlan helper)
+                        id++;
+                        result.Add(SMTCreateProdPlan(
+                            req,
+                            id,
+                            segStart,
+                            segEnd,
+                            line,
+                            segStart.Date,
+                            qty: segQty,
+                            balQty: remaining - segQty,
+                            setupMinute: setupToApply, // note: adapt to your helper signature if needed
+                            win.Start,
+                            win.WindowMinutes
+                        ));
+
+                        // update remaining and global tracking
+                        remaining -= segQty;
+                        // update DB-like map: insert or update EndDt for PCBKey+Lotno
+                        var mapKey = (req.Lotno, req.PCBKey);
+                        if (pcbLineMap.ContainsKey(mapKey))
+                        {
+                            // already locked to this line; we might want to store end time somewhere if needed
+                        }
+                        else
+                        {
+                            pcbLineMap[mapKey] = line;
+                        }
+
+                        // update line state: after segment finished
+                        st.PrevPCBKey = req.PCBKey;
+                        st.Cursor = segEnd; // next available time
+                        st.OverMinute = (win.End - st.Cursor).TotalMinutes;
+
+                        // if remaining > 0, loop will continue and find next window (possibly next day)
+                    } // end while remaining
+
+                    // after fully scheduled this req, update original input remaining so next checks see updated values
+                    // find the original item(s) and decrement BalanceQty accordingly (so RunOrder precedence checks are accurate)
+                    var originals = input.Where(x => x.Lotno == req.Lotno && x.PCBKey == req.PCBKey).ToList();
+                    foreach (var o in originals)
+                    {
+                        // reduce BalanceQty proportionally or set to 0
+                        o.BalanceQty = Math.Max(0, (o.BalanceQty ?? 0) - req.BalanceQty ?? 0);
+                    }
+
+                } // end foreach req
+
+                // after finishing a line, append scheduled result into ppv list (or will be done after all lines)
+            } // end foreach line
+
+            // afterwards reorder & assign to ppv.SMTProdPlanDTOList as you did before
+            ppv.SMTProdPlanDTOList = result
+                .OrderBy(x => x.StartScheduleDate)
+                .ThenBy(x => x.LineCode)
+                .ThenBy(x => x.StartDt)
+                .ToList();
+
+            return ppv;
+        }
+
+        
+
+
+        private static IEnumerable<string> SplitCsvOrStar(string? raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return Enumerable.Empty<string>();
+            raw = raw.Trim();
+            if (raw == "*") return new[] { "*" };
+
+            return raw.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                      .Select(x => x.Trim())
+                      .Where(x => x.Length > 0);
+        }
+
+        public async Task<List<SMTLineCalendarExpanded>> BuildLineCalendarExpandedAsync(string line)
+        {
+            // join header+detail, filter line or "*", order by priority
+            var src = await _con.UV_SMT_Mst_LineCalendar_Dtl
+                .Include(x => x.SMTLineCalendarHdrModel)
+                .Where(x =>
+                    x.SMTLineCalendarHdrModel.IsActive &&
+                    (("," + x.SMTLineCalendarHdrModel.LineCode + ",").Contains("," + line + ",")
+                     || x.SMTLineCalendarHdrModel.LineCode == "*") &&
+                    !string.IsNullOrEmpty(x.SMTLineCalendarHdrModel.ShiftCode)
+                )
+                .OrderBy(x => x.SMTLineCalendarHdrModel.Priority)
+                .Select(x => new
+                {
+                    LineCodeRaw = x.SMTLineCalendarHdrModel.LineCode,
+                    ShiftCodeRaw = x.SMTLineCalendarHdrModel.ShiftCode,
+                    x.ConditionType,
+                    x.WeekDay,
+                    x.StartDate,
+                    x.EndDate,
+                    Priority = x.SMTLineCalendarHdrModel.Priority
+                })
+                .ToListAsync();
+
+            var result = new List<SMTLineCalendarExpanded>();
+
+            foreach (var s in src)
+            {
+                var lineTokens = SplitCsvOrStar(s.LineCodeRaw);
+                var shiftTokens = SplitCsvOrStar(s.ShiftCodeRaw);
+
+                foreach (var lc in lineTokens)
+                    foreach (var sc in shiftTokens)
+                    {
+                        // Match SQL CASE: if raw == "*" keep "*", else token
+                        result.Add(new SMTLineCalendarExpanded
+                        {
+                            LineCodeOne = lc,
+                            ShiftCodeOne = sc,
+                            ConditionType = s.ConditionType,
+                            WeekDay = s.WeekDay,
+                            StartDt = s.StartDate?.Date,
+                            EndDt = s.EndDate?.Date,
+                            Priority = s.Priority
+                        });
+                    }
+            }
+
+            return result;
+        }
+
+
+        // GET property date base on Line Calendar
+        private static bool IsAllowedDate(DateTime date, IEnumerable<SMTLineCalendarExpanded> lc)
+        {
+            var d = date.Date;
+            var ddd = date.ToString("ddd"); // "Mon","Tue"... tùy culture; nếu muốn chắc chắn, set CultureInfo("en-US")
+
+            return lc.Any(i =>
+                (i.ConditionType == "Weekday" && i.WeekDay == ddd)
+                || (i.ConditionType == "Date" && i.StartDt.HasValue && i.StartDt.Value.Date == d)
+                || (i.ConditionType == "Range" && i.StartDt.HasValue && i.EndDt.HasValue
+                                           && d >= i.StartDt.Value.Date && d <= i.EndDt.Value.Date)
+            );
+        }
+
+        private static DateTime GetNextAllowedDate(DateTime date, List<SMTLineCalendarExpanded> lc)
+        {
+            // Nếu không allowed -> nhảy ngày (đệ quy)
+            return IsAllowedDate(date, lc) ? date.Date : GetNextAllowedDate(date.AddDays(1), lc);
+        }
+
+        // Pick property Shift
+        private static List<string> PickAllowedShifts(
+                                        string line, DateTime planDate,
+                                        List<SMTLineCalendarExpanded> expanded,
+                                        List<string> allShiftCodes)
+        {
+            bool Match(SMTLineCalendarExpanded r)
+            {
+                if (!(r.LineCodeOne == line || r.LineCodeOne == "*")) return false;
+                var d = planDate.Date;
+                var ddd = planDate.ToString("ddd");
+
+                return (r.ConditionType == "Weekday" && r.WeekDay == ddd)
+                    || (r.ConditionType == "Date" && r.StartDt.HasValue && r.StartDt.Value.Date == d)
+                    || (r.ConditionType == "Range" && r.StartDt.HasValue && r.EndDt.HasValue
+                                               && d >= r.StartDt.Value.Date && d <= r.EndDt.Value.Date);
+            }
+
+            // Pick one between HC and HCTruc
+            var pickPriority = expanded
+                .Where(r => Match(r))
+                .OrderBy(r => r.Priority)
+                .ThenBy(r => r.LineCodeOne == line ? 0 : 1) // line-specific wins
+                .Select(r => r.Priority)
+                .FirstOrDefault();
+
+            var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            //if (!string.IsNullOrWhiteSpace(pickHC))
+            //    allowed.Add(pickHC);
+
+            // Other shifts
+            foreach (var sh in allShiftCodes)
+            {
+                if (expanded.Any(r => Match(r) && r.Priority == pickPriority && (r.ShiftCodeOne.Equals(sh, StringComparison.OrdinalIgnoreCase) || r.ShiftCodeOne == "*")))
+                    allowed.Add(sh);
+            }
+
+            return allowed.ToList();
+        }
+
+        // buil shift windows for a day
+        private sealed class ShiftWindow
+        {
+            public string ShiftCode { get; set; } = "";
+            public DateTime Start { get; set; }
+            public DateTime End { get; set; }
+            public int WindowMinutes { get; set; }
+        }
+
+        private static List<ShiftWindow> BuildWindowsForDate(
+            DateTime date,
+            List<SMTShiftSeg> shiftSegs,
+            List<string> allowedShiftCodes)
+        {
+            var allowed = new HashSet<string>(allowedShiftCodes, StringComparer.OrdinalIgnoreCase);
+
+            List<ShiftWindow> shiftWindows = new();
+
+            var windows = shiftSegs
+                .Where(s => allowed.Contains(s.ShiftCode))
+                .Select(s =>
+                {
+                    var start = date.Date.AddMinutes(s.StartMinute);
+                    var end = date.Date.AddMinutes(s.EndMinute);
+                    if (s.EndMinute < s.StartMinute) end = end.AddDays(1);
+
+                    int mins = s.EndMinute >= s.StartMinute
+                        ? s.EndMinute - s.StartMinute
+                        : (s.EndMinute + 1440) - s.StartMinute;
+
+                    return new ShiftWindow
+                    {
+                        ShiftCode = s.ShiftCode,
+                        Start = start,
+                        End = end,
+                        WindowMinutes = mins
+                    };
+                })
+                .OrderBy(w => w.Start)
+                .ToList();
+
+            ShiftWindow last = null;
+
+            foreach (var w in windows)
+            {
+                // if windows overlap, we take the max end time (union)
+                //var last = shiftWindows.LastOrDefault();
+                if (last != null && w.Start <= last.End)
+                {
+                    // overlap -> merge
+                    last.End = w.End > last.End ? w.End : last.End;
+                    last.WindowMinutes = (int)(last.End - last.Start).TotalMinutes;
+                    last.ShiftCode += w.ShiftCode; // concatenate shift codes if needed                    
+                }
+                else
+                {
+                    shiftWindows.Add(w);
+                    last = w;
+                }
+            }
+
+            return shiftWindows;
+        }
+
+
+
+        private DateTime SMTGetDate(DateTime date, List<SMTLineCalendarDTO> lc)
+        {
+            bool isAllowed = lc.Any(i =>
+                (i.ConditionType == "Weekday" && date.ToString("ddd") == i.Weekday)
+                || (i.ConditionType == "Date" && i.StartDt.HasValue && date.Date == i.StartDt.Value.Date)
+                || (i.ConditionType == "Range" && i.StartDt.HasValue && i.EndDt.HasValue
+                                          && date.Date >= i.StartDt.Value.Date && date.Date <= i.EndDt.Value.Date)
+            );
+
+            // Nếu KHÔNG allowed => nhảy ngày
+            return isAllowed ? date : SMTGetDate(date.AddDays(1), lc);
+        }
+
+        // -- Helper --
+        private static SMTProdPlanDTO SMTCreateProdPlan(
+            SMTProdPlanDTO p, int Id, DateTime start, DateTime end,
+            string line, DateTime startSchDate,
+            int qty, int balQty, int setupMinute, DateTime winStart, int winMinute )
+                {
+            int minutes = (int)Math.Max(0, Math.Ceiling((end - start).TotalMinutes));
+
+            return new SMTProdPlanDTO
+            {
+                //RowId = p.RowId,
+                SortOrder = p.SortOrder,
+                Id = Id,
+                    
+                Market = null, // nếu có
+                Model = p.Model,
+                PCBKey = p.PCBKey,
+                Lotno = p.Lotno,
+                PCBType = p.PCBType,
+                PCBNo = p.PCBNo,
+
+                LineCode = line,
+                MachineCode = p.MachineCode,
+
+               // Program_Name = p.Program_Name,
+                RunOrder = p.RunOrder,
+                PlanStartDt = p.PlanStartDt,
+
+                StartScheduleDate = startSchDate,
+                StartDt = start,
+                EndDt = end,
+
+                Qty = qty,
+                BalQty = balQty,
+                BalanceQty = p.BalanceQty, // original remaining
+                TargetPerHour85 = p.TargetPerHour85,
+                PCBPerModel = p.PCBPerModel,
+                LotSize = p.LotSize,
+                IssuedQty = p.IssuedQty,
+
+                TimeTotal = minutes,
+                SetupMinute = setupMinute,
+
+                WinStartDt = winStart,
+                ShiftWindowMinutes = winMinute,
+
+                backgroundColor = p.backgroundColor,
+                borderColor = p.borderColor,
+                OldId = p.Id,
+                Remark = p.Remark
+            };
+        }
+        private sealed class LineState
+        {
+            public DateTime Cursor { get; set; }
+            public string? PrevPCBKey { get; set; }
+            public int SetupMinute { get; set; }
+            public double OverMinute { get; set; } = 0;
+        }
+        int id = 0;
+
+
 
         #endregion
 

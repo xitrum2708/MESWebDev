@@ -1,4 +1,4 @@
-// ----- Hide and show dropdown here ----
+﻿// ----- Hide and show dropdown here ----
 jQuery(function ($) {
     
 
@@ -27,7 +27,12 @@ jQuery(function ($) {
         if ($('.result-area').length > 0) {
             //alert('Data area found, binding data changed event!');
             $(document).on('dataChanged', '.result-area', function () {
-                $('table.paginated').each(function () {
+                var $table = $('table.paginated');
+                if (!$table.length) {
+                    $('.pager, .page-total, .page-rows').empty();
+                    return;
+                }
+                $table.each(function () {
                     //alert('abc');
                     panigation();
                 });
@@ -39,10 +44,14 @@ jQuery(function ($) {
         //    // Additional actions can be performed here
         //});
         function panigation() {
-            //alert('dfsssssssssssssss');
+            //alert('dfsssssssssssssss');            
+            var $table = $('table.paginated');
+
+            // Check existed
+            // Không có table → clear pager
+            
             var currentPage = 0;
             var numPerPage = parseInt($('.page-select').val());
-            var $table = $('table.paginated');
             $table.bind('repaginate', function () {
                 $table.find('tbody tr').hide().slice(currentPage * numPerPage, (currentPage + 1) * numPerPage).show();
             });
@@ -103,6 +112,8 @@ jQuery(function ($) {
             });
             $table.trigger('repaginate');
         }
+
+        
 
     });
 });

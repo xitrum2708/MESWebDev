@@ -14,6 +14,8 @@ namespace MESWebDev.Models.ProdPlan.SMT
         public string? Remark { get; set; }
         public DateTime CreatedDt { get; set; }
         public string CreatedBy { get; set; }
+        public DateTime? UpdatedDt { get; set; }
+        public string? UpdatedBy { get; set; }
     }
 }
 //Id	Model	Lotno	PCBNo	Remark	CreatedDt	CreatedBy	UpdatedDt	UpdatedBy

@@ -169,8 +169,8 @@
         //--------------------->> PIE CHART <<------------------------------
         function ShowPieChart(pie_data){
         if(pie_data && pie_data.length > 0) {
-            const pie_labels = pie_data.map(item => item.label);
-            const pie_values = pie_data.map(item => item.value);
+            const pie_labels = pie_data.map(item => item.Label);
+            const pie_values = pie_data.map(item => item.Value);
             const ctx2 = document.getElementById('myPieChart').getContext('2d');
 
             new Chart(ctx2, {
@@ -265,10 +265,10 @@
             function ShowLineBarChart(bar_line){
 
             if( bar_line && bar_line.length > 0) {
-                const labels = bar_line.map(item => item.label);
-            const target = bar_line.map(item => item.value1);
-            const output = bar_line.map(item => item.value2);
-            const rate = bar_line.map(item => item.rate);
+                const labels = bar_line.map(item => item.Label);
+            const target = bar_line.map(item => item.Value1);
+            const output = bar_line.map(item => item.Value2);
+            const rate = bar_line.map(item => item.Rate);
             const ctx = document.getElementById('chart_area').getContext('2d');
             const chart = new Chart(ctx,
             {

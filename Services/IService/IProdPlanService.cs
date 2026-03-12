@@ -4,6 +4,7 @@ using MESWebDev.Models.ProdPlan.SMT;
 using MESWebDev.Models.Setting;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Data;
+using static MESWebDev.Models.ProdPlan.SMT.DTO.FullCalendarDTO;
 
 namespace MESWebDev.Services.IService
 {
@@ -77,17 +78,22 @@ namespace MESWebDev.Services.IService
         Task<string> UVPlanEdit(SMTPlanModel shift);
         Task<string> UVPlanDelete(List<int> Ids);
 
-
         //SMT Completed Plan
-        Task<DataTable> SMTCompletedPlansList(Dictionary<string, object> dic);
-        Task<SMTProdPlanModel> SMTCompletedPlansDetail(int Id);
-        Task<string> SMTCompletedPlansAdd(SMTProdPlanModel shift);
-        Task<ProdPlanViewModel> SMTCompletedPlansUpload(IFormFile file);
-        Task<string> SMTCompletedPlansEdit(SMTProdPlanModel shift);
-        Task<string> SMTCompletedPlansDelete(List<int> Ids);
+        Task<DataTable> SMTPlanTrackingList(Dictionary<string, object> dic);
+        Task<SMTProdPlanModel> SMTPlanTrackingDetail(int Id);
+        Task<string> SMTPlanTrackingAdd(SMTProdPlanModel shift);
+        Task<ProdPlanViewModel> SMTPlanTrackingUpload(IFormFile file);
+        Task<string> SMTPlanTrackingEdit(SMTProdPlanModel shift);
+        Task<string> SMTPlanTrackingDelete(List<int> Ids);
 
 
-        
+        // Full Calendar
+        Task<ProdPlanViewModel> IniSMTProdPlan(DateTime Start, DateTime End);
+        //Task<PreviewResponse> IniSMTProdPlan2(DateTime Start, DateTime End);
+        Task<string> SMTSaveProdPlan(ProdPlanViewModel ppv);
+        Task<ProdPlanViewModel> SMTReloadProdPlan(ProdPlanViewModel ppv);
+        Task<ProdPlanViewModel> SMTViewProdPlan(RequestDTO _request);
+        Task<DataSet> SMTExportProdPlan(Dictionary<string, object> dic);
 
         #endregion
 

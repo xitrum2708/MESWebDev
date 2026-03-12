@@ -1,0 +1,213 @@
+﻿/* ============================= */
+/*        ROOT COLOR SYSTEM      */
+/* ============================= */
+:root {
+    --sap-bg: #f5f7f9;
+    --sap-card: #ffffff;
+    --sap-border: #e5e7eb;
+    --sap-text: #1f2937;
+    --sap-muted: #6b7280;
+    --util-low: #d9f3e6; /* 0–49% */
+    --util-mid: #8ed6b3; /* 50–74% */
+    --util-high: #3ca57a; /* 75–89% */
+    --util-critical: #174c33; /* ≥90% */
+
+    --event-shadow: 0 3px 10px rgba(0,0,0,.08);
+    --event-shadow-hover: 0 6px 18px rgba(0,0,0,.12);
+    --event-shadow-drag: 0 10px 28px rgba(0,0,0,.18);
+}
+
+/* ============================= */
+/*        CALENDAR WRAPPER       */
+/* ============================= */
+#calendar {
+    background: var(--sap-card);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.06);
+}
+
+/* ============================= */
+/*            TOOLBAR            */
+/* ============================= */
+.fc .fc-toolbar.fc-header-toolbar {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--sap-border);
+    margin-bottom: 10px !important;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--sap-text);
+}
+
+.fc .fc-button {
+    background: #f3f4f6;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #374151;
+    transition: all .2s ease;
+}
+
+    .fc .fc-button:hover {
+        background: #e5e7eb;
+    }
+
+.fc .fc-button-active {
+    background: #1f6f43 !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(31,111,67,.25);
+}
+
+/* ============================= */
+/*             GRID              */
+/* ============================= */
+.fc-theme-standard td,
+.fc-theme-standard th {
+    border: 1px solid #f1f5f9;
+}
+
+.fc .fc-scrollgrid {
+    border: 1px solid var(--sap-border);
+    border-radius: 12px;
+}
+
+/* ============================= */
+/*        RESOURCE COLUMN        */
+/* ============================= */
+.fc .fc-datagrid-cell-frame {
+    background: #f0fdf4;
+    font-weight: 600;
+    color: #174c33;
+    justify-content: center;
+    border-right: 1px solid var(--sap-border);
+}
+
+/* ============================= */
+/*        TIMELINE HEADER        */
+/* ============================= */
+.fc .fc-timeline-header-row {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+    text-align: center;
+    border-bottom: 1px solid var(--sap-border);
+}
+
+/* ============================= */
+/*         TIMELINE SLOT         */
+/* ============================= */
+.fc-timeline-slot {
+    border-left: 1px solid #f3f4f6 !important;
+}
+
+    .fc-timeline-slot.day-start-slot {
+        border-left: 1px solid #d1d5db !important;
+    }
+
+/* ============================= */
+/*            EVENTS             */
+/* ============================= */
+.fc-event {
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 4px 6px;
+    font-size: 12px;
+    box-shadow: var(--event-shadow);
+    transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
+}
+
+    /* Hover */
+    .fc-event:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--event-shadow-hover);
+    }
+
+    /* Dragging */
+    .fc-event.fc-event-dragging {
+        transform: scale(1.04);
+        box-shadow: var(--event-shadow-drag);
+        opacity: .95;
+    }
+
+/* ============================= */
+/*       EVENT CONTENT AREA      */
+/* ============================= */
+.event-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.event-title {
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+/* ============================= */
+/*        MINI PROGRESS BAR      */
+/* ============================= */
+.mini-progress {
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mini-bar {
+    height: 100%;
+    background: linear-gradient(90deg,#3ca57a,#174c33);
+    transition: width .4s ease;
+}
+
+/* ============================= */
+/*           TOOLTIP             */
+/* ============================= */
+.custom-tooltip {
+    position: absolute;
+    background: white;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #111827;
+    border: 1px solid var(--sap-border);
+    box-shadow: 0 10px 30px rgba(0,0,0,.15);
+    z-index: 9999;
+    transition: all .2s ease;
+}
+
+/* ============================= */
+/*         DISABLED SLOT         */
+/* ============================= */
+.fc-slot-disabled {
+    background-color: rgba(220,38,38,.06) !important;
+    pointer-events: none;
+}
+
+/* ============================= */
+/*          SUNDAY SOFT          */
+/* ============================= */
+.fc-day-sun {
+    background-color: #fef2f2 !important;
+}
+
+/* ============================= */
+/*      STICKY HEADER FIX        */
+/* ============================= */
+.fc .fc-scrollgrid-section-header {
+    position: sticky;
+    top: 52px;
+    background: white;
+    z-index: 90;
+}
+
+/* ============================= */
+/*       SMOOTH SCROLL FIX       */
+/* ============================= */
+.fc-scroller-harness-liquid {
+    height: auto !important;
+}

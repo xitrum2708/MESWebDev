@@ -1,0 +1,341 @@
+﻿
+
+#calendar {
+    max-width: auto;
+    margin: 0 auto;
+}
+
+.fc .fc-col-header-cell.fc-resource-area {
+   /* background-color: #004080;
+    color: white;*/
+    background: white;
+    color: rgb(5, 81, 43);
+    font-weight: bold;
+    text-align: center;
+}
+
+/*-- first column --*/
+/* ============================= */
+/*        RESOURCE COLUMN        */
+/* ============================= */
+.fc .fc-datagrid-cell-frame {
+    background: #f0fdf4;
+    font-weight: 600;
+    color: #174c33;
+    justify-content: center;
+    border-right: 1px solid var(--sap-border);
+}
+
+/* ============================= */
+/*        TIMELINE HEADER        */
+/* ============================= */
+.fc .fc-timeline-header-row {
+    background: white;
+    color: rgb(5, 81, 43);
+    font-weight: bold;
+    text-align: center;
+}
+
+/* ============================= */
+/*         TIMELINE SLOT         */
+/* ============================= */
+
+
+/* Add border cell */
+.fc-theme-standard td,
+.fc-theme-standard th {
+    border: 1px solid black;
+}
+
+/* Add border for outline table */
+.fc .fc-scrollgrid {
+    border: 1px solid black;
+}
+
+/* Center text of hours: 08, 09, 10 */
+.fc .fc-timeline-header-row-chrono .fc-timeline-slot-frame {
+    justify-content: center;
+}
+
+/*.fc-scroller-harness-liquid {
+    height: auto !important;
+}*/
+.fc .fc-scrollgrid-section-header {
+    position: sticky;
+    /*top: 56px;*/
+    z-index: 90;
+    background: white;
+}
+
+/*-- first column --*/
+.fc .fc-timeline-slot-frame a{
+    text-decoration:none !important;
+    color:rgb(5, 81, 43) !important;
+    
+}
+
+
+/*-- CSS Button --*/
+
+.fc .fc-button {
+    background: #f3f4f6;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 14px;
+    color: #374151;
+    transition: all .2s ease;
+}
+
+    .fc .fc-button:hover {
+        background: #e5e7eb;
+        color:rgb(5, 81, 43);
+    }
+
+.fc .fc-button-active {
+    background: #1f6f43 !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(31,111,67,.25);
+}
+
+
+/*-- Calendar Toolbar --*/
+.calendar-toolbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: linear-gradient(to bottom, #ffffff, #f9fafb);
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+    /* Left / center / right sections */
+    .calendar-toolbar .toolbar-left,
+    .calendar-toolbar .toolbar-center,
+    .calendar-toolbar .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Title */
+    .calendar-toolbar #calendar-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1f2937;
+        letter-spacing: 0.3px;
+    }
+/*.fc-button.fc-button-active {
+    background-color: #28a745 !important;
+}*/
+/*-- Add space between buttons --*/
+/*.fc .fc-button-group > .fc-button {
+    margin-right: 6px;
+    border-radius: 10%;
+    border: none;
+}
+
+    .fc .fc-button-group > .fc-button:hover {
+        background-color: rgb(6, 107, 57);
+    }*/
+
+    /* Optional: remove margin from the last button */
+    /*.fc .fc-button-group > .fc-button:last-child {
+        margin-right: 0;
+    }*/
+
+/* Highlight Sunday column in timeline view */
+/*.fc .fc-timeline-slot.fc-day-sun,
+.fc .fc-timeline-header .fc-day-sun {
+    background-color: #ffe0e0 !important;
+}*/
+
+
+/* Custom holiday highlight */
+.fc-day-holiday {
+    background-color: #ffe0e0 !important;
+}
+
+
+
+/* CSS for content in cells of Full Calendar */
+.content_inside_cell {
+    display: flex;
+    flex-direction : column;
+    justify-content: center;
+    align-items:center;
+    height:100%;
+    text-align:center;
+    line-height:1.4;
+    padding:4px;
+}
+
+/* Make text clearer */
+.event-text-white-shadow {
+    color: black;
+    text-shadow: 1px 1px 2px white;
+    /*font-weight: bold;*/
+}
+.event-text-black-box {
+    background-color: rgba(255, 255, 255, 0.55);
+    color: black;
+    padding: 0px 2px;
+    border-radius: 7px;
+    font-weight: bold;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
+}
+.event-text-outline {
+    color: rgb(5, 81, 43);
+    font-weight: bold;
+    text-shadow: 1px 1px 2px white;
+    /*  color: white;
+    font-weight: bold;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;*/
+}
+
+
+/* Default border */
+.fc-timeline-slot {
+    border-left: 1px double #ccc !important;
+}
+
+ /*Stronger border for day-start slots*/ 
+.fc-timeline-slot.day-start-slot {
+    border-left: 1px solid #000 !important;
+    /*background-color: #f9f9f9;  optional: slightly different bg*/ 
+}
+
+/*Customize Tooltip*/
+.custom-tooltip {
+    position: absolute;
+    background: linear-gradient(135deg, #000000,#000000,rgb(5, 81, 43), rgb(13, 108, 60)); /* grey to black */
+    color: white;
+    border: none;
+    padding: 8px;
+    width: 300px;
+    border-radius: 7px;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 100000;
+    display: none;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    transform: scale(0.95);
+}
+    .custom-tooltip.show {
+        display: block;
+        background-color: #e0ffe0; 
+        /* transition to greenish background */
+        transform: scale(1);
+    }
+
+/* Sticky header toolbar */
+.fc .fc-toolbar.fc-header-toolbar, .fc-header-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    padding-bottom: 0.7em !important;
+    margin-bottom: 0 !important;
+}
+
+.fc .fc-scrollgrid-section-header {
+    position: sticky;
+    /*top: 40px;*/
+    z-index: 90;
+}
+
+/*.fc .fc-scrollgrid-sync-table th:first-child,*/
+.fc .fc-col-header-cell:first-child 
+{
+    position: sticky;
+    left: 0;
+    z-index: 80;
+}
+
+
+/* ---------------+ Custom styles for setting holiday +----------------- */
+.calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    text-align: center;
+}
+
+.day-header {
+    font-weight: bold;
+    background-color: #f1f1f1;
+    padding: 5px;
+}
+
+.day-cell {
+    border: 1px solid #ccc;
+    padding: 10px 5px;
+    height: 80px;
+    position: relative;
+}
+
+.day-number {
+    position: absolute;
+    top: 4px;
+    left: 6px;
+    font-size: 0.9rem;
+}
+
+.holiday-checkbox {
+    position: absolute;
+    bottom: 4px;
+    right: 6px;
+}
+
+.holiday-checked {
+    background-color: #ffe3e3;
+}
+
+.workingHour {
+    position: absolute;
+    top: 40px;
+    /*width: 50px;*/
+}
+.ip_workingHour {
+    width: 38px;
+    margin-right:2px;
+}
+/* ------- end of holiday -------- */
+
+
+/* ------- Dropdown item ------- */
+.dropdown-item:hover {
+    background-color: #e9c605 !important;
+    color: black;
+}
+
+/*------ Disable Time Slot for week--------*/
+.fc-slot-disabled {
+    background-color: orangered !important;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.fc-slot-header-disabled {
+    background-color: rgba(255, 255, 255, 0.55) !important;
+    opacity: 0.5;
+}
+
+
+.fc .fc-datagrid-cell:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 80;
+    background: #f0fdf4;
+}
+
+.fc {
+    height: 100% !important;
+}
+
+
+
+

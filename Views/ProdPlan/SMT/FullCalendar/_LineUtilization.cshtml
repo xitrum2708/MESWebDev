@@ -1,0 +1,73 @@
+﻿
+<div class="util-dashboard">
+    <div class="container">
+        <!-- Header + Toolbar -->
+        <div class="header">
+            @* <h1>SMT Line Utilization (%)</h1> *@
+            <div class="toolbar">
+                <div class="tool">
+                    <label for="lineFilter">Filter Line:</label>
+                    <input id="lineFilter" type="text" placeholder="Line code..." />
+                </div>
+
+                <div class="tool">
+                    <label for="dateFilter">Filter Date:</label>
+                    <input id="dateFilter" type="date" />
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpis">
+            <div class="kpi">
+                <div class="label">Global Average</div>
+                <div class="value" id="kpiAvg">—</div>
+                <div class="sub">Across all lines & dates</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Highest</div>
+                <div class="value" id="kpiMax">—</div>
+                <div class="sub" id="kpiMaxMeta">—</div>
+            </div>
+            <div class="kpi">
+                <div class="label">Lowest</div>
+                <div class="value" id="kpiMin">—</div>
+                <div class="sub" id="kpiMinMeta">—</div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+            <div class="table-title">
+@*                 <div class="left">
+                    <h2>Daily Detail Table</h2>
+                    <span class="legend-item">
+                        <span class="legend-swatch"></span>
+                        <span>Gradient represents utilization (%)</span>
+                    </span>
+                </div> *@
+                <div class="legend">
+                    <span class="legend-item"><span class="dot dot1"></span> 0–49%</span>
+                    <span class="legend-item"><span class="dot dot2"></span> 50–74%</span>
+                    <span class="legend-item"><span class="dot dot3"></span> 75–89%</span>
+                    <span class="legend-item"><span class="dot dot4"></span> ≥90%</span>
+                </div>
+            </div>
+            <div class="table-scroll" style="max-height: calc(100vh - 470px); overflow-y: auto;">
+                <table id="utilTable" aria-label="SMT utilization by line and date">
+                    <thead>
+                        <tr id="headerRow">
+                            <th style="z-index:999">LineCode</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodyRows"></tbody>
+                </table>
+            </div> 
+
+
+        </div>
+    </div>
+</div>
+
+
+

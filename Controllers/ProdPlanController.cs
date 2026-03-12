@@ -1,4 +1,5 @@
-﻿using MESWebDev.Common;
+﻿using Humanizer.Localisation;
+using MESWebDev.Common;
 using MESWebDev.Data;
 using MESWebDev.Extensions;
 using MESWebDev.Models.IQC;
@@ -7,6 +8,7 @@ using MESWebDev.Models.PE;
 using MESWebDev.Models.ProdPlan;
 using MESWebDev.Models.ProdPlan.PC;
 using MESWebDev.Models.ProdPlan.SMT;
+using MESWebDev.Models.ProdPlan.SMT.DTO;
 using MESWebDev.Models.Setting;
 using MESWebDev.Repositories;
 using MESWebDev.Services;
@@ -17,6 +19,8 @@ using System.Data;
 using System.Drawing;
 using System.Threading.Tasks;
 using static MESWebDev.Common.Export2Excel;
+using static MESWebDev.Models.ProdPlan.SMT.DTO.FullCalendarDTO;
+using static Microsoft.IO.RecyclableMemoryStreamManager;
 
 namespace MESWebDev.Controllers
 {
@@ -714,7 +718,7 @@ namespace MESWebDev.Controllers
             ProdPlanViewModel pev = new();
             if (file1 == null)
             {
-                pev.error_msg = "Please upload no file.";
+                pev.error_msg = "No files to upload. ";
                 return View("SMT/LotPcb/Index", pev);
             }
             try
@@ -836,7 +840,7 @@ namespace MESWebDev.Controllers
             ProdPlanViewModel pev = new();
             if (file1 == null)
             {
-                pev.error_msg = "Please upload no file.";
+                pev.error_msg = "No files to upload. ";
                 return View("SMT/UVPlan/Index", pev);
             }
             try
@@ -890,99 +894,99 @@ namespace MESWebDev.Controllers
 
         #endregion
 
-        #region -- COMPLETED PLANS
+        #region -- PLAN TRACKING
         [HttpGet]
-        public async Task<IActionResult> SMTCompletedPlans()
+        public async Task<IActionResult> SMTPlanTracking()
         {
-            ProdPlanViewModel ppv = await GetSMTCompletedPlans();
-            return View("SMT/CompletedPlans/Index", ppv);
+            ProdPlanViewModel ppv = await GetSMTPlanTracking();
+            return View("SMT/PlanTracking/Index", ppv);
         }
 
         // Add
         [HttpGet]
-        public async Task<IActionResult> SMTCompletedPlansAdd()
+        public async Task<IActionResult> SMTPlanTrackingAdd()
         {
             SMTProdPlanModel ppv = new();
-            return PartialView("SMT/CompletedPlans/__Add", ppv);
+            return PartialView("SMT/PlanTracking/__Add", ppv);
         }
         [HttpPost]
-        public async Task<IActionResult> SMTCompletedPlansAdd(SMTProdPlanModel slp)
+        public async Task<IActionResult> SMTPlanTrackingAdd(SMTProdPlanModel slp)
         {
-            string msg = await _ppService.SMTCompletedPlansAdd(slp ?? new());
+            string msg = await _ppService.SMTPlanTrackingAdd(slp ?? new());
 
-            ProdPlanViewModel ppv = await GetSMTCompletedPlans();
+            ProdPlanViewModel ppv = await GetSMTPlanTracking();
             if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
 
-            return PartialView("SMT/CompletedPlans/_Result", ppv);
+            return PartialView("SMT/PlanTracking/_Result", ppv);
         }
 
         // Edit
         [HttpGet]
-        public async Task<IActionResult> SMTCompletedPlansEdit(int Id)
+        public async Task<IActionResult> SMTPlanTrackingEdit(int Id)
         {
-            SMTProdPlanModel ppv = await _ppService.SMTCompletedPlansDetail(Id);
-            return PartialView("SMT/CompletedPlans/__Edit", ppv);
+            SMTProdPlanModel ppv = await _ppService.SMTPlanTrackingDetail(Id);
+            return PartialView("SMT/PlanTracking/__Edit", ppv);
         }
         [HttpPost]
-        public async Task<IActionResult> SMTCompletedPlansEdit(SMTProdPlanModel slp)
+        public async Task<IActionResult> SMTPlanTrackingEdit(SMTProdPlanModel slp)
         {
-            string msg = await _ppService.SMTCompletedPlansEdit(slp ?? new());
-            ProdPlanViewModel ppv = await GetSMTCompletedPlans();
+            string msg = await _ppService.SMTPlanTrackingEdit(slp ?? new());
+            ProdPlanViewModel ppv = await GetSMTPlanTracking();
 
             if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
 
-            return PartialView("SMT/CompletedPlans/_Result", ppv);
+            return PartialView("SMT/PlanTracking/_Result", ppv);
         }
 
         //// Delete
         //[HttpPost]
-        //public async Task<IActionResult> SMTCompletedPlansDelete(int Id)
+        //public async Task<IActionResult> SMTPlanTrackingDelete(int Id)
         //{
-        //    string msg = await _ppService.SMTCompletedPlansDelete(Id);
-        //    ProdPlanViewModel ppv = await GetSMTCompletedPlans();
+        //    string msg = await _ppService.SMTPlanTrackingDelete(Id);
+        //    ProdPlanViewModel ppv = await GetSMTPlanTracking();
         //    if (!string.IsNullOrEmpty(msg)) ppv.error_msg = msg;
-        //    return PartialView("SMT/CompletedPlans/_Result", ppv);
+        //    return PartialView("SMT/PlanTracking/_Result", ppv);
         //}
 
 
         [HttpGet]
-        public async Task<ProdPlanViewModel> GetSMTCompletedPlans(Dictionary<string, object>? dic = null)
+        public async Task<ProdPlanViewModel> GetSMTPlanTracking(Dictionary<string, object>? dic = null)
         {
             ProdPlanViewModel ppv = new();
             ppv.FormatRazorDTO = await _settingService.GetFormatRazor();
 
-            ppv.Data = await _ppService.SMTCompletedPlansList(dic ?? new Dictionary<string, object>());
+            ppv.Data = await _ppService.SMTPlanTrackingList(dic ?? new Dictionary<string, object>());
             return ppv;
         }
 
         [HttpPost]
-        public async Task<IActionResult> SMTCompletedPlansUpload(IFormFile file1)
+        public async Task<IActionResult> SMTPlanTrackingUpload(IFormFile file1)
         {
             ProdPlanViewModel pev = new();
             if (file1 == null)
             {
-                pev.error_msg = "Please upload no file.";
-                return View("SMT/CompletedPlans/Index", pev);
+                pev.error_msg = "No files to upload. ";
+                return View("SMT/PlanTracking/Index", pev);
             }
             try
             {
-                pev = await _ppService.SMTCompletedPlansUpload(file1);
+                pev = await _ppService.SMTPlanTrackingUpload(file1);
                 ViewBag.Success = "Files uploaded and processed successfully.";
             }
             catch (Exception ex)
             {
                 ViewBag.Error = $"An error occurred while processing the files: {ex.Message}";
             }
-            return PartialView("SMT/CompletedPlans/_Result", pev);
+            return PartialView("SMT/PlanTracking/_Result", pev);
         }
         [HttpGet]
-        public async Task<IActionResult> SMTCompletedPlansSearch()
+        public async Task<IActionResult> SMTPlanTrackingSearch()
         {
             SMTProdPlanModel slp = new();
-            return PartialView("SMT/CompletedPlans/__Search", slp);
+            return PartialView("SMT/PlanTracking/__Search", slp);
         }
         [HttpPost]
-        public async Task<IActionResult> SMTCompletedPlansSearch(SMTProdPlanModel tsh)
+        public async Task<IActionResult> SMTPlanTrackingSearch(SMTProdPlanModel tsh)
         {
             ProdPlanViewModel pev = new();
             Dictionary<string, object> dic = new();
@@ -991,27 +995,153 @@ namespace MESWebDev.Controllers
                 // Search dictionary base on tsh
                 dic.Add("@lot_no", tsh.Lotno ?? string.Empty);
                 if (tsh.StartDt.HasValue)
-                    dic.Add("@start_dt", tsh.StartDt);
+                    dic.Add("@finished_start_dt", tsh.StartDt);
                 if (tsh.EndDt.HasValue)
-                    dic.Add("@end_dt", tsh.EndDt);
+                    dic.Add("@finished_end_dt", tsh.EndDt);
                 dic.Add("@model", tsh.Model ?? string.Empty);
                 dic.Add("@pcb_no", tsh.PCBNo ?? string.Empty);
+                dic.Add("@finished_status", true);
             }
-            pev.Data = await _ppService.SMTCompletedPlansList(dic);
-            return PartialView("SMT/CompletedPlans/_Result", pev);
+            pev.Data = await _ppService.SMTPlanTrackingList(dic);
+            return PartialView("SMT/PlanTracking/_Result", pev);
         }
 
         // Delete
         [HttpPost]
-        public async Task<IActionResult> SMTCompletedPlansDelete([FromBody] List<int> ids)
+        public async Task<IActionResult> SMTPlanTrackingDelete([FromBody] List<int> ids)
         {
             string msg = string.Empty;
-            msg = await _ppService.SMTCompletedPlansDelete(ids);
+            msg = await _ppService.SMTPlanTrackingDelete(ids);
             if (!string.IsNullOrEmpty(msg))
             {
                 return Json(new { success = false, error = msg });
             }
             return Json(new { success = true });
+        }
+
+        #endregion
+
+        #region -- SMT ProdPlan
+        [HttpGet]
+        public async Task<IActionResult> SMTFullCalendar()
+        {
+            ProdPlanViewModel ppv = await _ppService.SMTViewProdPlan(new RequestDTO());
+            HttpContext.Session.SetComplexData("ppv", ppv);
+            ppv.HasChange = false;
+            return View("SMT/FullCalendar/Index",ppv);
+        }
+
+        [HttpGet]
+        // load Plan for today
+        public async Task<IActionResult> SMTIniProdPlan()
+        {
+            ProdPlanViewModel ppv = await _ppService.IniSMTProdPlan( DateTime.Now.Date, DateTime.Now.Date.AddDays(1));
+            
+            ppv.start_sch_dt = DateTime.Now;
+            ppv.HasChange = false;
+            return await BindData(ppv);
+        }
+
+        public async Task<JsonResult> BindData(ProdPlanViewModel ppv)
+        {
+            HttpContext.Session.SetComplexData("ppv", ppv);
+            return Json(new
+            {
+                events = ppv.SMTEventsList,
+                resources = ppv.resources,
+                utilizationLine = ppv.SMTLineUtilizationList,
+                start_sch_dt = ppv.start_sch_dt?.ToString("yyyy/MM/dd HH:mm:ss"),
+                message = "Create plan data successfully !"// If needed // Add more properties as needed
+            });
+        }
+        [HttpPost]
+        public async Task<IActionResult> SMTReloadProdPlan([FromBody] ProdPlanViewModel ppv)
+        {
+            ppv = await _ppService.SMTReloadProdPlan(ppv);
+
+            ppv.HasChange = false;
+            return await BindData(ppv);
+            //return View("Index", ppv);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SMTSaveProdPlan([FromBody] ProdPlanViewModel ppv)
+        {
+            // Process and save updated events
+            //ppv.start_sch_dt = DateTime.Now;
+            string msg = string.Empty;
+            //check if any change? if not change, no need to save and reload data, just return success message
+            if (ppv.HasChange)
+            {
+                ppv = await _ppService.SMTReloadProdPlan(ppv);
+            }
+            else
+            {
+                ppv = HttpContext.Session.GetComplexData<ProdPlanViewModel>("ppv") ?? new ProdPlanViewModel();
+            }
+            
+            ppv.start_sch_dt = DateTime.Now;
+            msg = await _ppService.SMTSaveProdPlan(ppv);
+            return await BindData(ppv);
+            //return View("Index", ppv);
+        }
+        public async Task<IActionResult> DownloadSMTProdPlan()
+        {
+            ProdPlanViewModel ppv = HttpContext.Session.GetComplexData<ProdPlanViewModel>("ppv") ?? new ProdPlanViewModel();
+            Dictionary<string, object> dic = new Dictionary<string, object>()
+            {
+                ["@StartScheduleDt"] = ppv.start_sch_dt ?? DateTime.Now
+            };
+            DataSet ds = await _ppService.SMTExportProdPlan(dic);
+
+            return await DownloadData(ds, $"SMTProdPlan_{DateTime.Now:yyyyMMddHHmmss}");
+        }
+
+        public async Task<IActionResult> DownloadData(DataSet ds, string fileName)
+        {
+            return _ee.DownloadDataSetFormat(ds, fileName);
+        }
+
+        [HttpPost("validate")]
+        public IActionResult Validate([FromBody] ValidateRequest req)
+        {
+            if (req.events == null || req.events.Count == 0)
+            {
+                return Ok(new { ok = true });
+            }
+            DateTime? start1 = null, start2 = null;
+            string pcb1= string.Empty, pcb2 = string.Empty;
+
+            
+            foreach (var e in req.events)
+            {
+                if (e.runOrder == 1) {
+                    if(start1 == null || e.start < start1)
+                    {
+                        start1 = e.start;
+                        pcb1 = e.pcbKey ?? string.Empty;
+                    }
+                } 
+                else if (e.runOrder == 2)
+                {
+                    if (start2 == null || e.start < start2)
+                    {
+                        start2 = e.start;
+                        pcb2 = e.pcbKey ?? string.Empty;
+                    }
+                }               
+
+            }
+            if(start1.HasValue && start2.HasValue && start1 > start2)
+            {
+                return Ok(new
+                {
+                    ok = false,
+                    message = $"{pcb2} cannot run before {pcb1}"
+                });
+            }   
+
+            return Ok(new { ok = true });
         }
 
         #endregion

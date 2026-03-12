@@ -248,8 +248,8 @@
 
           //---------->> SMOOTH LINE CHART <<-------------------
           const chart_data = @Html.Raw(Json.Serialize(Model.line_chart));
-          const labels = chart_data.map(item => item.label);
-          const values = chart_data.map(item => item.value);
+          const labels = chart_data.map(item => item.Label);
+          const values = chart_data.map(item => item.Value);
 
           const ctx = document.getElementById('smoothLineChart').getContext('2d');
           new Chart(ctx, {
@@ -308,8 +308,8 @@
 
 
         const pie_data = @Html.Raw(Json.Serialize(Model.chart_data2));
-        const pie_labels = pie_data.map(item => item.label);
-        const pie_values = pie_data.map(item => item.value);
+        const pie_labels = pie_data.map(item => item.Label);
+        const pie_values = pie_data.map(item => item.Value);
 
         const ctx2 = document.getElementById('myPieChart').getContext('2d');
 

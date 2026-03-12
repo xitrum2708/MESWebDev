@@ -1,9 +1,13 @@
 ﻿using AutoMapper;
 using MESWebDev.Models.Master;
 using MESWebDev.Models.Master.DTO;
+using MESWebDev.Models.MRP;
+using MESWebDev.Models.MRP.DTO;
 using MESWebDev.Models.PE;
 using MESWebDev.Models.PE.DTO;
 using MESWebDev.Models.ProdPlan.PC;
+using MESWebDev.Models.ProdPlan.SMT;
+using MESWebDev.Models.ProdPlan.SMT.DTO;
 
 namespace MESWebDev.Common
 {
@@ -57,6 +61,55 @@ namespace MESWebDev.Common
 
             CreateMap<RoleDTO, RoleModel>().ReverseMap();
 
+            CreateMap<SMTProdPlanDtlModel, SMTEventsDTO>()
+                .ForMember(dest => dest.Model, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null? src.SMTProdPlanHdrModel.Model: string.Empty))
+                .ForMember(dest => dest.PCBNo, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null? src.SMTProdPlanHdrModel.PCBNo: string.Empty))
+                .ForMember(dest => dest.PCBType, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null? src.SMTProdPlanHdrModel.PCBType: string.Empty))
+                .ForMember(dest => dest.PCBPerModel, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null? src.SMTProdPlanHdrModel.PCBPerModel: 0))
+                .ForMember(dest => dest.TargetPerHour85, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null? src.SMTProdPlanHdrModel.TargetPerHour85 : 0))
+                ;
+
+            CreateMap<SMTProdPlanDTO, SMTProdPlanDtlModel>();
+            CreateMap<SMTProdPlanDtlModel, SMTProdPlanDTO>()
+            .ForMember(dest => dest.Model, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null ? src.SMTProdPlanHdrModel.Model : string.Empty))
+            .ForMember(dest => dest.PCBNo, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null ? src.SMTProdPlanHdrModel.PCBNo : string.Empty))
+            .ForMember(dest => dest.PCBType, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null ? src.SMTProdPlanHdrModel.PCBType : string.Empty))
+            .ForMember(dest => dest.PCBPerModel, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null ? src.SMTProdPlanHdrModel.PCBPerModel : 0))
+            .ForMember(dest => dest.BalanceQty, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null ? src.SMTProdPlanHdrModel.BalanceQty : 0))
+            .ForMember(dest => dest.IssuedQty, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null ? src.SMTProdPlanHdrModel.IssuedQty : 0))
+            .ForMember(dest => dest.TargetPerHour85, opt => opt.MapFrom(src => src.SMTProdPlanHdrModel != null ? src.SMTProdPlanHdrModel.TargetPerHour85 : 0))
+            ;
+
+            CreateMap<SMTEventsDTO, SMTProdPlanDTO>()
+                .ForMember(des => des.Id,
+                            opt => opt.MapFrom(src => src.id));
+            CreateMap<SMTProdPlanDTO, SMTEventsDTO>()
+                .ForMember(dest => dest.start,
+                    opt => opt.MapFrom(src => src.StartDt.ToString("yyyy-MM-ddTHH:mm:ss")))
+
+                .ForMember(dest => dest.end,
+                    opt => opt.MapFrom(src => src.EndDt.ToString("yyyy-MM-ddTHH:mm:ss")))
+
+                .ForMember(dest => dest.id,
+                    opt => opt.MapFrom(src => src.Id))
+
+                .ForMember(dest => dest.resourceId,
+                    opt => opt.MapFrom(src => src.LineCode))
+
+                .ForMember(dest => dest.OldStartDt,
+                    opt => opt.MapFrom(src => src.StartDt));
+
+            //------- MRP -------\\
+            CreateMap<MRPBOMDTO, MRPBOMModel>().ReverseMap();
+            CreateMap<MRPDataDTO, MRPDataModel>().ReverseMap();
+            CreateMap<MRPOBLDTO, MRPOBLModel>().ReverseMap();
+            CreateMap<MRPOHDTO, MRPOHModel>().ReverseMap();
+            CreateMap<MRPSPODTO, MRPSPOModel>().ReverseMap();
+
+            CreateMap<MRPBOMDTO, MRPBOMUpload>().ReverseMap();
+            CreateMap<MRPOBLDTO, MRPOBLUpload>().ReverseMap();
+            CreateMap<MRPOHDTO, MRPOHUpload>().ReverseMap();
+            CreateMap<MRPSPODTO, MRPSPOUpload>().ReverseMap();
         }
     }
 }

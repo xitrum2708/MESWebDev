@@ -34,19 +34,23 @@
                         <div class="col-4">@TranslationService.Trans("Lotno")</div>
                         <div class="col-8"><input type="text" class="form-control" asp-for="Lotno" disabled /></div>
                         <div class="col-4">@TranslationService.Trans("PCBNo")</div>
-                        <div class="col-8"><input type="text" class="form-control  _Size" asp-for="PCBNo" required /></div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="PCBNo" required /></div>
+                        <div class="col-4">@TranslationService.Trans("LotSize")</div>
+                        <div class="col-8"><input type="number" class="form-control _Size" asp-for="LotSize" /></div>
                         <div class="col-4">@TranslationService.Trans("IssuedQty")</div>
-                        <div class="col-8"><input type="number" class="form-control  _Balance" asp-for="IssuedQty" /></div>
+                        <div class="col-8"><input type="number" class="form-control _Issued" asp-for="IssuedQty" /></div>
                         <div class="col-4">@TranslationService.Trans("BalanceQty")</div>
-                        <div class="col-8"><input type="number" class="form-control  _Balance" asp-for="BalanceQty"  /></div>
+                        <div class="col-8"><input type="number" class="form-control _Balance" asp-for="BalanceQty"  /></div>
                         <div class="col-4">@TranslationService.Trans("Remark")</div>
-                        <div class="col-8"><input type="text" class="form-control  _Balance" asp-for="Remark" /></div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="Remark" /></div>
                         <div class="col-4">@TranslationService.Trans("Warning")</div>
-                        <div class="col-8"><input type="text" class="form-control  _Balance" asp-for="Warning" /></div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="Warning" /></div>
                         <div class="col-4">@TranslationService.Trans("UVNote")</div>
-                        <div class="col-8"><input type="text" class="form-control  _Balance" asp-for="UVNote" /></div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="UVNote" /></div>
                         <div class="col-4">@TranslationService.Trans("ETPCB")</div>
-                        <div class="col-8"><input type="text" class="form-control  _Balance" asp-for="ETPCB" /></div>
+                        <div class="col-8"><input type="text" class="form-control" asp-for="ETPCB" /></div>
+                        <div class="col-4">@TranslationService.Trans("IsFinished")</div>
+                        <div class="col-8"><input type="checkbox" class="form-check form-check-input" asp-for="IsFinished" /></div>
                     </div>
                 
                 </div>

@@ -245,9 +245,9 @@
             // Initialize Summary Chart
             function initializeSummaryChart(summaryData) {
                 const ctx = document.getElementById('summaryChart').getContext('2d');
-                const labels = summaryData.map(item => item.period);
-                const outputData = summaryData.map(item => item.outputQuantity);
-                const errorData = summaryData.map(item => item.errorQuantity);
+                const labels = summaryData.map(item => item.Period);
+                const outputData = summaryData.map(item => item.OutputQuantity);
+                const errorData = summaryData.map(item => item.ErrorQuantity);
 
                 summaryChart = new Chart(ctx, {
                     type: 'bar',
@@ -300,8 +300,8 @@
             // Initialize Daily Result Chart
             function initializeProductionChart(chartData) {
                 const ctx = document.getElementById('productionChart').getContext('2d');
-                const labels = chartData.map(item => item.model);
-                const data = chartData.map(item => item.totalProdQty);
+                const labels = chartData.map(item => item.Model);
+                const data = chartData.map(item => item.TotalProdQty);
 
                 productionChart = new Chart(ctx, {
                     type: 'bar',

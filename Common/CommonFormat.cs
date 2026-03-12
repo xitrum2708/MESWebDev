@@ -91,37 +91,15 @@ namespace MESWebDev.Common
 
             try
             {
-                // Nếu đã đúng type thì return luôn
+                // if correct type then return
                 if (val is T tVal)
                     return tVal;
-
-                //// Special handle cho string -> number
-                //if (typeof(T) == typeof(int))
-                //{
-                //    if (int.TryParse(val.ToString(), out int i))
-                //        return (T)(object)i;
-                //    return defaultValue;
-                //}
-
-                //if (typeof(T) == typeof(decimal))
-                //{
-                //    if (decimal.TryParse(val.ToString(), out decimal d))
-                //        return (T)(object)d;
-                //    return defaultValue;
-                //}
-
-                //if (typeof(T) == typeof(double))
-                //{
-                //    if (double.TryParse(val.ToString(), out double db))
-                //        return (T)(object)db;
-                //    return defaultValue;
-                //}
 
                 return (T)Convert.ChangeType(val, typeof(T));
             }
             catch
             {
-                // Bất kỳ giá trị bẩn nào như "200/900"
+                // Any wrong value as "200/900"
                 return defaultValue;
             }
         }

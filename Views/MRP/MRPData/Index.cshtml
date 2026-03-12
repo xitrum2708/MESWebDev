@@ -1,0 +1,190 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.PE
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Services
+@using System.Data
+@using System.Globalization
+@model MRPViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    string errorMsg = Model.error_msg ?? "";
+
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="float-start d-flex justify-content-between align-items-center w-50">
+                                <h3 class="card-title fw-bold fs-5">
+                                    <i class="bi bi-box"></i>
+                                    @TranslationService.Trans("91")
+                                @*  Id	ParentId	Order	EnName
+                                    87	86	        10	    BOM
+                                    88	86	        20	    MRPData
+                                    89	86	        30	    OBL
+                                    90	86	        40	    OH
+                                    91	85	        20	    Run MRP *@
+                                </h3>
+                                <input class="form-control w-50 ms-3" placeholder="🔍 Quick Search..." id="quickSearch" onkeyup="QuickSearch()" />
+                            </div>
+                            <div class="float-end d-flex justify-content-center align-items-center">
+
+                                <button class="btn btn-sm btn-success me-2" onclick="RunMRP()">
+                                    <i class="bi bi-gear"></i>
+                                    @TranslationService.Trans("RunMRP")
+                                </button>
+                                <a class="btn btn-sm btn-secondary me-2" id="DownloadData">
+                                    <i class="bi bi-download"></i>
+                                    @TranslationService.Trans("Download")
+                                </a>
+                         @*        <a class="btn btn-sm btn-light" href="~/Manual/Manual_Setting.xlsx">
+                                    <i class="bi bi-question-circle"></i>
+                                </a> *@
+
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="ResultArea">
+                                @if (Model.Data == null)
+                                {
+                                    <h5 class="m-3">No data available.</h5>
+                                }
+                                else
+                                {
+                                    <partial name="MRPData/_Result" model="@Model" />
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @* <partial name="ProdPlan/Setting/_Edit" /> *@
+            <partial name="_LoadingPartial" />
+@*             <div>
+                <h5> DEEP WORK CAN SAVE YOUR TIME </h5>
+            </div> *@
+            @* <partial name="ProdPlan/Setting/__Add" model="@Model"/> *@
+            <div id="modalArea">
+            </div>
+        </div>
+    </div>
+
+}
+catch (Exception ex)
+{
+    string t = ex.Message;
+}
+
+@section Scripts {
+    <link href="~/css/pecss.css" rel="stylesheet" />
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+
+    @* SORT TABLE  *@
+    <link href="~/css/TableSort.css?@DateTime.Now.Ticks" rel="stylesheet" />
+    <script src="~/js/TableSort.js?@DateTime.Now.Ticks"></script>
+    <script>
+        $(document).ready(function(){
+            enableTableSort('mytable');
+        });
+
+        function RunMRP() {
+            $.ajax({
+                url: '@Url.Action("MRPDataRun")',
+                type: 'Post',
+                success: function (html) {
+                    $('#ResultArea').html(html);
+                    enableTableSort('mytable');
+                    var errorMsg = $('#errorMsg').data('msg');
+                    if (errorMsg) {
+                        toastr.error(errorMsg, "Error");
+                    }
+                    else
+                        toastr.success('Finish running MRP !','Success')
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the run MRP form.');
+                }
+
+            });            
+        }
+
+        //Download
+        $('#DownloadData').on('click', function () {
+            const headers = [];
+            $('table thead .header-text').each(function () {
+                //alert($(this).text().trim());
+                headers.push($(this).text().trim());
+            });
+
+            const rows = [];
+            $('table tbody tr:visible').each(function () {
+                const rowData = [];
+                $(this).find('td.body-text').each(function () {
+                    rowData.push($(this).text().trim());
+                });
+                rows.push(rowData);
+            });
+
+            const payload = { headers: headers, rows: rows };
+
+            $.ajax({
+                url: '@Url.Action("DownloadWeb")',
+                type: 'POST',
+                data: JSON.stringify(payload),
+                contentType: 'application/json',
+                xhrFields: { reMRPDatanseType: 'blob' }, // important to download file'
+                success: function (data) {
+                const blob = new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                //a.download = "FilteredData.xlsx";
+
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                const fileName = `MRPMRPDataMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            }
+            });
+        });
+
+        // Quick Search
+        function QuickSearch(){
+            var query = $('#quickSearch').val().toUpperCase();
+            $('#mytable tbody tr').each(function(){
+                var row = $(this);
+                row.find('td').each(function(){
+                    var tdText = $(this).text().toUpperCase();
+                    if(tdText.indexOf(query) > -1){
+                        row.show(); return false;
+                    }
+                    else{
+                        row.hide();
+                    }
+                });
+            });
+        }
+
+    </script>
+
+}

@@ -9,8 +9,8 @@
             $dropdown.append(`
                 <li>
                     <label class="dropdown-item">
-                        <input type="checkbox" value="${item.value}">
-                        ${item.text}
+                        <input type="checkbox" value="${item.Value}">
+                        ${item.Text}
                     </label>
                 </li>
             `);

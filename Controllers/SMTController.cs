@@ -63,7 +63,7 @@ namespace MESWebDev.Controllers
             PEViewModel pev = new();
             if (file1 == null)
             {
-                pev.error_msg = "Please upload no file.";
+                pev.error_msg = "No files to upload. ";
                 return View("Manpower/Index", pev);
             }
             try

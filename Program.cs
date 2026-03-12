@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using MESWebDev.Common;
+using MESWebDev.Common.UploadEngine.Services;
 using MESWebDev.Data;
 using MESWebDev.Middleware;
 using MESWebDev.Repositories;
@@ -52,6 +53,14 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+
+builder.Services
+    .AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
 // Đăng ký IMemoryCache
 builder.Services.AddMemoryCache(options =>
 {
@@ -82,6 +91,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILanguageService, LanguageService>();
 
 builder.Services.AddScoped<ISettingService, SettingService>();
+builder.Services.AddScoped<IMRPService, MRPService>();
 
 // Logging is already configured in ASP.NET Core by default, but you can customize it
 builder.Services.AddLogging(logging =>
@@ -122,6 +132,8 @@ builder.Services.AddAuthentication(options =>
 //    options.Filters.Add(new AuthorizeFilter(policy));
 //    options.Filters.Add(new AuthorizeFilter(policy));
 //});
+
+//
 builder.Services.AddControllersWithViews(options =>
 {
     var policy = new AuthorizationPolicyBuilder("CookieAuth")
@@ -144,6 +156,12 @@ builder.Services.AddAutoMapper(typeof(MappingConfig));
 //        options.SlidingExpiration = true; // Optional: Enable sliding expiration
 //        options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // Set the expiration time for the cookie
 //    });
+
+//2026.03.06 Upload Engine
+//builder.Services.AddScoped<ExcelReaderService>();
+//builder.Services.AddScoped<BulkInsertService>();
+//builder.Services.AddScoped<UploadEngineService>();
+
 
 var app = builder.Build();
 app.UseMiddleware<RequestLoggingMiddleware>();

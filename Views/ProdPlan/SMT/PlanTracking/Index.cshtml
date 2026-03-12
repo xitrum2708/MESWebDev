@@ -30,7 +30,7 @@
                                     @TranslationService.Trans("82")
                                 </h3>
 
-                                <a class="btn btn-sm btn-light" href="~/Manual/Manual_SMTCompletedPlans.xlsx">
+                                <a class="btn btn-sm btn-light" href="~/Manual/Manual_SMTPlanTracking.xlsx">
                                     <i class="bi bi-question-circle"></i>
                                 </a>
                                 <input class="form-control w-50 ms-3" placeholder="🔍 Quick Search..." id="quickSearch" onkeyup="QuickSearch()" />
@@ -45,7 +45,7 @@
                                     @TranslationService.Trans("Upload")
                                     
                                 </a>
-                               @*  <button class="btn btn-sm btn-primary me-2" onclick="AddSMTCompletedPlans()">
+                               @*  <button class="btn btn-sm btn-primary me-2" onclick="AddSMTPlanTracking()">
                                     <i class="bi bi-plus-circle"></i>
                                     @TranslationService.Trans("add")
                                 </button> *@
@@ -69,7 +69,7 @@
                                 }
                                 else
                                 {
-                                    <partial name="SMT/CompletedPlans/_Result" model="@Model" />
+                                    <partial name="SMT/PlanTracking/_Result" model="@Model" />
                                 }
                             </div>
 
@@ -86,11 +86,11 @@
                     </div>
                 </div>
             </div>
-            @* <partial name="CompletedPlans/Setting/_Edit" /> *@
-            <Partial name="SMT/CompletedPlans/_Upload" />
+            @* <partial name="PlanTracking/Setting/_Edit" /> *@
+            <Partial name="SMT/PlanTracking/_Upload" />
             <Partial name="_LoadingPartial" />
-            <partial name="SMT/CompletedPlans/__Delete" />
-            @* <partial name="CompletedPlans/Setting/__Add" model="@Model"/> *@
+            <partial name="SMT/PlanTracking/__Delete" />
+            @* <partial name="PlanTracking/Setting/__Add" model="@Model"/> *@
             <div id="modalArea">
             </div>
         </div>
@@ -109,13 +109,20 @@ catch (Exception ex)
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-    <script src="~/js/panigation.js"></script>
+    <script src="~/js/panigation.js?@DateTime.Now.Ticks"></script>
 
     @* -- DATE TIME PICKER -- *@
     <link rel="stylesheet" href="~/css/DatetimePicker.css?@DateTime.Now.Ticks">
     <script src="~/js/DatetimePicker-IU.js?@DateTime.Now.Ticks"></script>
     <script src="~/js/DatetimePicker.js?@DateTime.Now.Ticks"></script>
+
+        @* SORT TABLE  *@
+    <link href="~/css/TableSort.css?@DateTime.Now.Ticks" rel="stylesheet" />
+    <script src="~/js/TableSort.js?@DateTime.Now.Ticks"></script>
     <script>
+        $(document).ready(function(){
+            enableTableSort('mytable');
+        });
 
 
         // --- Show Upload Windows --- \\
@@ -129,7 +136,7 @@ catch (Exception ex)
             var formData = new FormData(form);   // create FormData
 
             $.ajax({
-                url: '@Url.Action("SMTCompletedPlansUpload")',  // controller + action
+                url: '@Url.Action("SMTPlanTrackingUpload")',  // controller + action
                 type: 'POST',
                 data: formData,
                 processData: false, // important for FormData
@@ -139,7 +146,7 @@ catch (Exception ex)
                      $('#ResultArea').html(response);
                      $('.result-area').trigger("dataChanged");
                      ResetQuickSearch();
-
+                     enableTableSort('mytable');
                     //Get error message if existed
                     var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
                     if (errorMsg) {
@@ -158,9 +165,9 @@ catch (Exception ex)
 
         // Click Edit
         function editItem(id) {
-            //alert(id);            
+            alert(id);            
             $.ajax({
-                url: '@Url.Action("SMTCompletedPlansEdit")',
+                url: '@Url.Action("SMTPlanTrackingEdit")',
                 type: 'Get',
                 data: { Id: parseInt(id) },
                 success: function (html) {
@@ -177,16 +184,17 @@ catch (Exception ex)
         function Edit() {
             let size = parseInt($('._Size').val());
             let balance = parseInt($('._Balance').val());
+            let issued = parseInt($('._Issued').val());
         
-            if(balance > size)
+            if(balance + issued != size)
             {
-                toastr.error("Balance cannot be greater than Size.")
+                toastr.error("Lot Size must be equal to (Issued Qty + Balance).")
                 return
             }
             if($('#fEdit').valid()){
                 var data = $('#fEdit').serialize();
                 $.ajax({
-                    url: '@Url.Action("SMTCompletedPlansEdit")',
+                    url: '@Url.Action("SMTPlanTrackingEdit")',
                     type: 'Post',
                     data: data,
                     success: function (html) {
@@ -194,7 +202,7 @@ catch (Exception ex)
                         $('#ResultArea').html(html);
                         $('.result-area').trigger("dataChanged");
                         ResetQuickSearch();
-
+                        enableTableSort('mytable');
                         //Get error message if existed
                         var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
                         if (errorMsg) {
@@ -218,10 +226,10 @@ catch (Exception ex)
 
         //------------------ ADD ------------------
         // Click Add Use off before on to prevent double click
-        function AddSMTCompletedPlans(){
+        function AddSMTPlanTracking(){
             //alert('Hi there!');
             $.ajax({
-                url: '@Url.Action("SMTCompletedPlansAdd")',
+                url: '@Url.Action("SMTPlanTrackingAdd")',
                 type: 'Get',
                 success: function (html) {
                     $('#modalArea').html(html);
@@ -246,7 +254,7 @@ catch (Exception ex)
                 
                 //alert(data);
                 $.ajax({
-                    url: '@Url.Action("SMTCompletedPlansAdd")',
+                    url: '@Url.Action("SMTPlanTrackingAdd")',
                     type: 'Post',
                     data: data,
                     success: function (html) {
@@ -254,7 +262,7 @@ catch (Exception ex)
                         $('#ResultArea').html(html);
                         $('.result-area').trigger("dataChanged");
                         ResetQuickSearch();
-
+                        enableTableSort('mytable');
                         //Get error message if existed
                         var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
                         if (errorMsg) {
@@ -284,7 +292,7 @@ catch (Exception ex)
         function Delete() {
             let index = parseInt($('#deleteId').val());
             $.ajax({
-                url: '@Url.Action("SMTCompletedPlansDelete")',
+                url: '@Url.Action("SMTPlanTrackingDelete")',
                 type: 'Post',
                 data: {Id: index},
                 success: function (html) {
@@ -292,6 +300,7 @@ catch (Exception ex)
                     $('#deleteModal').modal('hide');
                     $('.result-area').trigger("dataChanged");
                     ResetQuickSearch();
+                    enableTableSort('mytable');
                     //Get error message if existed
                     var errorMsg = $('#ResultArea').find('#errorMsg').data('msg');
                     if (errorMsg) {
@@ -337,11 +346,11 @@ catch (Exception ex)
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                //a.download = "FilteredData.xlsx";
 
+                //a.download = "FilteredData.xlsx";
                 const now = new Date();
                 const pad = (n) => n.toString().padStart(2, '0');
-                const fileName = `SMTCompletedPlansMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+                const fileName = `SMTPlanTrackingMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
 
                 a.download = fileName;
                 document.body.appendChild(a);
@@ -374,7 +383,7 @@ catch (Exception ex)
 
         // Search
         function Search(){
-             $.get('/CompletedPlans/SMTCompletedPlansSearch')
+             $.get('/ProdPlan/SMTPlanTrackingSearch')
               .done(function(html){
                   $('#modalArea').html(html);
                   $('#searchModal').modal('show');
@@ -389,7 +398,7 @@ catch (Exception ex)
             e.preventDefault();
              var data = $('#fSearch').serialize();
             $.ajax({
-                url: '@Url.Action("SMTCompletedPlansSearch")',  // controller + action
+                url: '@Url.Action("SMTPlanTrackingSearch")',  // controller + action
                 type: 'POST',
                 data: data,
                 success: function (response) {
@@ -397,7 +406,7 @@ catch (Exception ex)
                     $('#ResultArea').html(response);
                     $('.result-area').trigger("dataChanged");
                     ResetQuickSearch();
-
+                    enableTableSort('mytable');
                 },
                 error: function (xhr, status, error) {
                     toastr.error('Error to search info, pls check again.','error')
@@ -451,7 +460,7 @@ catch (Exception ex)
                 }
 
                 $.ajax({
-                    url: '@Url.Action("SMTCompletedPlansDelete")', 
+                    url: '@Url.Action("SMTPlanTrackingDelete")', 
                     type: 'POST',
                     data: JSON.stringify(ids),
                     contentType: 'application/json',
@@ -459,7 +468,7 @@ catch (Exception ex)
                         if (response.success) {
                             toastr.success('Selected records deleted successfully.');
                             // Optionally, refresh the table or remove deleted rows from the DOM
-                            window.location.href = '@Url.Action("SMTCompletedPlans", "CompletedPlans")';
+                            window.location.href = '@Url.Action("SMTPlanTracking", "ProdPlan")';
                         } else {
                             toastr.error(response.message || 'An error occurred while deleting records.');
                         }

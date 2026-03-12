@@ -1,5 +1,5 @@
 ﻿$(document).ajaxStart(function () {
-    alert('I Love you')
+    //alert('I Love you')
     $("#loading").show();
 }).ajaxStop(function () {
     $("#loading").hide();

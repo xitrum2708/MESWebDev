@@ -265,9 +265,10 @@
 
         //-------------------->> CHART <<-----------------------------
         const chartData = @Html.Raw(Json.Serialize(Model.chart_data));
+        console.log(chartData);
         if(chartData && chartData.length >0){
-                    const labels = chartData.map(item => item.label);
-        const values = chartData.map(item => item.value);
+                    const labels = chartData.map(item => item.Label);
+        const values = chartData.map(item => item.Value);
         const total = values.reduce((sum, val) => sum + val, 0);
 
         const ctx = document.getElementById('myDoughnutChart').getContext('2d');

@@ -1,0 +1,385 @@
+﻿/* ================================
+   UTIL DASHBOARD 
+   ================================ */
+
+.util-dashboard {
+    /* ===== CSS VARIABLES (LOCAL) ===== */
+    --bg: #f5f7fa;
+    --text: #111827;
+    --muted: #475569;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --shadow: 0 6px 20px rgba(0,0,0,0.06);
+    --grad-e: #e36a9f; /* (max usage) */
+    --grad-d: #6fbd93;
+    --grad-c: #8fd3ad;
+    --grad-b: #b2e6c8;
+    --grad-a: #d6f5e3;
+    /*    --grad-a: #cfeee0;
+    --grad-b: #8fd3b1;
+    --grad-c: #4fa67a;
+    --grad-d: #256d4a;
+    --grad-e: #174c33;*/
+    /*background: var(--bg);*/
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+
+
+}
+
+
+    /* ===== CONTAINER ===== */
+
+    /*.util-dashboard .container {
+        height: 100%;*/
+        /*height: calc(100% - 200px);*/
+        /*height: calc(100% - 100px);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }*/
+
+
+    /* ===== HEADER ===== */
+
+    .util-dashboard .header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 10px;
+    }
+
+        .util-dashboard .header h1 {
+            margin: 0;
+            font-size: clamp(20px, 2vw, 28px);
+            font-weight: 700;
+        }
+
+
+    /* ===== TOOLBAR ===== */
+
+    .util-dashboard .toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .util-dashboard .tool {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 2px 5px;
+        box-shadow: var(--shadow);
+    }
+
+        .util-dashboard .tool label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .util-dashboard .tool input {
+            border: none;
+            outline: none;
+            background: transparent;
+        }
+
+
+    /* ===== KPI ===== */
+
+    .util-dashboard .kpis {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0,1fr));
+        gap: 14px;
+        margin: 0px 0 10px;
+    }
+
+@media (max-width: 900px) {
+    .util-dashboard .kpis {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 520px) {
+    .util-dashboard .kpis {
+        grid-template-columns: 1fr;
+    }
+}
+
+.util-dashboard .kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+    .util-dashboard .kpi::after {
+        content: "";
+        position: absolute;
+        inset: auto -20% 0 -20%;
+        height: 4px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--grad-a), var(--grad-b), var(--grad-c));
+        opacity: .75;
+    }
+
+    .util-dashboard .kpi .label {
+        font-size: 13px;
+        font-weight: bold;
+        color: var(--muted);
+        margin-bottom: 6px;
+    }
+    .util-dashboard .kpi .sub {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 4px;
+    }
+
+    .util-dashboard .kpi .value {
+        font-size: clamp(15px, 3.2vw, 18px);
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+
+
+
+
+/* ====== TABLE WRAPPER ====== */
+.util-dashboard .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 14px;
+
+    /*overflow: auto;
+    max-height: 550px;*/
+/*    display: flex;
+    flex-direction: column;
+    flex: 1; 
+    min-height: 0;  */
+}
+
+/*.util-dashboard .table-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;*/
+    /*max-height: 400px;*/
+/*}*/
+
+.util-dashboard .table-title {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    /*justify-content: space-between;*/
+    gap: 10px;
+    margin: 6px 2px 12px;
+}
+
+    .util-dashboard .table-title .left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .util-dashboard .table-title h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+.util-dashboard .legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.util-dashboard .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #334155;
+}
+
+.util-dashboard .legend-swatch {
+    width: 36px;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--grad-a), var(--grad-b), var(--grad-c), var(--grad-d), var(--grad-e));
+    border: 1px solid #e2e8f0;
+}
+
+
+/* ===== TABLE ===== */
+
+.util-dashboard table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 760px;
+    font-size: 14px;
+}
+
+.util-dashboard thead th {
+    position: sticky;
+    top: 0;
+    z-index:99;
+    background: linear-gradient(to right, #eef2f7, #e5ebf3);
+    color: #334155;
+    font-weight: 700;
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid #d9e2ec;
+    white-space: nowrap;
+}
+
+.util-dashboard tbody td {
+    border-bottom: 1px solid #f1f5f9;
+    border-right: 1px solid #f1f5f9;
+    height: 44px;
+    padding: 0;
+    position: relative;
+}
+
+.util-dashboard tbody tr:hover {
+    background: #fafbfc;
+    transition: background .25s ease;
+}
+
+.util-dashboard td:first-child,
+.util-dashboard th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 99;
+    background: #f7f9fb;
+    border-right: 1px solid #e2e8f0;
+}
+
+.util-dashboard .line-cell {
+    padding: 0 14px;
+    font-weight: 600;
+    color: #1f2937;
+    white-space: nowrap;
+}
+/* ===== PROGRESS BAR ===== */
+
+.util-dashboard .progress-cell {
+    background: #ffffff;
+}
+
+.util-dashboard .progress-fill {
+    position: absolute;
+    inset: 0 auto 0 0; /* top:0; left:0; bottom:0 */
+    width: 0%;
+    border-radius: 0 4px 4px 0;
+    /* Default gradient; will be overwritten by inline style */
+    background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+    transition: width 900ms cubic-bezier(.25,.8,.25,1);
+}
+.util-dashboard .progress-gloss {
+    pointer-events: none;
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--w, 0%);
+    border-radius: 4px;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 38%);
+    mix-blend-mode: soft-light;
+}
+/* ====== PERCENT TEXT (highly readable) ====== */
+.util-dashboard .progress-text {
+    position: relative;
+    z-index: 2;
+    font-size: 15px; /* larger for clarity */
+    font-weight: 800; /* extra bold */
+    color: #0f172a; /* dark by default */
+    letter-spacing: .2px;
+    padding-left: 10px;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    text-shadow: 0 1px 2px rgba(255,255,255,.6), 0 1px 1px rgba(0,0,0,.15);
+}
+
+    /*  !!!!!!!!!!!!!!! auto switch on dark bars */
+    /*.util-dashboard .progress-text.white {
+        color: #ffffff;*/ /* auto switch on dark bars */
+        /*text-shadow: 0 1px 3px rgba(0,0,0,.75);
+    }*/
+
+/* ===== TOOLTIP ===== */
+
+.util-dashboard .tooltip {
+    position: absolute;
+    z-index: 9999;
+    top: -8px;
+    left: 8px;
+    transform: translateY(-100%) scale(.98);
+    transform-origin: bottom left;
+    background: #0b1220;
+    color: #e5e7eb;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.3;
+    box-shadow: 0 10px 24px rgba(2,6,23,.35);
+    border: 1px solid rgba(148,163,184,.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+    white-space: nowrap;
+}
+
+    .util-dashboard .tooltip::after {
+        content: "";
+        position: absolute;
+        bottom: -6px;
+        left: 10px;
+        width: 10px;
+        height: 10px;
+        transform: rotate(45deg);
+        background: inherit;
+        border-bottom: inherit;
+        border-right: inherit;
+    }
+
+.util-dashboard .progress-cell:hover .tooltip {
+    opacity: 1;
+    transform: translateY(calc(-100% - 2px)) scale(1);
+}
+
+
+
+/* ===== DOTS ===== */
+
+.util-dashboard .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    display: inline-block;
+}
+
+.util-dashboard .dot1 {
+    background: var(--grad-a);
+}
+
+.util-dashboard .dot2 {
+    background: var(--grad-b);
+}
+
+.util-dashboard .dot3 {
+    background: var(--grad-c);
+}
+
+.util-dashboard .dot4 {
+    background: var(--grad-e);
+}

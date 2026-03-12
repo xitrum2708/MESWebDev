@@ -1,0 +1,59 @@
+﻿
+@model MRPViewModel
+
+@{
+    int i = 0;
+    DataTable dt = Model != null && Model.Data != null && Model.Data.Rows.Count > 0 ? Model.Data : new();
+}
+
+@if (dt.Rows.Count>0)
+{
+    if (Model.UploadedError)
+    {
+        <div class="m-3 border-danger">
+            <h3 class="text-danger">Error during upload, pls check the error message below.</h3>
+        </div>
+    }
+    <div style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative">
+        <table class="table table-bordered table-striped table-hover" id="mytable">
+            <thead class="sticky-top">
+                <!-- Header Row -->
+                <tr>
+                    <th class="text-center table-info header-text">No.</th>
+                    @foreach (DataColumn col in dt.Columns)
+                    {
+                        <th class="text-center table-info header-text"> @TranslationService.Trans(col.ColumnName)</th>
+                    }
+                </tr>
+            </thead>
+
+            <tbody id="tbodyResult">
+                @foreach (DataRow row in dt.Rows)
+                {
+                    i++;
+                    var netQty = row.Table.Columns.Contains("NetQty") ? Convert.ToDecimal(row["NetQty"]) : 1;
+                    var rowClass = netQty == 0 ? "text-decoration-line-through text-muted" : "";
+                    <tr class="@rowClass">
+                        <td class="body-text text-center">@i</td>
+                        @foreach (var f in row.ItemArray)
+                        {
+                            <td class="@CommonFormat.FormatCss(f.GetType(), Model.FormatRazorDTO) body-text">@CommonFormat.FormatCell(f,f.GetType(),Model.FormatRazorDTO)</td>
+                        }
+
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.error_msg))
+        {
+            <div id="errorMsg" data-msg="@Model.error_msg"></div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-warning text-center">
+            No data available.
+        </div>
+    }

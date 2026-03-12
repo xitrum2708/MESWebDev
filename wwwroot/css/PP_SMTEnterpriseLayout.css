@@ -1,0 +1,161 @@
+﻿:root {
+    --bg-main: #f5f7f9;
+    --panel-bg: #ffffff;
+    --border: #e5e7eb;
+    --text: #1f2937;
+    --shadow: 0 8px 28px rgba(0,0,0,.06);
+}
+
+.enterprise-container {
+    display: flex;
+    height: calc(100vh - 180px);
+    background: var(--bg-main);
+    overflow: hidden;
+}
+
+/* PANEL */
+
+/* ===== PANEL BODY FLEX FIX ===== */
+
+
+
+
+.panel {
+    background: var(--panel-bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all .3s ease;
+}
+
+.panel-left {
+    width: 60%;
+}
+
+.panel-right {
+    width: 40%;
+}
+
+.panel-header {
+    padding: 14px 18px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9fafb;
+}
+
+.panel-actions button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/*.panel-body {
+    flex: 1;
+    overflow: auto;
+    padding: 10px;
+}*/
+
+.panel-body {
+    flex: 1;
+    padding: 0;
+    overflow: hidden; /* avoid double scroll */
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* important */
+}
+
+/* DIVIDER */
+.divider {
+    width: 6px;
+    cursor: col-resize;
+    background: linear-gradient(to right,#f3f4f6,#e5e7eb,#f3f4f6);
+}
+
+    .divider:hover {
+        background: #d1d5db;
+    }
+
+/* FULLSCREEN */
+.panel.fullscreen {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    z-index: 9999;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 14px;
+}
+
+.btn-full i {
+    transition: transform .25s ease;
+}
+
+.panel.fullscreen .btn-full i {
+    transform: rotate(180deg);
+}
+
+/* RESPONSIVE */
+@media(max-width:1100px) {
+    .enterprise-container {
+        flex-direction: column;
+    }
+
+    .divider {
+        height: 6px;
+        width: 100%;
+        cursor: row-resize;
+    }
+
+    .panel-left,
+    .panel-right {
+        width: 100% !important;
+        height: 50%;
+    }
+}
+
+/* ===== FIX CALENDAR HEIGHT PROPERLY ===== */
+
+.panel-body {
+    flex: 1;
+    overflow: hidden; /* avoid double scroll */
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Wrapper scroll */
+.calendar-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: auto;
+}
+
+/* Calendar always fill */
+#calendar {
+    height: 100%;
+}
+
+/* Khi fullscreen */
+.panel.fullscreen .panel-body {
+    padding: 12px;
+}
+
+.panel.fullscreen .calendar-wrapper {
+    height: 100%;
+}
+
+/* =====================================================
+   ENTERPRISE FULLCALENDAR TIMELINE LAYOUT
+   Production Scheduling System Style
+===================================================== */
+
+
+
+

@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using MESWebDev.Models.ProdPlan.PC;
 using MESWebDev.Models.ProdPlan.SMT;
 using MESWebDev.Models.Setting;
+using MESWebDev.Models.MRP;
 
 namespace MESWebDev.Data
 {
@@ -124,6 +125,16 @@ namespace MESWebDev.Data
         public DbSet<SMTShiftDtlModel> UV_SMT_Mst_Shift_Dtl { get; set; }
         public DbSet<SMTLineCalendarDtlModel> UV_SMT_Mst_LineCalendar_Dtl { get; set; }
 
+        // 2026.02.02
+        public DbSet<SMTProdPlanHdrModel> UV_SMT_Prod_Plan_Hdr { get; set; }
+        public DbSet<SMTProdPlanDtlModel> UV_SMT_Prod_Plan_Dtl { get; set; }
+
+        //--------------- MRP -------------------
+        public DbSet<MRPDataModel> UV_MRP_Data { get; set; }
+        public DbSet<MRPOBLModel> UV_MRP_OBL { get; set; }
+        public DbSet<MRPOHModel> UV_MRP_OH { get; set; }
+        public DbSet<MRPSPOModel> UV_MRP_SPO { get; set; }
+        public DbSet<MRPBOMModel> UV_MRP_BOM { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

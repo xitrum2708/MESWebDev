@@ -1,0 +1,256 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Models.ProdPlan.PC
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model ProdPlanViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="float-start d-flex justify-content-center align-items-center">
+                                <h3 class="card-title fw-bold fs-6">
+                                    <span class="lastRun badge bg-success fs-6 p-2">
+                                        Last run: @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                                    </span>
+                                    @* Production Plan *@
+                                   @*  @if (Model.start_sch_dt != null)
+                                    {
+                                        <span class="lastRun badge bg-success fs-6 p-2">
+                                            Last run: @Convert.ToDateTime(Model.start_sch_dt).ToString("yyyy-MM-dd HH:mm:ss")
+                                        </span>
+                                    } *@
+                                </h3>
+                                <div class="btn-group ms-2 rounded-2" role="group">
+                                    <button id="zoomIn" class="btn btn-sm btn-outline-success fw-bold">
+                                        <i class="bi bi-zoom-in fw-bold"></i>
+                                    </button>
+                                    <button id="zoomOut" class="btn btn-sm btn-outline-success fw-bold">
+                                        <i class="bi bi-zoom-out fw-bold"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="float-end d-flex justify-content-center align-items-center">
+
+                                <a class="btn btn-info btn-sm bt_upload me-2">
+                                    <i class="bi bi-file-earmark-arrow-up"></i>
+                                    Upload
+                                </a>
+                                <a class="btn btn-success btn-sm bt_reload me-2">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    Reload
+                                </a>
+                                @* <a class="btn btn-secondary btn-sm bt_master me-2">Master</a> *@
+                                <a class="btn btn-primary btn-sm bt_save me-2">
+                                    <i class="bi bi-floppy"></i>
+                                    Save
+                                </a>
+                                <a asp-action="DownloadProdPlan" asp-controller="ProdPlan" class="btn btn-secondary btn-sm me-2">
+                                    <i class="bi bi-download"></i>
+                                    Download
+                                </a>
+
+                                @* This for master setting *@
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-warning dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="bi bi-gear"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        @*                                   <li>
+                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#whModal">
+                                                <i class="bi bi-calendar3"></i>
+                                                Working Hour
+                                            </a>
+
+                                        </li> *@
+                                        <li>
+                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#holidayModal">
+                                                <i class="bi bi-calendar-date"></i>
+                                                Holiday
+                                            </a>
+
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#paraModal">
+                                                <i class="bi bi-file-earmark-ppt-fill"></i>
+                                                Parameter
+                                            </a>
+                                        </li>
+                                    </ul>
+                                   @*  <partial name="PC/__Holiday" model="@Model.holidays" />
+                                    <partial name="PC/__Parameter" model="@Model" />
+                                    <partial name="PC/__WorkingHour" model="@Model" /> *@
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @* <h2>Product Schedule (Resource Timeline View)</h2> *@
+                           @*  <div class="d-flex gap-2 mb-2">
+                                <button class="btn btn-sm btn-outline-primary" id="btnRefresh">Refresh</button>
+                            </div> *@
+                            <div style="max-height: calc(100vh - 250px); overflow-y: auto; position:relative" id='calendar'></div>
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+}
+catch(Exception ex)
+{
+    string t = ex.Message;
+}
+@*         /* ------+ 2025-07-08 +-------
+            Pending task:
+            1. save working hour settup
+            2. Bind it here
+            3. Calculate base on line/date/working hour
+        */ *@
+
+@section Scripts {
+    <link href="~/css/prodplan.css?@DateTime.Now.Ticks" rel="stylesheet" />
+    <script src="~/js/index.global.min.js"></script>
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/pp_holidayCalendar.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/pp_prodPlanSchedule.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/pp_workingCalendar.js?@DateTime.Now.Ticks"></script>
+
+@*     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler/index.global.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler/index.global.min.js"></script>
+    @using System.Text.Json *@
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('calendar');
+
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives', // trial key [5](https://fullcalendar.io/docs/premium)
+
+        initialView: 'resourceTimelineDay',
+        height: 'auto',
+        nowIndicator: true,
+        resourceAreaWidth: 160,
+        resourceAreaHeaderContent: 'Line',
+
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'resourceTimelineDay,resourceTimelineWeek,resourceTimelineMonth,resourceTimelineYear'
+        },
+        views: {
+          resourceTimelineDay:   { buttonText: 'Day' },
+          resourceTimelineWeek:  { buttonText: 'Week' },
+          resourceTimelineMonth: { buttonText: 'Month' },
+          resourceTimelineYear:  { buttonText: 'Year' }
+        },
+
+        editable: true,
+        eventDurationEditable: true,
+        eventStartEditable: true,
+        eventResourceEditable: true, // cho phép kéo sang line khác [1](https://fullcalendar.io/docs/timeline-view)
+
+        // fetch resources
+        resources: async (fetchInfo, success, fail) => {
+          try {
+            const res = await fetch(`/preview?start=${fetchInfo.startStr}&end=${fetchInfo.endStr}`);
+            const data = await res.json();
+            success(data.resources);
+          } catch (e) { fail(e); }
+        },
+
+        // fetch events + backgroundEvents
+        events: async (fetchInfo, success, fail) => {
+          try {
+            const res = await fetch(`/preview?start=${fetchInfo.startStr}&end=${fetchInfo.endStr}`);
+            const data = await res.json();
+            success([...(data.events || []), ...(data.backgroundEvents || [])]);
+          } catch (e) { fail(e); }
+        },
+
+        // Tooltip hover
+        eventDidMount: function(info) {
+          // ignore background breaks
+          if (info.event.display === 'background') return;
+
+          const ep = info.event.extendedProps || {};
+          const line = info.event.getResources?.()?.[0]?.id || info.event._def.resourceIds?.[0] || '';
+
+          const tip = `${ep.Lotno} | ${ep.PCBKey} | RO${ep.RunOrder} | Qty ${ep.Qty}\nLine: ${line}\n${info.event.start?.toLocaleString()} - ${info.event.end?.toLocaleString()}`;
+
+          new bootstrap.Tooltip(info.el, {
+            title: tip.replaceAll('\n','<br/>'),
+            html: true,
+            placement: 'top',
+            trigger: 'hover',
+            container: 'body'
+          });
+        },
+
+        // Drag/drop validate
+        eventDrop: async function(info) { await validateLot(info); },  
+        eventResize: async function(info) { await validateLot(info); }  
+      });
+
+      calendar.render();
+
+      document.getElementById('btnRefresh').addEventListener('click', () => calendar.refetchEvents());
+
+      async function validateLot(info) {
+        // ignore background events
+        if (info.event.display === 'background') return;
+
+        const ep = info.event.extendedProps || {};
+        const lotno = ep.Lotno;
+
+        // collect current events for that lotno
+        const lotEvents = calendar.getEvents()
+          .filter(e => e.display !== 'background')
+          .filter(e => (e.extendedProps?.Lotno || '') === lotno)
+          .map(e => ({
+            id: e.id,
+            lotno: e.extendedProps?.Lotno,
+            pcbKey: e.extendedProps?.PCBKey,
+            runOrder: e.extendedProps?.RunOrder,
+            qty: e.extendedProps?.Qty,
+            lineCode: e.getResources?.()?.[0]?.id || e._def.resourceIds?.[0],
+            start: e.start?.toISOString(),
+            end: e.end?.toISOString()
+          }));
+
+        const res = await fetch('/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lotno, events: lotEvents })
+        });
+
+        const data = await res.json();
+        if (!data.ok) {
+          info.revert(); // rollback drag/resize 
+          alert(data.message || "Vi phạm điều kiện CumQty(RO1) >= CumQty(RO2)");
+        }
+      }
+    });
+</script>
+}

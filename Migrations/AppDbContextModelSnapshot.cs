@@ -899,6 +899,203 @@ namespace MESWebDev.Migrations
                     b.ToTable("UVMES_Languages", (string)null);
                 });
 
+            modelBuilder.Entity("MESWebDev.Models.MRP.MRPBOMModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BOMQty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DrawingPstNo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Item")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedFile")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_MRP_BOM");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.MRP.MRPDataModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("GrossQty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Item")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NetQty")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplyQty")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_MRP_Data");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.MRP.MRPOBLModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Item")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OBLQty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PONo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedFile")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_MRP_OBL");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.MRP.MRPOHModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Item")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LocationType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OHQty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedFile")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_MRP_OH");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.MRP.MRPSPOModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SPOQty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedFile")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_MRP_SPO");
+                });
+
             modelBuilder.Entity("MESWebDev.Models.Master.ActionModel", b =>
                 {
                     b.Property<int>("Id")
@@ -2304,6 +2501,12 @@ namespace MESWebDev.Migrations
                     b.Property<string>("Remark")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("UploadedFile")
                         .HasColumnType("nvarchar(max)");
 
@@ -2412,6 +2615,191 @@ namespace MESWebDev.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UV_SMT_Plan");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTProdPlanDtlModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BalQty")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EndDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("HeaderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LineCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Lotno")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OldId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PCBKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Qty")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RunOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SetupMinute")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShiftWindowMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("StartScheduleDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TimeTotal")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("WinStartDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("backgroundColor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("borderColor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HeaderId");
+
+                    b.ToTable("UV_SMT_Prod_Plan_Dtl");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTProdPlanHdrModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BalanceQty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ETPCB")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ExcessStock")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IssuedQty")
+                        .HasColumnType("int");
+
+                    b.Property<string>("KeyCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LineCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LotSize")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Lotno")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MachineCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Market")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PCBKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PCBNo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PCBPerModel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PCBType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PlanCompletedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("PlanStartDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TargetPerHour85")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TargetPerShift")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TimeF")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UVNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedFile")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Warning")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_SMT_Prod_Plan_Hdr");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTProdPlanModel", b =>
@@ -2523,6 +2911,12 @@ namespace MESWebDev.Migrations
 
                     b.Property<string>("UVNote")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UploadedFile")
                         .HasColumnType("nvarchar(max)");
@@ -4298,6 +4692,17 @@ namespace MESWebDev.Migrations
                         .IsRequired();
 
                     b.Navigation("Machine");
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.ProdPlan.SMT.SMTProdPlanDtlModel", b =>
+                {
+                    b.HasOne("MESWebDev.Models.ProdPlan.SMT.SMTProdPlanHdrModel", "SMTProdPlanHdrModel")
+                        .WithMany()
+                        .HasForeignKey("HeaderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SMTProdPlanHdrModel");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.RolePermission", b =>

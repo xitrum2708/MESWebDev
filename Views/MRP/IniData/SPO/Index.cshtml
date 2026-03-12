@@ -1,0 +1,348 @@
+﻿@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.PE
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Services
+@using System.Data
+@using System.Globalization
+@model MRPViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    string errorMsg = Model.error_msg ?? "";
+
+}
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+@try
+{
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="float-start d-flex justify-content-between align-items-center w-50">
+                                <h3 class="card-title fw-bold fs-5">
+                                    <i class="bi bi-box"></i>
+                                    @TranslationService.Trans("88")
+                                @*  Id	ParentId	Order	EnName
+                                    87	86	        10	    BOM
+                                    88	86	        20	    SPO
+                                    89	86	        30	    OBL
+                                    90	86	        40	    OH
+                                    91	85	        20	    Run MRP *@
+                                </h3>
+                                <input class="form-control w-50 ms-3" placeholder="🔍 Quick Search..." id="quickSearch" onkeyup="QuickSearch()" />
+                            </div>
+                            <div class="float-end d-flex justify-content-center align-items-center">
+                                <a class="btn btn-info btn-sm bt_upload me-2">
+                                    <i class="bi bi-file-earmark-arrow-up"></i>
+                                    @TranslationService.Trans("Upload")
+                                </a>
+                                <button class="btn btn-sm btn-primary me-2" onclick="AddMRPSPO()">
+                                    <i class="bi bi-plus-circle"></i>
+                                    @TranslationService.Trans("add")
+                                </button>
+                                <a class="btn btn-sm btn-secondary me-2" id="DownloadData">
+                                    <i class="bi bi-download"></i>
+                                    @TranslationService.Trans("Download")
+                                </a>
+                      @*           <a class="btn btn-sm btn-light" href="~/Manual/Manual_Setting.xlsx">
+                                    <i class="bi bi-question-circle"></i>
+                                </a> *@
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="ResultArea">
+                                @if (Model.Data == null)
+                                {
+                                    <h5 class="m-3">No data available.</h5>
+                                }
+                                else
+                                {
+                                    <partial name="IniData/SPO/_Result" model="@Model" />
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @* <partial name="ProdPlan/Setting/_Edit" /> *@
+            <partial name="_LoadingPartial" />
+            <partial name="IniData/SPO/__Delete" />
+            <partial name="IniData/SPO/_Upload" />
+@*             <div>
+                <h5> DEEP WORK CAN SAVE YOUR TIME </h5>
+            </div> *@
+            @* <partial name="ProdPlan/Setting/__Add" model="@Model"/> *@
+            <div id="modalArea">
+            </div>
+        </div>
+    </div>
+
+}
+catch (Exception ex)
+{
+    string t = ex.Message;
+}
+
+@section Scripts {
+    <link href="~/css/pecss.css" rel="stylesheet" />
+    <script src="~/js/loadingpage.js?@DateTime.Now.Ticks"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+
+    @* SORT TABLE  *@
+    <link href="~/css/TableSort.css?@DateTime.Now.Ticks" rel="stylesheet" />
+    <script src="~/js/TableSort.js?@DateTime.Now.Ticks"></script>
+    <script>
+        $(document).ready(function(){
+            enableTableSort('mytable');
+        });
+
+                // --- Show Upload Windows --- \\
+        $('.bt_upload').click( function(){
+             $('#uploadModal').modal('show');
+        });
+        $(document).on("click", "#btnUpload", function (e) {
+            e.preventDefault();
+
+            var form = $("#UploadForm")[0];      // get form element
+            var formData = new FormData(form);   // create FormData
+
+            $.ajax({
+                url: '@Url.Action("MRPSPOUpload")',  // controller + action
+                type: 'POST',
+                data: formData,
+                processData: false, // important for FormData
+                contentType: false, // important for FormData
+                success: function (response) {
+                    $('#uploadModal').modal('hide');
+                    $('#ResultArea').html(response);
+                    $('.result-area').trigger("dataChanged");
+                    enableTableSort('mytable');
+                    //<div id="errorMsg" data-msg="@Model.error_msg"></div>
+
+
+                    var errorMsg = $('#errorMsg').data('msg');
+
+                    if (errorMsg && errorMsg.length > 0) {
+                        toastr.error(errorMsg, "Error");
+                    } 
+                    else {
+                        toastr.success('Upload successfully!', 'Success');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Upload error:", error);
+                    alert("Upload failed!");
+                }
+            });
+        });
+        
+
+        // Click Edit
+        function editItem(id) {
+            //alert(id);
+            $.ajax({
+                url: '@Url.Action("MRPSPOEdit")',
+                type: 'Get',
+                data: { id: id },
+                success: function (html) {
+                    $('#modalArea').html(html);
+                    $('#editModal').modal('show');
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the edit form.');
+                }
+            });
+        }
+        function Edit() {
+            var qty = $('#SPOQty').val();
+
+            if (qty <= 0) {
+                toastr.error("SPOQty must be greater than 0");
+                return;
+            }
+            if($('#fEdit').valid()){
+                var data = $('#fEdit').serialize();
+                $.ajax({
+                    url: '@Url.Action("MRPSPOEdit")',
+                    type: 'Post',
+                    data: data,
+                    success: function (html) {
+                        $('#editModal').modal('hide');
+                        $('#ResultArea').html(html);
+                        enableTableSort('mytable');
+                        var errorMsg = $('#errorMsg').data('msg');
+                        if (errorMsg) {
+                        toastr.error(errorMsg, "Error");
+                        }
+                        else
+                        toastr.success('Edit successfully !','Success')
+                        },
+                        error: function () {
+                            toastr.error('An error occurred while loading the edit form.');
+                        }
+
+                });
+            }
+            else{
+                toastr.error("Please fill all fields.","Error");
+                return;
+            }
+        }
+
+        //------------------ ADD ------------------
+        // Click Add Use off before on to prevent double click
+        function AddMRPSPO(){
+            //alert('Hi there!');
+            $.ajax({
+                url: '@Url.Action("MRPSPOAdd")',
+                type: 'Get',
+                success: function (html) {
+                    $('#modalArea').html(html);
+                    $('#addModal').modal('show');
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the add form.');
+                }
+            });
+        }
+        function Add() {
+            var qty = $('#SPOQty').val();
+
+            if (qty <= 0) {
+                toastr.error("SPOQty must be greater than 0");
+                return;
+            }
+            if($('#fAdd').valid()){
+                var data = $('#fAdd').serialize();
+                $.ajax({
+                    url: '@Url.Action("MRPSPOAdd")',
+                    type: 'Post',
+                    data: data,
+                    success: function (html) {
+                        $('#addModal').modal('hide');
+                        $('#ResultArea').html(html);
+                        enableTableSort('mytable');
+                        var errorMsg = $('#errorMsg').data('msg');
+                        if (errorMsg) {
+                        toastr.error(errorMsg, "Error");
+                        }
+                        else
+                        toastr.success('Add successfully !','Success')
+                    },
+                    error: function () {
+                        toastr.error('An error occurred while loading the add form.');
+                    }
+                });
+            }
+            else{
+                toastr.error("Please fill all fields.","Error");
+                return;
+            }           
+        }
+        
+        
+        // DELETE
+        function deleteItem(id) {
+            $('#deleteId').val(id);
+            $('#deleteModal').modal('show');
+        }
+
+        function Delete() {
+            let index = $('#deleteId').val();
+            $.ajax({
+                url: '@Url.Action("MRPSPODelete")',
+                type: 'Post',
+                data: {id: index},
+                success: function (html) {
+                    $('#ResultArea').html(html);
+                    $('#deleteModal').modal('hide');
+                    //Get error message if existed
+                    enableTableSort('mytable');
+                    var errorMsg = $('#errorMsg').data('msg');
+                    if (errorMsg) {
+                    toastr.error(errorMsg, "Error");
+                    }
+                    else
+                    toastr.success('Delete successfully !','Success')
+                },
+                error: function () {
+                    toastr.error('An error occurred while loading the delete form.');
+                }
+            });            
+        }
+
+        //Download
+        $('#DownloadData').on('click', function () {
+            const headers = [];
+            $('table thead .header-text').each(function () {
+                //alert($(this).text().trim());
+                headers.push($(this).text().trim());
+            });
+
+            const rows = [];
+            $('table tbody tr:visible').each(function () {
+                const rowData = [];
+                $(this).find('td.body-text').each(function () {
+                    rowData.push($(this).text().trim());
+                });
+                rows.push(rowData);
+            });
+
+            const payload = { headers: headers, rows: rows };
+
+            $.ajax({
+                url: '@Url.Action("DownloadWeb")',
+                type: 'POST',
+                data: JSON.stringify(payload),
+                contentType: 'application/json',
+                xhrFields: { responseType: 'blob' }, // important to download file'
+                success: function (data) {
+                const blob = new Blob([data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                //a.download = "FilteredData.xlsx";
+
+                const now = new Date();
+                const pad = (n) => n.toString().padStart(2, '0');
+                const fileName = `MRPSPOMaster_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.xlsx`;
+
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            }
+            });
+        });
+
+        // Quick Search
+        function QuickSearch(){
+            var query = $('#quickSearch').val().toUpperCase();
+            $('#mytable tbody tr').each(function(){
+                var row = $(this);
+                row.find('td').each(function(){
+                    var tdText = $(this).text().toUpperCase();
+                    if(tdText.indexOf(query) > -1){
+                        row.show(); return false;
+                    }
+                    else{
+                        row.hide();
+                    }
+                });
+            });
+        }
+
+    </script>
+
+}
