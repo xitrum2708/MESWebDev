@@ -456,7 +456,7 @@
                         <div class="gauge-text">
                             <div class="gauge-val">@Model.GaugePercentage.ToString("F1")<span style="font-size: 50%;">%</span></div>
                             <div class="gauge-separator"></div>
-                            <div class="gauge-target-label">TARGET: 85% </div>
+                            <div class="gauge-target-label">TARGET: 100% </div>
                         </div>
                     </div>
                 </div>
@@ -471,8 +471,8 @@
                                 <div class="text-danger fw-bold" style="font-size: calc(1.3rem + 0.3vw);">@Model.lotstimeTotal <small style="font-size:60%">min</small></div>
                             </div>
                             <div class="status-container">
-                                <div class="status-box status-running"><span>▶</span><span><strong>@Model.linerun</strong> RUN</span></div>
-                                <div class="status-box status-changeover text-white"><span>🔧</span><span><strong>@Model.lotchangeover</strong> CHG</span></div>
+                                <div class="status-box status-running"><span>▶</span><span><strong>@Model.linerun</strong> RUNNING</span></div>
+                                <div class="status-box status-changeover text-white"><span>🔧</span><span><strong>@Model.lotchangeover</strong> CHANGEOVER</span></div>
                                 <div class="status-box status-stop text-white"><span>■</span><span><strong>@Model.linestop</strong> STOP</span></div>
                             </div>
                         </div>
