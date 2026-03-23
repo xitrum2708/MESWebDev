@@ -1,37 +1,332 @@
-﻿@* @using MESWebDev.Models.UVASSY
-@using MESWebDev.Models.VM
-@model List<UVAssyAllOutputResult> *@
-@model DashboardViewModel;
+﻿@model DashboardViewModel;
 @using System.Text.Json;
 @using System.Data;
+
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-
 }
+
 @section ContentHeader {
-<div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-12">
-                <ol class="breadcrumb float-sm-end d-flex justify-content-center align-content-center" style="margin-bottom:0px !important">
-                    <li class="breadcrumb-item text-black fw-bold">HOME</li>
-                    <li class="breadcrumb-item active fw-bold" aria-current="page">SMT DASHBOARD</li>
-                </ol>
+    <div class="app-content-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-12">
+                    <ol class="breadcrumb float-sm-end d-flex justify-content-center align-content-center" style="margin-bottom:0 !important">
+                        <li class="breadcrumb-item text-black fw-bold">HOME</li>
+                        <li class="breadcrumb-item active fw-bold" aria-current="page">SMT DASHBOARD</li>
+                    </ol>
+                </div>
             </div>
         </div>
     </div>
-</div>
 }
+@* <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-3d@1.0.3/dist/chartjs-plugin-3d.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script> *@
+
+
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        height: 100%;
+        overflow: hidden !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .app-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding-bottom: 5px;
+
+    } 
+        .app-content .container-fluid {
+            font-family: 'Segoe UI', sans-serif;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 5px 15px; /* Giảm padding để tiết kiệm không gian */
+        }
+
+        .app-content,
+        .app-content .container-fluid,
+        ._result,
+        .fit-shell,
+        #dashboardFit,
+        .smt-frame,
+        .smt-frame > .container-fluid {
+            height: 100%;
+            min-height: 0;
+        }
+
+            .fit-shell,
+            #dashboardFit,
+            .smt-frame,
+            .smt-frame > .container-fluid {
+                display: flex;
+                flex-direction: column;
+            }
+
+            ._result > * {
+                flex: 1 1 auto;
+                min-height: 0;
+            }
+    /* HEADER TEXTS */
+    .iqc-shape {
+        font-size: calc(1.3rem + 0.3vw); /* Thu nhỏ chữ tiêu đề */
+        font-weight: bold;
+        letter-spacing: 1px;
+        margin: 0;
+    }
+
+    #clock {
+        font-size: 1.6rem !important; /* Thu nhỏ đồng hồ */
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .app-content .btn.btn-sm {
+        font-size: 1.2rem !important; /* Thu nhỏ nút back */
+        padding: 6px 15px;
+    }
+
+    .breadcrumb-item {
+        font-size: 1rem;
+    }
+
+    /* VÙNG CHỨA KẾT QUẢ (_result) */
+    ._result {
+        flex: 1 1 auto; /* Cho phép tự do co giãn */
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        margin-top: 5px !important;
+    }
+
+    /* KHUNG CHỨA TOÀN BỘ NỘI DUNG */
+    .smt-frame {
+      /*   background-color: #0b1120;
+        color: #ffffff; */
+        background-color: transparent !important;
+        box-shadow: none !important; /* bỏ nếu em vẫn muốn glow */
+        border: 2px solid #1e3c72;
+        border-radius: 12px;
+        padding: 8px;
+        box-shadow: 0 0 10px rgba(30, 60, 114, 0.35);
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .table {
+        margin-bottom: 0 !important;
+    }
+
+    .table-custom-border th, .table-custom-border td {
+        border-color: rgba(255, 255, 255, 0.75) !important;
+        vertical-align: middle;
+    }
+
+    /* INFO BOXES (Top Row) - Giảm đáng kể kích thước */
+    .smt-info-box {
+        background: rgba(5, 8, 45, 0.65) !important;
+        border-color: #62d9ff !important;
+        box-shadow: 0 0 10px rgba(98, 217, 255, 0.45);
+        min-height: auto; /* Bỏ min-height cứng */
+        padding: 6px 0; /* Thu nhỏ padding dọc */
+        justify-content: center;
+        border-radius: 6px;
+    }
+
+    .smt-info-label {
+        color: #9dfcff !important;
+        font-size: 1.1rem; /* Giảm chữ nhãn (Line No, Model...) */
+        line-height: 1;
+        margin-bottom: 2px;
+    }
+
+    .smt-info-value {
+        color: #ffffff !important;
+        font-size: 1.8rem; /* Giảm chữ số/giá trị (TM12, Q990F...) */
+        line-height: 1.1;
+        text-align: center;
+        word-break: break-word;
+        font-weight: bold;
+    }
+
+    /* MAIN TABLE - Giảm font size và padding */
+    .main-table th {
+        background-color: #49bdf2 !important;
+        color: #ffffff !important;
+        font-size: 1.3rem; /* Giảm chữ tiêu đề cột */
+        line-height: 1.1;
+        padding: 8px 5px !important; /* Giảm padding dọc */
+        white-space: nowrap;
+    }
+
+    .main-table td {
+        background-color: #2b3194 !important;
+        color: #ffffff !important;
+        font-size: 1.3rem; /* Giảm chữ trong bảng */
+        line-height: 1.1;
+        padding: 6px 5px !important; /* Giảm padding dọc */
+    }
+
+    .main-table tbody tr:nth-child(even) td {
+        background-color: #446bea !important;
+    }
+
+    .main-table tbody td:first-child {
+        text-align: left;
+        font-weight: 700;
+        min-width: 150px;
+        color: #ffffff !important;
+        font-weight: 700;
+    }
+
+    /* LOSTTIME */
+    .smt-losttime-title, .smt-losttime-total {
+        font-size: 1.3rem;
+        margin-bottom: 4px;
+    }
+
+    .losttime-table {
+        width: 100%;
+        table-layout: fixed;
+    }
+
+        .losttime-table th {
+            background-color: #49bdf2 !important;
+            color: #ffffff !important;
+            font-weight: bold;
+            text-align: center;
+            font-size: 1.1rem;
+            padding: 6px 4px !important;
+        }
+
+        .losttime-table td {
+            background-color: #2b3194 !important;
+            color: #ffffff !important;
+            padding: 6px 4px !important;
+            font-size: 1.1rem;
+            line-height: 1.1;
+        }
+
+            .losttime-table th:nth-child(1), .losttime-table td:nth-child(1) {
+                width: 15%;
+                text-align: center;
+            }
+
+            .losttime-table th:nth-child(2), .losttime-table td:nth-child(2) {
+                width: 55%;
+                text-align: left;
+                white-space: normal;
+            }
+
+            .losttime-table th:nth-child(3), .losttime-table td:nth-child(3) {
+                width: 15%;
+                text-align: right;
+            }
+
+            .losttime-table th:nth-child(4), .losttime-table td:nth-child(4) {
+                width: 15%;
+                text-align: right;
+            }
+
+        .losttime-table tbody tr:nth-child(even) td {
+            background-color: #446bea !important;
+        }
+
+    /* CHARTS - Ép khu vực biểu đồ bung hết cỡ vào khoảng trống */
+    .chart-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .pie-chart-holder {
+        flex: 1 1 auto;
+        height: 100%; /* Ép chiếm 100% vùng trống */
+        min-height: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end !important;
+        padding-bottom: 5px;
+    }
+
+    .smt-bar-panel {
+        background-color: #0f1f3d;
+        width: 100%;
+        flex: 1 1 auto;
+        height: 100%; /* Ép chiếm 100% vùng trống */
+        display: flex;
+        flex-direction: column;
+        border-radius: 8px;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        width: 100%;
+        flex: 1; /* Thêm dòng này để lấp đầy smt-bar-panel */
+        min-height: 0;
+    }
+
+    .charts-row {
+        flex: 1 1 auto;
+        min-height: 0;
+        margin-top: auto;
+    }
+
+        .charts-row > [class*="col-"] {
+            height: 100%;
+            min-height: 0;
+        }
+
+    /* Pie chart bám đáy */
+    .pie-chart-holder {
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        align-items: flex-end !important;
+        justify-content: center;
+        padding-bottom: 0;
+    }
+
+    /* Bar chart bám đáy */
+    .smt-bar-panel {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        margin-top: auto;
+    }
+
+    /* Đảm bảo khung ngoài của Partial View dùng flex */
+    .smt-frame .row.flex-grow-1 {
+        min-height: 0; /* Quan trọng để flexbox không bị đẩy tràn */
+    }
+</style>
+
+
 <div class="app-content">
-    <div class="container-fluid p-0 px-5">
-        <!-- HEADER -->
+    <div class="container-fluid p-0 px-4">
         <div class="row text-center">
             <div class="col-md-3 d-flex justify-content-start align-items-center">
                 <a asp-controller="Admin" asp-action="SMTLines" class="btn btn-sm btn-primary">
                     <i class="bi bi-arrow-left-square"></i>
-                    Back</a>
-                <!-- <h4>Info</h4> -->
+                    Back
+                </a>
             </div>
             <div class="col-md-6">
                 <div class="iqc-shape">SMT PRODUCTION INFORMATION</div>
@@ -40,13 +335,13 @@
                 <h4 id="clock"></h4>
             </div>
         </div>
-        <!-- SUMARY -->
+
         <div class="row mt-3 _result">
             <partial name="SMTDashboard/_SMTProdInfoResult" model="@Model" />
         </div>
     </div>
 </div>
-<!-- Loading Overlay -->
+
 <div id="loadingOverlay"
      class="position-fixed top-0 start-0 w-100 h-100 d-none d-flex align-items-center justify-content-center"
      style="background: rgba(255,255,255,0.7); z-index: 9999;">
@@ -58,116 +353,69 @@
 @section Scripts {
     <link href="~/css/dashboard.css?@DateTime.Now.Ticks" rel="stylesheet" />
 
-
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
     <script>
+        let barChartInstance = null;
+        let pieChartInstance = null;
 
-        //--------- CHANGE COMMBO BOX --------------
-
-        $(document).on('change','.sl_lot',function() {
-        var lot = $(this).val();
-        reloagPage(lot);
+        $(document).on('change', '.sl_lot', function () {
+            const lot = $(this).val();
+            reloadPage(lot);
         });
 
-        function reloagPage(lot){
-        //alert(lot);
-        var line = $('#line').text().trim();
-        if (line) {
-            // Show overlay
-            //document.getElementById("loadingOverlay").classList.remove("d-none");
-
-            // Redirect after short delay to let overlay render
-            // setTimeout(function () {
-                // window.location.href = '@Url.Action("SMTProdInfo", "Admin")?line=' + line + '&lot=' + lot;
-            //}, 200); // 200ms is enough
-            
-            $.ajax({
-                url:'@Url.Action("SMTProdInfoSearch", "Admin")',
-                type:'GET',
-                data:{'line':line,'lot':lot},
-                success: function(res){
-                            // update table html
-                    $('._result').html(res.html);
-                    // update charts
-                    ShowLineBarChart(res.charts.bar_line_chart);
-                    ShowPieChart(res.charts.chart_data);
-                    MakeupTable();
-                }
-            });
-        }
-
-        }
-
-        //--------------------->> TABLE <<-------------------------------
         $(document).ready(function () {
-            MakeupTable();
-            //const pie_data = Html.Raw(Json.Serialize(Model.chart_data));
-            //const bar_line = Html.Raw(Json.Serialize(Model.bar_line_chart));
-            //ShowLineBarChart(bar_line);
-            //ShowPiechart(pie_data);
+            if (typeof ChartDataLabels !== 'undefined') {
+                Chart.register(ChartDataLabels);
+            }
+
             const bar_line = @Html.Raw(Json.Serialize(Model.bar_line_chart));
             const pie_data = @Html.Raw(Json.Serialize(Model.chart_data));
 
             ShowLineBarChart(bar_line);
             ShowPieChart(pie_data);
-            setInterval(function(){
-                var lot = $('.sl_lot').val();
-                reloagPage(lot);
-            },120000);
+
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            setInterval(function () {
+                const lot = $('.sl_lot').val();
+                reloadPage(lot);
+            }, 120000);
         });
 
-        function MakeupTable(){
-        // $('table thead th').each(function (index) {
-        //     $(this).css({
-        //         'background-color': '#00c0ff',
-        //         'padding': '10px 0px'
-        //     });
-        //     $(this).addClass('p-0 mx-2 py-2 fw-bold text-center');
-        //     $(this).css({'font-size':'16px'});
+        function destroyCharts() {
+            if (barChartInstance) {
+                barChartInstance.destroy();
+                barChartInstance = null;
+            }
+            if (pieChartInstance) {
+                pieChartInstance.destroy();
+                pieChartInstance = null;
+            }
+        }
 
-        // });
-                $(this).css({
-            'background-color': '#0084b0',
-            'padding': '10px 0px',
-            'color': 'white',
-            'vertical-align': 'middle', // Căn giữa theo chiều dọc
-            'overflow': 'hidden',       // Không cho nội dung tràn ra
-            'white-space': 'normal'     // Cho phép tiêu đề dài tự xuống dòng
-        });
-              $('table thead th').each(function (index) {
-            $(this).css({
-                'background-color': '#00c0ff',
-                'padding': '10px 0px',
-                'color': 'white' // <--- THÊM DÒNG NÀY ĐỂ CHỮ THÀNH MÀU TRẮNG
+        function reloadPage(lot) {
+            const line = $('#line').text().trim();
+            if (!line) return;
+
+            $.ajax({
+                url: '@Url.Action("SMTProdInfoSearch", "Admin")',
+                type: 'GET',
+                data: { line: line, lot: lot },
+                success: function (res) {
+                    destroyCharts();
+                    $('._result').html(res.html);
+                    ShowLineBarChart(res.charts.bar_line_chart);
+                    ShowPieChart(res.charts.chart_data);
+                }
             });
-            $(this).addClass('p-0 mx-2 py-2 fw-bold text-center text-white'); // Thêm text-white vào class cho chắc chắn
-            $(this).css({'font-size':'14px'});
-             });
-
-        $('table tbody tr').each(function (index) {
-        if ((index + 1) % 2 === 0) {
-            $(this).find('td').addClass('bg-primary text-center text-white py-2');
-            $(this).find('td').css({'font-size':'14px'});
-
-        } else {
-            $(this).find('td').removeClass('bg-primary');// Clear any inline styles
-            $(this).find('td').addClass('text-white text-center py-2')
-            $(this).find('td').css({'background-color':'#1c2b88', 'font-size':'14px'})
-            // $(this).find('td').removeClass('bg-primary text-white');
         }
 
-        // ✅ Ensure first column is left-aligned
-        $(this).find('td:first-child')
-            .removeClass('text-center')  // remove center
-            .addClass('p-1 text-start');
-        });
-        }
-          function updateClock() {
+        function updateClock() {
             const now = new Date();
-
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
@@ -175,370 +423,196 @@
             const minute = String(now.getMinutes()).padStart(2, '0');
             const second = String(now.getSeconds()).padStart(2, '0');
 
-            const formatted = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+            document.getElementById('clock').textContent =
+                `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+        }
 
-            document.getElementById('clock').textContent = formatted;
-          }
+        function ShowPieChart(pie_data) {
+            const canvas = document.getElementById('myPieChart');
+            if (!canvas || !pie_data || pie_data.length === 0) return;
 
-          // Update immediately and every second
-          updateClock();
-          setInterval(updateClock, 1000);         
+            if (pieChartInstance) {
+                pieChartInstance.destroy();
+                pieChartInstance = null;
+            }
 
-        //--------------------->> PIE CHART <<------------------------------
-        function ShowPieChart(pie_data){
-        if(pie_data && pie_data.length > 0) {
             const pie_labels = pie_data.map(item => item.label);
-            const pie_values = pie_data.map(item => item.value);
-            const ctx2 = document.getElementById('myPieChart').getContext('2d');
+            const pie_values = pie_data.map(item => Number(item.value));
 
-            new Chart(ctx2, {
+            pieChartInstance = new Chart(canvas.getContext('2d'), {
                 type: 'pie',
                 data: {
                     labels: pie_labels,
                     datasets: [{
-                        label: 'Colors',
                         data: pie_values,
-                                       backgroundColor: [
-                                                    'rgba(7, 157, 217, 1)',   // Xanh dương sáng (#079DD9)
-                                                    'rgba(224, 137, 99, 1)',  // Cam đất/Gạch (#E08963)
-                                                    'rgba(140, 198, 63, 0.8)',  // 01 - Xanh lá
-                                                    'rgba(255, 191, 163, 1)', // Cam san hô nhạt (#FFBFA3)
-                                                    'rgba(178, 235, 224, 1)', // Xanh Mint (#B2EBE0)
-                                                    'rgba(236, 216, 242, 0.9)',  // Hồng tím cực nhạt (#ECD8F2)
-                                                    'rgba(190, 182, 242, 1)', // Tím Lavender (#BEB6F2)
-                                                    'rgba(242, 171, 179, 0.8)', // 02 - Hồng san hô (#F2ABB3)
-                                                    'rgba(153, 217, 242, 1)', // Xanh da trời nhạt (#99D9F2)
-                                                    'rgba(56, 144, 143, 1)',  // Xanh Teal đậm (#38908F)
-                                                 ],
-                        // backgroundColor: [
-                        //     '#28a745', // green
-                        //     '#dc3545', // red
-                        //     '#ffc107', // yellow
-                        //     '#0dcaf0', // cyan
-                        //     '#6f42c1', // purple
-                        //     '#fd7e14', // orange
-                        //     '#20c997', // teal
-                        //     '#6610f2', // indigo
-                        //     '#198754', // dark green
-                        //     '#e83e8c', // pink
-                        //     '#17a2b8', // info blue
-                        //     '#343a40', // dark gray
-                        //     '#adb5bd', // light gray
-                        //     '#ff6384', // soft red
-                        //     '#36a2eb', // soft blue
-                        //     '#ff9f40', // soft orange
-                        //     '#4bc0c0', // turquoise
-                        //     '#9966ff', // violet
-                        //     '#c9cbcf', // light silver
-                        //     '#f94144', // coral red
-                        // ],
-                        borderColor: '#283593',//'#fff',
-                        borderWidth: 3
+                        backgroundColor: [
+                            '#3ea7d8', '#e77f52', '#2e8c4a', '#d94c4c', '#f1c40f',
+                            '#8e44ad', '#16a085', '#ff7f50', '#3498db', '#95a5a6'
+                        ],
+                        borderColor: '#0b1120',
+                        borderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: { padding: 10 },
                     plugins: {
                         legend: {
-                            labels:{
-                                boxWidth: 40,
-                                padding: 5,
-                                color: '#ffffff',
-                                font:{
-                                    size:12
-                                }
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 16,
+                                color: '#fff',
+                                font: { size: 25, weight: 'bold' }
+                            }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            formatter: (value, context) => {
+                                const sum = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                return sum ? ((value * 100 / sum).toFixed(0) + '%') : '0%';
                             },
-                            position: 'right'
+                            font: { size: 25, weight: 'bold' }
                         },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
-                                    const value = context.raw;
-                                    const total = context.chart.data.datasets[0].data
-                                        .reduce((a, b) => a + b, 0);
-                                    const percent = ((value / total) * 100).toFixed(1);
-                                    return `${context.label}: ${value} (${percent}%)`;
+                                label: function (context) {
+                                    const value = Number(context.raw);
+                                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    const percent = total ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${context.label}: ${value.toLocaleString()} (${percent}%)`;
                                 }
                             }
-                        },
-                        datalabels: {
-                            formatter: (value, context) => {
-                                const dataArr = context.chart.data.datasets[0].data;
-                                const sum = dataArr.reduce((a, b) => a + b, 0);
-                                const percentage = (value * 100 / sum).toFixed(0) + "%";
-                                return percentage;
-                            },
-                            color: '#fff',
-                            font: {
-                                weight: 'bold'
-                            }
-                        }}
-
-                }
-                    ,
+                        }
+                    }
+                },
                 plugins: [ChartDataLabels]
             });
-
         }
 
-        }
+        function ShowLineBarChart(bar_line) {
+            const canvas = document.getElementById('chart_area');
+            if (!canvas || !bar_line || bar_line.length === 0) return;
 
+            if (barChartInstance) {
+                barChartInstance.destroy();
+                barChartInstance = null;
+            }
 
+            const labels = bar_line.map(item => item.label);
+            const target = bar_line.map(item => Number(item.value1));
+            const output = bar_line.map(item => Number(item.value2));
+            const rate = bar_line.map(item => Number(item.rate));
 
-            //--------------------->> BAR LINE CHART <<------------------------------
+            const maxTargetOutput = Math.max(...target, ...output, 0);
+            const maxRate = Math.max(...rate, 100);
 
-              //      const chart_data = @Html.Raw(Json.Serialize(Model.line_chart));
-              // const labels = chart_data.map(item => item.label);
-              // const values = chart_data.map(item => item.value);
-
-            function ShowLineBarChart(bar_line){
-
-            if( bar_line && bar_line.length > 0) {
-                const labels = bar_line.map(item => item.label);
-            const target = bar_line.map(item => item.value1);
-            const output = bar_line.map(item => item.value2);
-            const rate = bar_line.map(item => item.rate);
-            Chart.register(ChartDataLabels);
-            const ctx = document.getElementById('chart_area').getContext('2d');
-            // const chart = new Chart(ctx,
-            // {
-            //     type: 'bar',
-            //     data: {
-            //         labels: labels,
-            //         datasets: [
-            //             {
-            //                 label: 'Target',
-            //                 type:'bar',
-            //                 data: target,
-            //                 backgroundColor: 'rgba(63, 114, 255,0.9)', //'rgba(71, 211, 89, 0.9)',
-            //                 datalabels: {
-            //                     color: 'rgba(63, 114, 255)',
-            //                     font: {
-            //                         weight: 'bold'
-            //                     },
-            //                 formatter: Math.round
-            //             }}
-            //             ,
-            //             {
-            //                 label: 'Output',
-            //                 type:'bar',
-            //                 data: output,
-            //                 backgroundColor: 'rgba(255, 161, 58,0.9)',// 'rgba(211,91,200,0.8)',
-            //                 datalabels: {
-            //                     color: 'rgba(255, 161, 58)',
-            //                     font: {
-            //                         weight: 'bold'
-            //                     },
-            //                     formatter: Math.round
-            //                 },
-
-            //             },
-            //             {
-            //                 label: 'Achieve Rate',
-            //                 type: 'line',
-            //                 tension: 0.4,
-            //                 data: rate,
-            //                 backgroundColor: 'rgba(255, 206, 86, 0.5)',
-            //                 borderColor: 'yellow',//'rgba(255, 206, 86, 1)',
-            //                 fill: false,
-            //                 yAxisID: 'y2'
-            //             }
-            //         ]
-            //     },
-            //     options: {
-            //         responsive: true,
-            //         maintainAspectRatio: false,
-            //         scales: {
-            //             x: {
-            //                 ticks: {
-            //                     color: 'white'   // axis labels
-            //                 },
-            //                 grid: {
-            //                     color: 'white'   // grid line color
-            //                 }
-            //             },
-            //             y: {
-            //                 ticks: {
-            //                     color: 'white'   // axis labels
-            //                 },
-            //                 grid: {
-            //                     color: 'white'   // grid line color
-            //                 },
-            //                 beginAtZero: true,
-            //                 position: 'left',
-            //                 title: {
-            //                     display: true,
-            //                     text: 'Target/Output',
-            //                     color: 'white'
-            //                 }
-            //             },
-            //             y2: {
-            //                 type: 'linear',
-            //                 position: 'right',
-            //                 beginAtZero: true,
-            //                 title: {
-            //                     display: true,
-            //                     text: 'Acheive Rate',
-            //                     color: 'white'
-            //                 },
-            //                 grid: {
-            //                     drawOnChartArea: false,
-            //                     color: 'white'
-            //                     },
-            //                 ticks: {
-            //                     autoSkip: false,
-            //                     maxRotation: 45,
-            //                     minRotation: 0,
-            //                     color: 'white'
-            //                 }
-            //             }
-            //         },
-
-            //     plugins: {
-            //         datalabels: {
-            //         display: true,
-            //         color: 'rgba(255, 255, 0)',
-            //         anchor: 'end',
-            //         align: 'top',
-            //             formatter: function(value, context) {
-            //                 if(context.dataset.type === 'bar'){
-            //                     return typeof value === 'number' ? value.toLocaleString() : value;
-            //                 } else {
-            //                     return value.toFixed(2);
-            //                 }
-            //             }
-            //         },
-            //         legend: {
-            //             display: true,
-            //             labels: {
-            //                 color: 'white'   // <-- Legend text color
-            //             }
-            //         },
-            //         tooltip: {
-            //             enabled: true
-            //         }
-            //     }
-            //     },
-            // plugins: [ChartDataLabels]
-
-            // });
-                    // Đảm bảo bạn đã nhúng thư viện plugin datalabels trước đoạn code này
-        // Chart.register(ChartDataLabels); // Nếu dùng Chart.js v3+
-
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Target',
-                        type: 'bar',
-                        data: target,
-                        backgroundColor: 'rgba(63, 114, 255, 0.9)',
-                        order: 9,
-                        datalabels: {
-                            align: 'end',
-                            anchor: 'end',
-                            color: '#91ABED',//'rgba(63, 114, 255)', // Cấu hình riêng cho Target nếu muốn
-                            offset: 4
-                        }
-                    },
-                    {
-                        label: 'Output',
-                        type: 'bar',
-                        data: output,
-                        backgroundColor: 'rgba(255, 161, 58, 0.9)',
-                        order: 9,
-                        datalabels: {
-                            align: 'end',
-                            anchor: 'end',
-                            color: 'rgba(255, 161, 58)',
-                            offset: 4
-                        }
-                    },
-                    {
-                        label: 'Achieve Rate',
-                        type: 'line',
-                        tension: 0.4,
-                        data: rate,
-                        backgroundColor: 'rgba(255, 206, 86, 0.5)',
-                        borderColor: 'yellow',
-                        fill: false,
-                        yAxisID: 'y2',
-                        order: 1,
-                        datalabels: {
-                            align: 'top',
-                            anchor: 'end',
-                            color: 'yellow',
-                            offset: 8 // Đẩy nhãn của đường Line cao hơn một chút để tránh đè lên cột
-                        }
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                layout: {
-                    padding: {
-                        top: 40 // Quan trọng: Tạo khoảng trống ở đỉnh để nhãn không bị mất
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: { color: 'white' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        position: 'left',
-                        suggestedMax: Math.max(...target) * 1.3, // Tự động nới trần 20%
-                        ticks: { color: 'white' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                        title: {
-                            display: true,
-                            text: 'Target/Output',
-                            color: 'white'
-                        }
-                    },
-                    y2: {
-                        type: 'linear',
-                        position: 'right',
-                        beginAtZero: true,
-                        suggestedMax: 110, // Nới trần trục phần trăm lên 110%
-                        grid: { drawOnChartArea: false },
-                        ticks: { color: 'white' },
-                        title: {
-                            display: true,
-                            text: 'Achieve Rate (%)',
-                            color: 'white'
-                        }
-                    }
-                },
-                plugins: {
-                    datalabels: {
-                        display: true,
-                        font: { weight: 'bold', size: 11 },
-                        formatter: function(value, context) {
-                            // Nếu là Dataset 'Achieve Rate' (Line)
-                            if (context.dataset.label === 'Achieve Rate') {
-                                return value.toFixed(1) + '%';
+            barChartInstance = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Achieve Rate',
+                            data: rate,
+                            borderColor: '#f1c40f',
+                            backgroundColor: '#f1c40f',
+                            borderWidth: 3,
+                            yAxisID: 'y1',
+                            tension: 0.35,
+                            pointRadius: 4,
+                            datalabels: {
+                                color: '#f1c40f',
+                                align: 'top',
+                                formatter: (v) => `${Number(v).toFixed(1)}%`,
+                                font: { size: 18, weight: 'bold' }
                             }
-                            // Nếu là Bar (Target/Output), định dạng phân cách hàng ngàn
-                            return value.toLocaleString();
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Target',
+                            data: target,
+                            backgroundColor: '#3b82f6',
+                            yAxisID: 'y',
+                            // maxBarThickness: 42,
+                           categoryPercentage: 0.9,
+                             barPercentage: 0.95,
+                            datalabels: {
+                                color: '#fff',
+                                align: 'top',
+                                anchor: 'end',
+                                font: { size: 18, weight: 'bold' },
+                                formatter: (v) => Number(v).toLocaleString()
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Output',
+                            data: output,
+                            backgroundColor: '#e87c3e',
+                            yAxisID: 'y',
+                            // maxBarThickness: 42,
+                             categoryPercentage: 0.9,
+                            barPercentage: 0.95,
+                            datalabels: {
+                                color: '#fff',
+                                align: 'top',
+                                anchor: 'end',
+                                font: { size: 18, weight: 'bold' },
+                                formatter: (v) => Number(v).toLocaleString()
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 30 } },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#fff',
+                                font: { size: 18, weight: 'bold' }
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            suggestedMax: maxTargetOutput * 1.25,
+                            ticks: {
+                                color: '#fff',
+                                font: { size: 18 },
+                                callback: (v) => Number(v).toLocaleString()
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            suggestedMax: Math.max(110, Math.ceil(maxRate / 10) * 10 + 10),
+                            grid: { drawOnChartArea: false },
+                            ticks: {
+                                color: '#f1c40f',
+                                font: { size: 18 },
+                                callback: (v) => `${v}%`
+                            }
                         }
                     },
-                    legend: {
-                        display: true,
-                        labels: { color: 'white' }
-                    },
-                    tooltip: { enabled: true }
-                }
-            },
-            plugins: [ChartDataLabels] // Kích hoạt plugin
-        });
-            }
-            }
-
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff',
+                                font: { size: 18, weight: 'bold' }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
     </script>
 }
