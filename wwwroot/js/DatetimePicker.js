@@ -28,6 +28,15 @@
         });
     }
 
+    if ($("#DateTimePicker").length > 0) {
+        $("#DateTimePicker").datepicker({
+            dateFormat: "yy/mm/dd",
+            changeMonth: true,
+            firstDay: 1, // Monday as the first day of the week
+            changeYear: true
+        });
+    }
+
 
     if ($(".input-group-text").length > 0) {
         $(".input-group-text").click(function () {

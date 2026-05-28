@@ -4,6 +4,7 @@ using MESWebDev.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MESWebDev.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260313013609_addst0002")]
+    partial class addst0002
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -951,9 +954,6 @@ namespace MESWebDev.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AfterAllLocation")
-                        .HasColumnType("int");
-
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -961,23 +961,14 @@ namespace MESWebDev.Migrations
                     b.Property<DateTime>("CreatedDt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("GrossQty")
+                        .HasColumnType("int");
+
                     b.Property<string>("Item")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("OBLQty")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OHQty")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PlanPOQty")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("PlanShipDt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("ReqQty")
+                    b.Property<int>("NetQty")
                         .HasColumnType("int");
 
                     b.Property<int>("SupplyQty")

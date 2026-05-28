@@ -24,6 +24,15 @@
                             <div class="col-4">@TranslationService.Trans("SPOQty")</div>
                             <div class="col-8"><input type="number" class="form-control" asp-for="SPOQty" /></div>
 
+                            <div class="col-4">@TranslationService.Trans("PlanShipDt")</div>
+                            <div class="col-8">
+                                <div class="input-group">
+                                    <input class="form-control" type="text" id="DateTimePicker" asp-for="PlanShipDt" value="" />
+                                    <span class="input-group-text">
+                                        <i class="bi bi-calendar-week-fill"></i>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

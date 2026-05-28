@@ -30,6 +30,15 @@
             <input type="password" class="form-control fs-6" id="password" name="password" placeholder="Password" required>
             <label for="password">Password</label>
         </div>
+            <!-- Remember Me -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe" value="true">
+                <label class="form-check-label" for="rememberMe">
+                    Remember me
+                </label>
+            </div>
+        </div>
         <button type="submit" class="btn btn-login w-100 fs-6 py-2">Login</button>
         @if (ViewBag.Error != null)
         {
@@ -43,5 +52,44 @@
 </div>
 @section Scripts {
     <link href="~/css/Login.css?@DateTime.Now.Ticks" rel="stylesheet" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // Load saved account
+            const savedUser = localStorage.getItem("remember_user");
+            const savedPass = localStorage.getItem("remember_pass");
+
+            if (savedUser) {
+                document.getElementById("username").value = savedUser;
+                document.getElementById("rememberMe").checked = true;
+            }
+
+            if (savedPass) {
+                document.getElementById("password").value = savedPass;
+            }
+
+            // Save when submit
+            document.querySelector("form").addEventListener("submit", function () {
+
+                if (document.getElementById("rememberMe").checked) {
+
+                    localStorage.setItem(
+                        "remember_user",
+                        document.getElementById("username").value
+                    );
+
+                    localStorage.setItem(
+                        "remember_pass",
+                        document.getElementById("password").value
+                    );
+
+                } else {
+
+                    localStorage.removeItem("remember_user");
+                    localStorage.removeItem("remember_pass");
+                }
+            });
+        });
+    </script>
 }
 </body>

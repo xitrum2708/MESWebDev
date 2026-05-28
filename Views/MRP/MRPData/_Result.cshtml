@@ -31,8 +31,9 @@
                 @foreach (DataRow row in dt.Rows)
                 {
                     i++;
-                    var netQty = row.Table.Columns.Contains("NetQty") ? Convert.ToDecimal(row["NetQty"]) : 1;
-                    var rowClass = netQty == 0 ? "text-decoration-line-through text-muted" : "";
+                    var netQty = row.Table.Columns.Contains("PlanPOQty") ? Convert.ToDecimal(row["PlanPOQty"]) : 1;
+                    @* var rowClass = netQty == 0 ? "text-decoration-line-through text-muted" : ""; *@
+                    var rowClass = netQty == 0 ?  "table-success":"table-danger";
                     <tr class="@rowClass">
                         <td class="body-text text-center">@i</td>
                         @foreach (var f in row.ItemArray)

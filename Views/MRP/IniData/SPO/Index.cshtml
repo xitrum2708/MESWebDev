@@ -102,6 +102,12 @@ catch (Exception ex)
     @* SORT TABLE  *@
     <link href="~/css/TableSort.css?@DateTime.Now.Ticks" rel="stylesheet" />
     <script src="~/js/TableSort.js?@DateTime.Now.Ticks"></script>
+
+    @* -- DATE TIME PICKER -- *@
+    <link rel="stylesheet" href="~/css/DatetimePicker.css?@DateTime.Now.Ticks">
+    <script src="~/js/DatetimePicker-IU.js?@DateTime.Now.Ticks"></script>
+    <script src="~/js/DatetimePicker.js?@DateTime.Now.Ticks"></script>
+
     <script>
         $(document).ready(function(){
             enableTableSort('mytable');
@@ -134,7 +140,10 @@ catch (Exception ex)
                     var errorMsg = $('#errorMsg').data('msg');
 
                     if (errorMsg && errorMsg.length > 0) {
-                        toastr.error(errorMsg, "Error");
+                            toastr.error(errorMsg, "Error", { 
+                                timeOut: 1000,          // auto close
+                                extendedTimeOut: 1000   // auto close when hover mouse
+                            });
                     } 
                     else {
                         toastr.success('Upload successfully!', 'Success');
@@ -158,6 +167,7 @@ catch (Exception ex)
                 success: function (html) {
                     $('#modalArea').html(html);
                     $('#editModal').modal('show');
+                        IniDatetimePicker();
                 },
                 error: function () {
                     toastr.error('An error occurred while loading the edit form.');
@@ -210,6 +220,7 @@ catch (Exception ex)
                 success: function (html) {
                     $('#modalArea').html(html);
                     $('#addModal').modal('show');
+                        IniDatetimePicker();
                 },
                 error: function () {
                     toastr.error('An error occurred while loading the add form.');

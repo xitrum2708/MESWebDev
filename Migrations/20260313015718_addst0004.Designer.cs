@@ -4,6 +4,7 @@ using MESWebDev.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MESWebDev.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260313015718_addst0004")]
+    partial class addst0004
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -978,9 +981,6 @@ namespace MESWebDev.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("ReqQty")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SupplyQty")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

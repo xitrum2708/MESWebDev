@@ -740,8 +740,9 @@ namespace MESWebDev.Services
 
                             string model = CommonFormat.GetValueOrDefault(reader, colMap, "Model", string.Empty);
                             int SPOQty = CommonFormat.GetValueOrDefault(reader, colMap, "SPOQty", 0);
+                            DateTime? planShipDt = CommonFormat.GetValueOrDefault(reader, colMap, "PlanShipDt", (DateTime?)null);
 
-                            if (string.IsNullOrEmpty(model) || SPOQty == 0) {
+                            if (string.IsNullOrEmpty(model) || SPOQty == 0 || planShipDt == null) {
                                 error_msg = SD.ErrorMsg.CheckValue;
                                 mvm.UploadedError = true;
                             }
@@ -750,6 +751,7 @@ namespace MESWebDev.Services
                             {
                                 Model = model,
                                 SPOQty = SPOQty,
+                                PlanShipDt = (DateTime)planShipDt,
                                 ErrorMsg = error_msg,
                                 UploadedFile = uploadedFile,
                                 //Remark = "Data from IFS System",
@@ -795,7 +797,7 @@ namespace MESWebDev.Services
             try
             {
                 //delete old data
-                await _con.UV_MRP_SPO.Where(i => i.Model == SPO.Model).ExecuteDeleteAsync();
+                await _con.UV_MRP_SPO.Where(i => i.Model == SPO.Model && i.PlanShipDt == SPO.PlanShipDt).ExecuteDeleteAsync();
 
                 SPO.CreatedDt = DateTime.Now;
                 SPO.CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system";
@@ -820,6 +822,7 @@ namespace MESWebDev.Services
             {
                 var data = await _con.UV_MRP_SPO.FindAsync(SPO.Id);
                 data.SPOQty = SPO.SPOQty;
+                data.PlanShipDt = SPO.PlanShipDt;
                 data.UpdatedDt = DateTime.Now;
                 data.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? "system";
                 await _con.SaveChangesAsync();
