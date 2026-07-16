@@ -124,8 +124,7 @@ namespace MESWebDev.Controllers
         [HttpGet]
         public IActionResult GetServerTime()
         {
-            DateTime st = DateTime.UtcNow;
-            return Ok(DateTime.UtcNow);
+            return Ok(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
         }
 
         //-------------------->> WHS DASHBOARD <<--------------------
