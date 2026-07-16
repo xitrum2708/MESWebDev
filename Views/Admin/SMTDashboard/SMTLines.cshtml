@@ -117,24 +117,56 @@
 
     <script>
         //--------------------->> TABLE <<-------------------------------
-          function updateClock() {
-            const now = new Date();
+           let serverTime;
+        let clientStartTime;
 
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hour = String(now.getHours()).padStart(2, '0');
-            const minute = String(now.getMinutes()).padStart(2, '0');
-            const second = String(now.getSeconds()).padStart(2, '0');
+        function initClock() {
 
-            const formatted = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+            fetch('/Admin/GetServerTime')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok.");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Nếu API trả về trực tiếp DateTime
+                    serverTime = new Date(data);
 
-            document.getElementById('clock').textContent = formatted;
-          }
+                    // Nếu API trả về { serverTime: ... }
+                    // serverTime = new Date(data.serverTime);
+
+                    clientStartTime = Date.now();
+
+                    updateClock();
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        }
+
+        function updateClock() {
+
+            if (!serverTime) return;
+
+            const elapsed = Date.now() - clientStartTime;
+            const current = new Date(serverTime.getTime() + elapsed);
+
+            document.getElementById("clock").textContent =
+                `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')} ` +
+                `${String(current.getHours()).padStart(2, '0')}:${String(current.getMinutes()).padStart(2, '0')}:${String(current.getSeconds()).padStart(2, '0')}`;
+        }
 
           // Update immediately and every second
-          updateClock();
-          setInterval(updateClock, 1000);
+          // Init Clock
+            initClock();
+
+            // update clock each secon
+            //updateClock();
+            setInterval(updateClock, 1000);
+
+            // Sync server clock after 5 minutes
+            setInterval(initClock, 5 * 60 * 1000);
 
           $('.divLine').click(function() {
             var lineValue = $(this).find('.lineValue').text().trim();

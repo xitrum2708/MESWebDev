@@ -121,6 +121,12 @@ namespace MESWebDev.Controllers
             }
             return model;
         }
+        [HttpGet]
+        public IActionResult GetServerTime()
+        {
+            DateTime st = DateTime.UtcNow;
+            return Ok(DateTime.UtcNow);
+        }
 
         //-------------------->> WHS DASHBOARD <<--------------------
         public async Task<IActionResult> WHSDashboard()

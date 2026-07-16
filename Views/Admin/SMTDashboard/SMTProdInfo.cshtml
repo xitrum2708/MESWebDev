@@ -366,6 +366,48 @@
             reloadPage(lot);
         });
 
+
+        // GET Clock from server
+        let serverTime;
+        let clientStartTime;
+
+        function initClock() {
+
+            fetch('/Admin/GetServerTime')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok.");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Nếu API trả về trực tiếp DateTime
+                    serverTime = new Date(data);
+
+                    // Nếu API trả về { serverTime: ... }
+                    // serverTime = new Date(data.serverTime);
+
+                    clientStartTime = Date.now();
+
+                    updateClock();
+                })
+                .catch(err => {
+                    console.error(err);
+                });
+        }
+
+        function updateClock() {
+
+            if (!serverTime) return;
+
+            const elapsed = Date.now() - clientStartTime;
+            const current = new Date(serverTime.getTime() + elapsed);
+
+            document.getElementById("clock").textContent =
+                `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')} ` +
+                `${String(current.getHours()).padStart(2, '0')}:${String(current.getMinutes()).padStart(2, '0')}:${String(current.getSeconds()).padStart(2, '0')}`;
+        }
+
         $(document).ready(function () {
             if (typeof ChartDataLabels !== 'undefined') {
                 Chart.register(ChartDataLabels);
@@ -377,14 +419,21 @@
             ShowLineBarChart(bar_line);
             ShowPieChart(pie_data);
 
-            updateClock();
+            // Init Clock
+            initClock();
+
+            // update clock each secon
+            //updateClock();
             setInterval(updateClock, 1000);
+
+            // Sync server clock after 5 minutes
+            setInterval(initClock, 5 * 60 * 1000);
 
             setInterval(function () {
                 const lot = $('.sl_lot').val();
                 reloadPage(lot);
             }, 120000);
-        });
+            });
 
         function destroyCharts() {
             if (barChartInstance) {
@@ -414,18 +463,33 @@
             });
         }
 
-        function updateClock() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hour = String(now.getHours()).padStart(2, '0');
-            const minute = String(now.getMinutes()).padStart(2, '0');
-            const second = String(now.getSeconds()).padStart(2, '0');
+        // function updateClock() {
+        //     const now = new Date();
+        //     const year = now.getFullYear();
+        //     const month = String(now.getMonth() + 1).padStart(2, '0');
+        //     const day = String(now.getDate()).padStart(2, '0');
+        //     const hour = String(now.getHours()).padStart(2, '0');
+        //     const minute = String(now.getMinutes()).padStart(2, '0');
+        //     const second = String(now.getSeconds()).padStart(2, '0');
 
-            document.getElementById('clock').textContent =
-                `${year}-${month}-${day} ${hour}:${minute}:${second}`;
-        }
+        //     document.getElementById('clock').textContent =
+        //         `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+        // }
+
+        // function updateClock() {
+
+        //     const elapsed = Date.now() - clientStartTime;
+
+        //     const current = new Date(serverTime.getTime() + elapsed);
+
+        //     document.getElementById("clock").textContent =
+        //         `${current.getFullYear()}-${
+        //             String(current.getMonth() + 1).padStart(2, '0')}-${
+        //             String(current.getDate()).padStart(2, '0')} ${
+        //             String(current.getHours()).padStart(2, '0')}:${
+        //             String(current.getMinutes()).padStart(2, '0')}:${
+        //             String(current.getSeconds()).padStart(2, '0')}`;
+        // }
 
         function ShowPieChart(pie_data) {
             const canvas = document.getElementById('myPieChart');
