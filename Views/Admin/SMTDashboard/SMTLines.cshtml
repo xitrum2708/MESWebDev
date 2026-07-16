@@ -116,49 +116,48 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <script>
-        //--------------------->> TABLE <<-------------------------------
-           let serverTime;
-        let clientStartTime;
+        //--------------------->> GET SERVER DATETIME <<-------------------------------
+            let serverTime;
+            let clientStartPerf; 
 
-        function initClock() {
+            function initClock() {
+                    fetch('/Admin/GetServerTime')
+                    .then(r => r.text())
+                    .then(data => {
+                        
+                        const parts = data.split(/[- :]/);
 
-            fetch('/Admin/GetServerTime')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok.");
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Nếu API trả về trực tiếp DateTime
-                    serverTime = new Date(data);
+                        serverTime = new Date(
+                            Number(parts[0]),
+                            Number(parts[1]) - 1,
+                            Number(parts[2]),
+                            Number(parts[3]),
+                            Number(parts[4]),
+                            Number(parts[5])
+                        );
 
-                    // Nếu API trả về { serverTime: ... }
-                    // serverTime = new Date(data.serverTime);
+                        clientStartPerf = performance.now();
+                        updateClock();
+                    });
+            }
 
-                    clientStartTime = Date.now();
+            function updateClock() {
+                const elapsedMs = performance.now() - clientStartPerf;
 
-                    updateClock();
-                })
-                .catch(err => {
-                    console.error(err);
-                });
-        }
+                const current = new Date(
+                    serverTime.getTime() + elapsedMs
+                );
 
-        function updateClock() {
-
-            if (!serverTime) return;
-
-            const elapsed = Date.now() - clientStartTime;
-            const current = new Date(serverTime.getTime() + elapsed);
-
-            document.getElementById("clock").textContent =
+                document.getElementById("clock").textContent =
                 `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')} ` +
                 `${String(current.getHours()).padStart(2, '0')}:${String(current.getMinutes()).padStart(2, '0')}:${String(current.getSeconds()).padStart(2, '0')}`;
-        }
 
-          // Update immediately and every second
-          // Init Clock
+                //console.log("Server base:", serverTime);
+                //console.log("Client now :", new Date());
+            }
+
+              // Update immediately and every second
+              // Init Clock
             initClock();
 
             // update clock each secon

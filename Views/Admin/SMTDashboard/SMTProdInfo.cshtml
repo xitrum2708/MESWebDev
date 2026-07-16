@@ -369,40 +369,32 @@
 
         // GET Clock from server
         let serverTime;
-        let clientStartTime;
-
+        let clientStartPerf; 
         function initClock() {
-
             fetch('/Admin/GetServerTime')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Network response was not ok.");
-                    }
-                    return response.json();
-                })
+                .then(r => r.text())
                 .then(data => {
-                    // Nếu API trả về trực tiếp DateTime
-                    serverTime = new Date(data);
+                    // Parse manually
+                    const parts = data.split(/[- :]/);
 
-                    // Nếu API trả về { serverTime: ... }
-                    // serverTime = new Date(data.serverTime);
+                    serverTime = new Date(
+                        Number(parts[0]),
+                        Number(parts[1]) - 1,
+                        Number(parts[2]),
+                        Number(parts[3]),
+                        Number(parts[4]),
+                        Number(parts[5])
+                    );
 
-                    clientStartTime = Date.now();
-
+                    clientStartPerf = performance.now();
                     updateClock();
-                })
-                .catch(err => {
-                    console.error(err);
                 });
         }
 
         function updateClock() {
-
             if (!serverTime) return;
-
-            const elapsed = Date.now() - clientStartTime;
+            const elapsed = performance.now() - clientStartPerf; 
             const current = new Date(serverTime.getTime() + elapsed);
-
             document.getElementById("clock").textContent =
                 `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')} ` +
                 `${String(current.getHours()).padStart(2, '0')}:${String(current.getMinutes()).padStart(2, '0')}:${String(current.getSeconds()).padStart(2, '0')}`;
