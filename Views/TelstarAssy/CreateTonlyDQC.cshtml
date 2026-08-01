@@ -21,8 +21,12 @@
                 <h4>@T.GetTranslation("TONLYDQCCheck", languageCode)</h4>
                 <form id="dqcForm" method="post">
                     <div class="form-group">
+                        <label for="Checker">@T.GetTranslation("Checker", languageCode)</label>
+                        <input type="text" name="Checker" class="form-control" id="Checker" autofocus required />
+                    </div>
+                    <div class="form-group">
                         <label for="QRCode">@T.GetTranslation("QRCode", languageCode)</label>
-                        <input type="text" name="QRCode" class="form-control" id="QRCode" autofocus required />
+                        <input type="text" name="QRCode" class="form-control" id="QRCode" required />
                     </div>
                     <div class="form-group">
                         <label for="Status">@T.GetTranslation("Status",languageCode)</label>
@@ -49,6 +53,7 @@
                         <tr>
                             <th>QRCode</th>
                             <th>Status</th>
+                            <th>Checker</th>
                             <th>Remark</th>
                             <th>Date</th>
                             <th>Model</th>
@@ -63,6 +68,7 @@
                                 <tr>
                                     <td>@item.QRCode</td>
                                     <td>@item.Status</td>
+                                    <td>@item.Checker</td>
                                     <td>@item.Remark</td>
                                     <td>@item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
                                     <td>@item.Model</td>
@@ -82,6 +88,21 @@
         $(document).ready(function () {
             $('#Status').change(function () {
                 $('#remarkDiv').toggle($(this).val() === 'NG');
+            });
+
+            $('#Checker').keypress(function (e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    if (!$('#Checker').val().trim()) {
+                        toastr.error('@T.GetTranslation("Checker", languageCode)', '', {
+                            closeButton: true,
+                            progressBar: true,
+                            timeOut: 3000
+                        });
+                        return;
+                    }
+                    $('#QRCode').focus();
+                }
             });
 
             $('#QRCode').keypress(function (e) {
@@ -119,7 +140,7 @@
                              timeOut: 1000
                         });                        
                         $('#QRCode').val('').focus();
-                        $('#Remark').val('');
+                        $('#Remark').val('');                        
                         $('#Status').val('OK');
                         $('#remarkDiv').hide();
 
@@ -128,6 +149,7 @@
                         <tr>
                             <td>${res.data.qrCode}</td>
                             <td>${res.data.status}</td>
+                            <td>${res.data.checker}</td>
                             <td>${res.data.remark || ''}</td>
                             <td>${res.data.createdDate}</td>
                             <td>${res.data.model}</td>

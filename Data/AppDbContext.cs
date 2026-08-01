@@ -61,6 +61,7 @@ namespace MESWebDev.Data
         public DbSet<TELSTAR_ASSY_Model> TELSTAR_ASSYs { get; set; }
         public DbSet<TELSTAR_DQC> TELSTAR_DQCs { get; set; }
         public DbSet<TONLY_DQC> TONLY_DQCs { get; set; }
+        public DbSet<TONLY_DQC_CTN> TONLY_DQC_CTNs {  get; set; }
         public DbSet<EASTECH_SMT_OUTPUT_Model> EASTECH_SMT_OUTPUTs { get; set; }
         public DbSet<UV_SPO_MASTER_ALL_Model> UV_SPO_MASTER_ALLs { get; set; }
         public DbSet<tbl_EstechSerialGeneral_Model> tbl_EstechSerialGenerals { get; set; }
@@ -201,6 +202,10 @@ namespace MESWebDev.Data
             modelBuilder.Entity<TONLY_DQC>(entity =>
             {
                 entity.ToTable("TONLY_DQC");
+            });
+            modelBuilder.Entity<TONLY_DQC_CTN>(entity =>
+            {
+                entity.ToTable("TONLY_DQC_CTN");
             });
             modelBuilder.Entity<UV_PRO_LINE_Model>(entity =>
             {

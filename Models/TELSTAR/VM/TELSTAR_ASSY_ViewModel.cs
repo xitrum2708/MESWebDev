@@ -7,6 +7,7 @@ namespace MESWebDev.Models.TELSTAR.VM
         public PagedResult<TelstarAssyVM>? TelstarVM { get; set; }
         public PagedResult<TelstarDQCVM>? TelstarDQCVM { get; set; }
         public PagedResult<TonlyDQCVM>? TonlyDQCVM { get; set; }
+        public PagedResult<TonlyDQC_CTNVM>? TonlyDQC_CTNVM { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string? SearchTerm { get; set; }
@@ -37,11 +38,24 @@ namespace MESWebDev.Models.TELSTAR.VM
     {
         public string? LotNo { get; set; }
         public string Status { get; set; } = string.Empty;
+        public string? Checker {  get; set; }
         public string? Model { get; set; }
         public string? PCBCode { get; set; }
         public string? QRCode { get; set; }
         public DateTime? CreatedDate { get; set; }
         public string? Remark { get; set; }
+        public string? RemarkAfterCheck { get; set; }
+        public string? CreatedBy { get; set; }
+    }
+    public class TonlyDQC_CTNVM
+    {
+        public string? LotNo { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string? Checker { get; set; }
+        public string? Model { get; set; }        
+        public string? QRCodeCTN { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public string? Remark { get; set; }        
         public string? CreatedBy { get; set; }
     }
 }
