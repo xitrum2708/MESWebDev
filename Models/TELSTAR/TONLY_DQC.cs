@@ -4,8 +4,10 @@
     {
         public long Id { get; set; }
         public string QRCode { get; set; } = string.Empty;
+        public string? Checker {  get; set; }
         public string Status { get; set; } = string.Empty;
         public string? Remark { get; set; }
+        public string? RemarkAfterCheck {  get; set; }
         public string? Model { get; set; }
         public string? LotNo { get; set; }
         public string? PCBCode { get; set; }

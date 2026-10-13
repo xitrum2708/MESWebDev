@@ -5,6 +5,8 @@ namespace MESWebDev.Models.TELSTAR.VM
     public class EASTECH_OQC_VM
     {
         [Required]
+        public string Checker {  get; set; }
+        [Required]
         public string QRCode { get; set; }
 
         [Required]

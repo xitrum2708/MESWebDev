@@ -21,6 +21,39 @@
                     <h3 class="card-title">@TranslationService.GetTranslation("ListOfTonlyProduct", languageCode)</h3>
                 </div> *@
                 <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success">
+                            @TempData["Success"]
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            @TempData["Error"]
+                        </div>
+                    }
+                    <form asp-action="UpdateDataRemarkStatus"
+                          method="post"
+                          enctype="multipart/form-data">
+
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label">Chọn file Excel</label>
+
+                            <input type="file"
+                                   name="file"
+                                   class="form-control"
+                                   accept=".xlsx"
+                                   required />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            Import Excel
+                        </button>
+                    </form>
                     <form asp-action="ReportTonlyDQC" method="get" class="mb-3">
                         <div class="d-flex flex-wrap align-items-end">                           
                             <!-- StartDate -->
@@ -85,10 +118,12 @@
                                 <tr>
                                     <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("QrCode", languageCode)</th>
                                     <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("Status", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("Checker", languageCode)</th>
                                     <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("Model", languageCode)</th>
                                     <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("LotNo", languageCode)</th>
                                     <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("PCBCode", languageCode)</th>
                                     <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("Remark", languageCode)</th>
+                                    <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("RemarkAfterCheck", languageCode)</th>
                                     <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("CreatedDate", languageCode)</th>
                                     <th style="background: #2e5a6e !important; color: white !important;">@TranslationService.GetTranslation("CreatedBy", languageCode)</th>
                                 </tr>
@@ -101,10 +136,12 @@
                                         <tr>
                                             <td>@log.QRCode</td>
                                             <td>@log.Status</td>
+                                            <td>@log.Checker</td>
                                             <td>@log.Model</td>
                                             <td>@log.LotNo</td>
                                             <td>@log.PCBCode</td>
                                             <td>@log.Remark</td>
+                                            <td>@log.RemarkAfterCheck</td>
                                             <td>@log.CreatedDate.Value.ToString("yyyy/MM/dd")</td>
                                             <td>@log.CreatedBy</td>
                                         </tr>
