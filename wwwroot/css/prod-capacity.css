@@ -1,0 +1,98 @@
+/* PE - Production Capacity. Dedicated styles; no CSS remains in Index.cshtml. */
+.capacity-header {
+    background: #17324f;
+    color: #fff;
+    padding: 1.25rem 1.5rem;
+    border-radius: .8rem .8rem 0 0;
+}
+
+.capacity-header .btn { white-space: nowrap; }
+
+.capacity-table-scroll {
+    max-height: calc(100vh - 300px);
+    min-height: 260px;
+    overflow: auto;
+    border: 1px solid #e3e9ee;
+    border-radius: .5rem;
+}
+
+#mytable {
+    width: max-content;
+    min-width: 100%;
+    font-size: .8rem;
+    margin: 0;
+    white-space: nowrap;
+}
+
+#mytable th, #mytable td {
+    padding: .45rem .65rem;
+    vertical-align: middle;
+    /*border-color: #e8edf2;*/
+}
+
+#mytable thead th {
+    position: sticky;
+    z-index: 4;
+    text-align: center;
+}
+
+#mytable thead tr.capacity-group th {
+    top: 0;
+    background: #203d58;
+    color: #fff;
+    font-size: 1rem;
+    height: 33px;
+    letter-spacing: .04em;
+}
+
+    #mytable thead tr.capacity-group th.other {
+        top: 0;
+        background: #eaf3f8;
+        color: #183a52;
+        font-size: 1rem;
+        height: 33px;
+        letter-spacing: .04em;
+    }
+
+#mytable thead tr.capacity-columns th {
+    top: 33px;
+    background: #eaf3f8;
+    color: #183a52;
+    height: 40px;
+}
+
+#mytable td.capacity-value { font-variant-numeric: tabular-nums; }
+
+#mytable .capacity-checkbox-column {
+    width: 44px;
+    min-width: 44px;
+    left: 0;
+}
+
+#mytable thead th.capacity-checkbox-column { z-index: 6; }
+
+#mytable tbody td.capacity-checkbox-column {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 2;
+}
+
+#mytable tbody tr:nth-child(even) td.capacity-checkbox-column {
+    background: #f7f9fb;
+}
+
+#mytable tbody tr.capacity-selected td,
+#mytable tbody tr.capacity-selected td.capacity-checkbox-column {
+    background: #fff3dc;
+}
+
+#mytable .capacity-man-day { background: #f1faf8; }
+
+.capacity-modal-header { background: #17324f; color: white; }
+
+.capacity-empty {
+    padding: 3.5rem 1rem;
+    text-align: center;
+    color: #63768a;
+}

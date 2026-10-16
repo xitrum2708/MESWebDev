@@ -3682,6 +3682,9 @@ namespace MESWebDev.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("Checker")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -3705,6 +3708,9 @@ namespace MESWebDev.Migrations
                     b.Property<string>("Remark")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("RemarkAfterCheck")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -3715,6 +3721,53 @@ namespace MESWebDev.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TONLY_DQC", (string)null);
+                });
+
+            modelBuilder.Entity("MESWebDev.Models.TELSTAR.TONLY_DQC_CTN", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Checker")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LotNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Model")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("QRCodeCTN")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remark")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TONLY_DQC_CTN", (string)null);
                 });
 
             modelBuilder.Entity("MESWebDev.Models.Translation", b =>
@@ -4385,6 +4438,123 @@ namespace MESWebDev.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("WHS_RECEIVING_TOTAL");
+                });
+
+            modelBuilder.Entity("ProdCapacityModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AssyHC")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("AssyOutput")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<string>("BModel")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("COBHC")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("COBOutput")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Customer1")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Customer2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Insert")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("InsertHC")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("InsertOutput")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("MicHC")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MicOutput")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<decimal>("OtherHC")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OtherOutput")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PCBNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PCBType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PcsPerSheet")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SCHC")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SCOutput")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<int>("SMTBottom")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SMTHC")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SMTOutput")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<decimal>("SMTPointsTotal")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<int>("SMTTop")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SMTTotal")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadFile")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UV_PE_ProdCapacity_tbl");
                 });
 
             modelBuilder.Entity("MESWebDev.Models.COMMON.UV_LOTCONTROL_MASTER", b =>

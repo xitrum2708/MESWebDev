@@ -7,6 +7,7 @@ namespace MESWebDev.Models.PE
     {
         [Key]
         public int Id { get; set; }
+
         [Required(ErrorMessage = "This field is required")]
         public string Company { get; set; }
         [Required(ErrorMessage = "This field is required")]
@@ -31,7 +32,7 @@ namespace MESWebDev.Models.PE
 
         public string? UploadFile { get; set; } // Total cost
         [Required(ErrorMessage = "This field is required")]
-        public DateTime UpdatedModelDt { get; set; } // Total cost
+        public DateTime UpdatedModelDt { get; set; } 
 
         public string? Note { get; set; } // 
 

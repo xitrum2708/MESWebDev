@@ -1,0 +1,85 @@
+@using MESWebDev.Models.PE
+@using MESWebDev.Services
+@inject ITranslationService TranslationService
+@model ProdCapacitySearchCriteria
+
+<form id="fSearch" method="post" action="@Url.Action("ProdCapacitySearch", "PE")">
+    @Html.AntiForgeryToken()
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header table-success">
+                    <h5 class="modal-title"><i class="bi bi-search me-1"></i>Search Production Capacity</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body bg-warning bg-opacity-25">
+                    <div class="row g-2 align-items-center">
+                        <label class="col-4 col-form-label" asp-for="StartDate">@TranslationService.Trans("From")</label>
+                        <div class="col-8">
+                            <div class="input-group">
+                                <input class="form-control" type="date" asp-for="StartDate"
+                                       asp-format="{0:yyyy-MM-dd}" />
+                                <span class="input-group-text"><i class="bi bi-calendar-week-fill"></i></span>
+                            </div>
+                        </div>
+
+                        <label class="col-4 col-form-label" asp-for="EndDate">@TranslationService.Trans("To")</label>
+                        <div class="col-8">
+                            <div class="input-group">
+                                <input class="form-control" type="date" asp-for="EndDate"
+                                       asp-format="{0:yyyy-MM-dd}" />
+                                <span class="input-group-text"><i class="bi bi-calendar-week-fill"></i></span>
+                            </div>
+                        </div>
+
+                        <label class="col-4 col-form-label" asp-for="Customer1">Type</label>
+                        <div class="col-8">
+                            <input class="form-control" asp-for="Type" placeholder="Type" />
+                        </div>
+
+                        <label class="col-4 col-form-label" asp-for="Customer1">Customer 1</label>
+                        <div class="col-8">
+                            <input class="form-control" asp-for="Customer1" placeholder="Customer 1" />
+                        </div>
+
+                        <label class="col-4 col-form-label" asp-for="UNo">U-No</label>
+                        <div class="col-8">
+                            <input class="form-control" asp-for="UNo" placeholder="U-No" />
+                        </div>
+
+                        <label class="col-4 col-form-label" asp-for="BModel">B-Model</label>
+                        <div class="col-8">
+                            <input class="form-control" asp-for="BModel" placeholder="B-Model" />
+                        </div>
+
+                        <label class="col-4 col-form-label" asp-for="PCBNo">PCB No</label>
+                        <div class="col-8">
+                            <input class="form-control" asp-for="PCBNo" placeholder="PCB No" />
+                        </div>
+
+                        <label class="col-4 col-form-label" asp-for="Version">Version</label>
+                        <div class="col-8">
+                            <select class="form-select-sm" asp-for="Version">
+                                <option value="0" selected>All</option>
+                                <option value="1">Lastest</option>
+                                <option value="2">Others</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="capacitySearchError" class="text-danger small mt-2" role="alert"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" id="btnSearch" class="btn btn-sm btn-primary">
+                        <i class="bi bi-search me-1"></i>Search
+                    </button>
+                    <button type="button" id="btnCapacityResetSearch" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

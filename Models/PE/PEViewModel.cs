@@ -8,6 +8,7 @@ namespace MESWebDev.Models.PE
         public DataTable? data { get; set; }
         public DataTable? detail { get; set; }
         public ManpowerModel? manpower { get; set; }
+        public ProdCapacityModel? prodCapacity { get; set; }
         public OperationModel? operation { get; set; }
         public OperationDetailModel? operationDtl { get; set; }
         public TimeStudyHdrDTO TimeStudyHdr { get; set; }

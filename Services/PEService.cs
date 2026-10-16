@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelDataReader;
 using MESWebDev.Common;
@@ -13,6 +14,7 @@ using NuGet.Packaging;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using System.Net.Http;
 
 namespace MESWebDev.Services
@@ -274,6 +276,1018 @@ namespace MESWebDev.Services
         public async Task<ManpowerModel> GetManpowerDetail(int id)
         {
             return await _con.UV_PE_Manpower_tbl.FindAsync(id) ?? new ManpowerModel();
+        }
+
+        #endregion
+
+        #region ProdCapacity
+
+        public async Task<DataTable> GetProdCapacity(Dictionary<string, object> dic)
+        {
+            return await _proc.Proc_GetDatatable("spweb_UV_PE_GetProdCapacity", dic);
+        }
+
+        public async Task<ProdCapacityModel> GetProdCapacityDetail(int id)
+        {
+            return await _con.UV_PE_ProdCapacity_tbl
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id && x.IsActive)
+                ?? new ProdCapacityModel();
+        }
+
+        public async Task<string> AddProdCapacity(ProdCapacityModel model)
+        {
+            try
+            {
+                if (model == null)
+                    return "Input model is null.";
+
+                var validation = ValidateProdCapacity(model);
+                if (validation != null)
+                    return validation;
+
+                var previous = await _con.UV_PE_ProdCapacity_tbl
+                    .Where(x => x.IsActive
+                        && x.Type == model.Type
+                        && x.Customer1 == model.Customer1
+                        && x.Customer2 == model.Customer2
+                        && x.UNo == model.UNo
+                        && x.BModel == model.BModel
+                        && x.PCBNo == model.PCBNo
+                        && x.PCBType == model.PCBType
+                        && x.UpdateDate == model.UpdateDate)
+                    .ToListAsync();
+
+                await using var transaction = await _con.Database.BeginTransactionAsync();
+
+                _con.UV_PE_ProdCapacity_tbl.RemoveRange(previous);
+
+                model.Id = 0;
+                model.IsActive = true;
+                model.CreatedDt = DateTime.Now;
+                model.CreatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+
+                await _con.UV_PE_ProdCapacity_tbl.AddAsync(model);
+                await _con.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        public async Task<string> EditProdCapacity(ProdCapacityModel model)
+        {
+            try
+            {
+                if (model == null)
+                    return "Input model is null.";
+
+                var validation = ValidateProdCapacity(model);
+                if (validation != null)
+                    return validation;
+
+                var current = await _con.UV_PE_ProdCapacity_tbl
+                    .FirstOrDefaultAsync(x => x.Id == model.Id && x.IsActive);
+
+                if (current == null)
+                    return "Production capacity record was not found.";
+
+                ApplyProdCapacityValues(current, model);
+                current.UpdatedDt = DateTime.Now;
+                current.UpdatedBy = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                await _con.SaveChangesAsync();
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        public async Task<string> DeleteProdCapacity(List<int> ids)
+        {
+            try
+            {
+                if (ids == null || ids.Count == 0)
+                    return string.Empty;
+
+                var records = await _con.UV_PE_ProdCapacity_tbl
+                    .Where(x => x.IsActive && ids.Contains(x.Id))
+                    .ToListAsync();
+
+                var user = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                var now = DateTime.Now;
+                foreach (var record in records)
+                {
+                    record.IsActive = false;
+                    record.UpdatedDt = now;
+                    record.UpdatedBy = user;
+                }
+
+                await _con.SaveChangesAsync();
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        public async Task<PEViewModel> UploadProdCapacity(IFormFile file)
+        {
+            var result = new PEViewModel();
+
+            if (file == null || file.Length == 0)
+            {
+                result.error_msg = "Please select a non-empty Excel file.";
+                return result;
+            }
+
+            if (!new[] { ".xlsx", ".xls" }.Contains(
+                    Path.GetExtension(file.FileName), StringComparer.OrdinalIgnoreCase))
+            {
+                result.error_msg = "Only .xlsx and .xls files are supported.";
+                return result;
+            }
+
+            const long maxUploadBytes = 20 * 1024 * 1024;
+            if (file.Length > maxUploadBytes)
+            {
+                result.error_msg = "The Excel file must be 20 MB or smaller.";
+                return result;
+            }
+
+            try
+            {
+                // Exact file_name comparison: prevents loading config of other modules.
+                var configs = await _con.Master_UploadFile_mst.AsNoTracking()
+                    .Where(x => x.file_name == "PEProdCapacity")
+                    .OrderBy(x => x.col_index)
+                    .ToListAsync();
+
+                if (configs.Count == 0)
+                {
+                    result.error_msg = "PEProdCapacity upload mapping is not configured.";
+                    return result;
+                }
+
+                var colMap = configs.ToDictionary(
+                    x => x.db_col_name,
+                    x => x.col_index,
+                    StringComparer.OrdinalIgnoreCase);
+
+                string[] requiredColumns =
+                {
+                    "Type", "Customer1", "Customer2", "UNo", "BModel", "PCBNo",
+                    "PCBType", "UpdateDate", "SMTPointsTotal", "COBHC", "COBOutput",
+                    "SMTHC", "SMTOutput", "InsertHC", "InsertOutput", "SCHC",
+                    "SCOutput", "AssyHC", "AssyOutput", "MicHC", "MicOutput",
+                    "OtherHC", "OtherOutput", "SMTTop", "SMTBottom", "SMTTotal", "Insert"
+                };
+
+                var missing = requiredColumns.Where(x => !colMap.ContainsKey(x)).ToArray();
+                if (missing.Length > 0)
+                {
+                    result.error_msg = "Missing upload mapping: " + string.Join(", ", missing);
+                    return result;
+                }
+
+                int headerRow = configs[0].header_row; // Usually 1 (first row is column names).
+                var rows = new List<ProdCapacityModel>();
+                // Keep UploadFile within common NVARCHAR(100) database constraints.
+                var safeOriginalName = Path.GetFileName(file.FileName);
+                if (safeOriginalName.Length > 70)
+                    safeOriginalName = safeOriginalName.Substring(0, 70);
+                var uploadName = $"{safeOriginalName}_{DateTime.Now:yyyyMMddHHmmssfff}";
+                var user = _hca.HttpContext?.User?.Identity?.Name ?? string.Empty;
+                var now = DateTime.Now;
+
+                using var stream = new MemoryStream();
+                await file.CopyToAsync(stream);
+                stream.Position = 0; // Important after CopyToAsync.
+
+                // Reads ONLY worksheet 1, which must be the flat "Upload Data" sheet.
+                using var reader = ExcelReaderFactory.CreateReader(stream);
+                int excelRow = 0;
+                while (reader.Read())
+                {
+                    excelRow++;
+                    if (excelRow <= headerRow)
+                        continue;
+
+                    object? Raw(string column)
+                    {
+                        if (!colMap.TryGetValue(column, out int index))
+                            return null; // Optional column (PcsPerSheet) not configured.
+                        if (index < 0 || index >= reader.FieldCount)
+                            return null;
+                        return reader.GetValue(index);
+                    }
+
+                    string Txt(string column) => Convert.ToString(Raw(column), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+                    int Int(string column) => ParseProdCapacityInt(Raw(column), excelRow, column);
+                    decimal Dec(string column) => ParseProdCapacityDecimal(Raw(column), excelRow, column);
+
+                    // Skip entirely blank rows, not rows where numeric values happen to be 0.
+                    if (requiredColumns.All(x => IsBlankProdCapacityCell(Raw(x)))
+                        && IsBlankProdCapacityCell(Raw("PcsPerSheet")))
+                        continue;
+
+                    var model = new ProdCapacityModel
+                    {
+                        Type = Txt("Type"),
+                        Customer1 = Txt("Customer1"),
+                        Customer2 = Txt("Customer2"),
+                        UNo = Txt("UNo"),
+                        BModel = Txt("BModel"),
+                        PCBNo = Txt("PCBNo"),
+                        PCBType = Txt("PCBType"),
+                        UpdateDate = ParseProdCapacityDate(Raw("UpdateDate"), excelRow),
+                        SMTPointsTotal = Dec("SMTPointsTotal"),
+                        COBHC = Dec("COBHC"),
+                        COBOutput = Dec("COBOutput"),
+                        SMTHC = Dec("SMTHC"),
+                        SMTOutput = Dec("SMTOutput"),
+                        InsertHC = Dec("InsertHC"),
+                        InsertOutput = Dec("InsertOutput"),
+                        SCHC = Dec("SCHC"),
+                        SCOutput = Dec("SCOutput"),
+                        AssyHC = Dec("AssyHC"),
+                        AssyOutput = Dec("AssyOutput"),
+                        MicHC = Dec("MicHC"),
+                        MicOutput = Dec("MicOutput"),
+                        OtherHC = Dec("OtherHC"),
+                        OtherOutput = Dec("OtherOutput"),
+                        SMTTop = Int("SMTTop"),
+                        SMTBottom = Int("SMTBottom"),
+                        SMTTotal = Int("SMTTotal"),
+                        Insert = Int("Insert"),
+                        PcsPerSheet = Int("PcsPerSheet"),
+                        UploadFile = uploadName,
+                        IsActive = true,
+                        CreatedDt = now,
+                        CreatedBy = user
+                    };
+
+                    var validation = ValidateProdCapacity(model);
+                    if (validation != null)
+                    {
+                        result.error_msg = $"Row {excelRow}: {validation}";
+                        return result;
+                    }
+
+                    rows.Add(model);
+                }
+
+                if (rows.Count == 0)
+                {
+                    result.error_msg = "No data found in the uploaded Excel file.";
+                    return result;
+                }
+
+                var duplicate = rows.Where(i=>i.UpdateDate != null).GroupBy(ProdCapacityKey, StringComparer.OrdinalIgnoreCase)
+                    //.Select(ProdCapacityKey)
+                    .FirstOrDefault(x => x.Count() > 1);
+                if (duplicate != null)
+                {
+                    result.error_msg = $"Excel contains duplicate rows for the same product key and UpdateDate: {duplicate.Key}.";
+                    return result;
+                }
+
+                // Full-file validation finishes BEFORE modifying the database.
+                // Query likely candidates once instead of querying once per Excel row.
+                var unos = rows.Select(x => x.UNo!).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                var importedKeys = new HashSet<string>(
+                    rows.Select(ProdCapacityKey), StringComparer.OrdinalIgnoreCase);
+
+                await using (var transaction = await _con.Database.BeginTransactionAsync())
+                {
+                    var candidates = new List<ProdCapacityModel>();
+                    const int batchSize = 500; // Avoid excessive SQL IN parameters.
+                    for (int offset = 0; offset < unos.Count; offset += batchSize)
+                    {
+                        var batch = unos.Skip(offset).Take(batchSize).ToList();
+                        var batchRows = await _con.UV_PE_ProdCapacity_tbl
+                            .Where(x => x.IsActive && x.UNo != null && batch.Contains(x.UNo))
+                            .ToListAsync();
+                        candidates.AddRange(batchRows);
+                    }
+
+                    var oldVersions = candidates
+                        .Where(x => importedKeys.Contains(ProdCapacityKey(x)))
+                        .ToList();
+
+                    _con.UV_PE_ProdCapacity_tbl.RemoveRange(oldVersions);
+                    await _con.UV_PE_ProdCapacity_tbl.AddRangeAsync(rows);
+                    await _con.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+
+                result.data = await GetProdCapacity(new Dictionary<string, object>
+                {
+                    ["@filename"] = uploadName
+                });
+            }
+            catch (Exception ex)
+            {
+                result.error_msg = ex.Message;
+            }
+
+            return result;
+        }
+
+        public async Task<byte[]> ExportProdCapacityExcel(DataTable table)
+        {
+            //var table = await GetProdCapacity(dic);
+            using var workbook = new XLWorkbook();
+            BuildProdCapacityReportSheet(workbook, table);
+            BuildProdCapacityUploadSheet(workbook, table);
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return stream.ToArray();
+        }
+
+        // ----------------------------------------------------------------------
+        // Private helpers
+        // ----------------------------------------------------------------------
+
+        private static string? ValidateProdCapacity(ProdCapacityModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Type)) return "Type is required.";
+            if (string.IsNullOrWhiteSpace(model.UNo)) return "UNo is required.";
+            //if (string.IsNullOrWhiteSpace(model.BModel)) return "BModel is required.";
+            //if (string.IsNullOrWhiteSpace(model.PCBNo)) return "PCBNo is required.";
+            //if (string.IsNullOrWhiteSpace(model.PCBType)) return "PCBType is required.";
+            return null;
+        }
+
+        private static string ProdCapacityKey(ProdCapacityModel m) => string.Join("\u001F",
+            (m.Type ?? "").Trim().ToUpperInvariant(),
+            (m.Customer1 ?? "").Trim().ToUpperInvariant(),
+            (m.Customer2 ?? "").Trim().ToUpperInvariant(),
+            (m.UNo ?? "").Trim().ToUpperInvariant(),
+            (m.BModel ?? "").Trim().ToUpperInvariant(),
+            (m.PCBNo ?? "").Trim().ToUpperInvariant(),
+            (m.PCBType ?? "").Trim().ToUpperInvariant(),
+            m.UpdateDate?.Ticks.ToString(CultureInfo.InvariantCulture) ?? "NULL");
+
+        private static bool IsBlankProdCapacityCell(object? value) =>
+            value == null || value == DBNull.Value ||
+            (value is string text && string.IsNullOrWhiteSpace(text));
+
+        private decimal ParseProdCapacityDecimal2(object value, int excelRow, string column)
+        {
+            if (value == null || value == DBNull.Value)
+                return 0m;
+
+            if (value is decimal dec)
+                return dec;
+
+            if (value is double dbl)
+                return Convert.ToDecimal(dbl);
+
+            if (value is float flt)
+                return Convert.ToDecimal(flt);
+
+            if (value is int i)
+                return i;
+
+            if (value is long l)
+                return l;
+
+            string text = Convert.ToString(
+                value, CultureInfo.InvariantCulture)?.Trim();
+
+            if (decimal.TryParse(
+                text,
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out decimal result))
+            {
+                return result;
+            }
+
+            throw new Exception(
+                $"Row {excelRow}, Column {column}: " +
+                $"Invalid decimal value '{text}'.");
+        }
+
+        private static decimal ParseProdCapacityDecimal(object? value, int row, string column)
+        {
+            if (IsBlankProdCapacityCell(value)) return 0m;
+            try
+            {
+                if (value is not string)
+                    return Convert.ToDecimal(value, CultureInfo.InvariantCulture);
+
+                var text = ((string)value).Trim();
+                if (decimal.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out var number)
+                    || decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out number))
+                    return number;
+            }
+            catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
+            {
+                // Wrapped below with Excel row and column.
+            }
+            throw new FormatException($"Invalid decimal at row {row}, column {column}: '{value}'.");
+        }
+
+        private static int ParseProdCapacityInt(object? value, int row, string column)
+        {
+            if (IsBlankProdCapacityCell(value)) return 0;
+            var number = ParseProdCapacityDecimal(value, row, column);
+            if (number != decimal.Truncate(number)
+                || number < int.MinValue || number > int.MaxValue)
+                throw new FormatException($"Invalid integer at row {row}, column {column}: '{value}'.");
+            return (int)number;
+        }
+
+        private static DateTime? ParseProdCapacityDate(object? value, int row)
+        {
+            if (IsBlankProdCapacityCell(value)) return null;
+            if (value is DateTime dt) return dt;
+
+            if (value is double serial)
+            {
+                try { return DateTime.FromOADate(serial); }
+                catch (ArgumentException) { /* handled below */ }
+            }
+
+            var text = Convert.ToString(value, CultureInfo.InvariantCulture);
+            if (DateTime.TryParse(text, CultureInfo.GetCultureInfo("vi-VN"),
+                    DateTimeStyles.None, out var parsed)
+                || DateTime.TryParse(text, CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out parsed))
+                return parsed;
+
+            throw new FormatException($"Invalid date at row {row}, column UpdateDate: '{value}'.");
+        }
+
+        private static void ApplyProdCapacityValues(ProdCapacityModel dst, ProdCapacityModel src)
+        {
+            dst.Type = src.Type;
+            dst.Customer1 = src.Customer1;
+            dst.Customer2 = src.Customer2;
+            dst.UNo = src.UNo;
+            dst.BModel = src.BModel;
+            dst.PCBNo = src.PCBNo;
+            dst.PCBType = src.PCBType;
+            dst.UpdateDate = src.UpdateDate;
+            dst.SMTPointsTotal = src.SMTPointsTotal;
+            dst.COBHC = src.COBHC;
+            dst.COBOutput = src.COBOutput;
+            dst.SMTHC = src.SMTHC;
+            dst.SMTOutput = src.SMTOutput;
+            dst.InsertHC = src.InsertHC;
+            dst.InsertOutput = src.InsertOutput;
+            dst.SCHC = src.SCHC;
+            dst.SCOutput = src.SCOutput;
+            dst.AssyHC = src.AssyHC;
+            dst.AssyOutput = src.AssyOutput;
+            dst.MicHC = src.MicHC;
+            dst.MicOutput = src.MicOutput;
+            dst.OtherHC = src.OtherHC;
+            dst.OtherOutput = src.OtherOutput;
+            dst.SMTTop = src.SMTTop;
+            dst.SMTBottom = src.SMTBottom;
+            dst.SMTTotal = src.SMTTotal;
+            dst.Insert = src.Insert;
+            dst.PcsPerSheet = src.PcsPerSheet;
+        }
+
+        private static readonly string[] ProdCapacityDbColumns =
+        {
+            "Type", "Customer1", "Customer2", "UNo", "BModel", "PCBNo",
+            "PCBType", "UpdateDate", "SMTPointsTotal", "COBHC", "COBOutput",
+            "SMTHC", "SMTOutput", "InsertHC", "InsertOutput", "SCHC",
+            "SCOutput", "AssyHC", "AssyOutput", "MicHC", "MicOutput",
+            "OtherHC", "OtherOutput", "SMTTop", "SMTBottom", "SMTTotal",
+            "Insert", "PcsPerSheet"
+        };
+
+        private static string CapacityNumberFormat(
+                                decimal value,
+                                int maxDecimals = 6)
+        {
+            decimal rounded = Math.Round(
+                value,
+                maxDecimals,
+                MidpointRounding.AwayFromZero);
+
+            string text = rounded.ToString(
+                "0." + new string('#', maxDecimals),
+                CultureInfo.InvariantCulture);
+
+            int dotIndex = text.IndexOf('.');
+
+            if (dotIndex < 0)
+                return "#,##0";
+
+            int decimalPlaces = text.Length - dotIndex - 1;
+
+            return decimalPlaces == 0
+                ? "#,##0"
+                : "#,##0." + new string('0', decimalPlaces);
+        }
+
+        private static void SetCapacityDecimal(
+            IXLWorksheet ws,
+            int row,
+            int col,
+            decimal value)
+        {
+            SetDecimal(
+                ws,
+                row,
+                col,
+                value,
+                CapacityNumberFormat(value));
+        }
+
+        private static void BuildProdCapacityReportSheet(
+            XLWorkbook workbook,
+            DataTable data)
+        {
+            const int groupRow = 1;
+            const int headerRow = 2;
+            const int firstDataRow = 3;
+
+            // ==================== HEADERS ====================
+
+            string[] headings =
+            {
+                "Type", "Customer 1", "Customer 2", "U-No",
+                "B-Model", "PCB No", "PCB Type",
+                "Update Date", "FY", "VersionStatus", "SMT Points",
+                "SMT", "Insert", "SC", "Assy", "MIC", "Other", "TOTAL",
+                "COB HC", "COB Output",
+                "SMT HC", "SMT Output",
+                "Insert HC", "Insert Output",
+                "SC HC", "SC Output",
+                "Assy HC", "Assy Output",
+                "MIC HC", "MIC Output",
+                "Other HC", "Other Output",
+                "TOP", "Bottom", "TTL", "Insert", "Pcs / Sheet"
+            };
+
+            int lastCol = headings.Length;
+
+            // Ensure SQL returns calculated values.
+            string[] manDayFields =
+            {
+                "MdSMT",
+                "MdInsert",
+                "MdSC",
+                "MdAssy",
+                "MdMic",
+                "MdOther",
+                "MdTotal"
+            };
+
+            string[] requiredFields =
+            {
+                "FY",
+                "VersionStatus",
+                "SMTPointsTotal"
+            };
+
+            foreach (string field in requiredFields.Concat(manDayFields))
+            {
+                if (!data.Columns.Contains(field))
+                    throw new ArgumentException(
+                        $"Missing column '{field}' in Production Capacity data.");
+            }
+
+            // ==================== WORKSHEET ====================
+
+            var ws = workbook.Worksheets.Add("Capacity Report");
+            ws.ShowGridLines = false;
+
+            var navy = XLColor.FromHtml("#14243A");
+            var teal = XLColor.FromHtml("#087E8B");
+            var paleTeal = XLColor.FromHtml("#E8F6F4");
+            var gray = XLColor.FromHtml("#64748B");
+            var alternate = XLColor.FromHtml("#F6F9FC");
+
+            // ==================== GROUP HEADER ====================
+
+            var groups = new (string title, int from, int to, string hex)[]
+            {
+                ("PRODUCT INFORMATION", 1, 7, "#263A52"),
+                ("PERIOD / POINTS", 8, 11, "#475569"),
+                ("MAN-DAY / PERSON-DAYS PER PIECE", 12, 18, "#087E8B"),
+                ("COB", 19, 20, "#263A52"),
+                ("SMT", 21, 22, "#263A52"),
+                ("INSERT", 23, 24, "#263A52"),
+                ("SC", 25, 26, "#263A52"),
+                ("ASSEMBLY", 27, 28, "#263A52"),
+                ("MIC", 29, 30, "#263A52"),
+                ("OTHER", 31, 32, "#263A52"),
+                ("SMT / PCB SIDE", 33, 35, "#445D75"),
+                ("INSERT", 36, 36, "#445D75"),
+                ("SHEET", 37, 37, "#445D75")
+            };
+
+            ws.Row(groupRow).Height = 29;
+
+            foreach (var group in groups)
+            {
+                var range = ws.Range(
+                    groupRow, group.from,
+                    groupRow, group.to);
+
+                if (group.from != group.to)
+                    range.Merge();
+
+                range.FirstCell().Value = group.title;
+
+                range.Style.Fill.BackgroundColor =
+                    XLColor.FromHtml(group.hex);
+
+                range.Style.Font.FontColor = XLColor.White;
+                range.Style.Font.FontSize = 10;
+                range.Style.Font.Bold = true;
+
+                range.Style.Alignment.Horizontal =
+                    XLAlignmentHorizontalValues.Center;
+
+                range.Style.Alignment.Vertical =
+                    XLAlignmentVerticalValues.Center;
+            }
+
+            // ==================== COLUMN HEADER ====================
+
+            ws.Row(headerRow).Height = 38;
+
+            for (int c = 1; c <= lastCol; c++)
+            {
+                var cell = ws.Cell(headerRow, c);
+
+                cell.Value = headings[c - 1];
+
+                cell.Style.Fill.BackgroundColor =
+                    c >= 12 && c <= 18
+                        ? XLColor.FromHtml("#D2EEE9")
+                        : XLColor.FromHtml("#E8EDF4");
+
+                cell.Style.Font.FontColor = navy;
+                cell.Style.Font.FontSize = 10;
+                cell.Style.Font.Bold = true;
+                cell.Style.Font.FontName = "Aptos";
+
+                cell.Style.Alignment.Horizontal =
+                    XLAlignmentHorizontalValues.Center;
+
+                cell.Style.Alignment.Vertical =
+                    XLAlignmentVerticalValues.Center;
+
+                cell.Style.Alignment.WrapText = true;
+
+                cell.Style.Border.BottomBorder =
+                    XLBorderStyleValues.Medium;
+
+                cell.Style.Border.BottomBorderColor = teal;
+            }
+
+            // ==================== SOURCE FIELDS ====================
+
+            string[] productFields =
+            {
+                "Type", "Customer1", "Customer2",
+                "UNo", "BModel", "PCBNo", "PCBType"
+            };
+
+            string[] metricFields =
+            {
+                "COBHC", "COBOutput",
+                "SMTHC", "SMTOutput",
+                "InsertHC", "InsertOutput",
+                "SCHC", "SCOutput",
+                "AssyHC", "AssyOutput",
+                "MicHC", "MicOutput",
+                "OtherHC", "OtherOutput",
+                "SMTTop", "SMTBottom", "SMTTotal",
+                "Insert", "PcsPerSheet"
+            };
+
+            // ==================== DATA ====================
+
+            for (int i = 0; i < data.Rows.Count; i++)
+            {
+                DataRow record = data.Rows[i];
+                int r = firstDataRow + i;
+
+                ws.Row(r).Height = 25;
+
+                var line = ws.Range(r, 1, r, lastCol);
+
+                line.Style.Fill.BackgroundColor =
+                    i % 2 == 0 ? XLColor.White : alternate;
+
+                line.Style.Font.FontName = "Aptos";
+                line.Style.Font.FontSize = 10;
+                line.Style.Font.FontColor = navy;
+
+                line.Style.Alignment.Vertical =
+                    XLAlignmentVerticalValues.Center;
+
+                line.Style.Border.BottomBorder =
+                    XLBorderStyleValues.Hair;
+
+                line.Style.Border.BottomBorderColor =
+                    XLColor.FromHtml("#E5ECF1");
+
+                // ================= PRODUCT A:G =================
+
+                for (int c = 1; c <= productFields.Length; c++)
+                {
+                    ws.Cell(r, c).Value =
+                        DataText(record, productFields[c - 1]);
+                }
+
+                ws.Cell(r, 4).Style.Font.Bold = true;
+                ws.Cell(r, 5).Style.Font.Bold = true;
+
+                // ================= UPDATE DATE H =================
+
+                var date = DataDate(record, "UpdateDate");
+
+                if (date.HasValue)
+                {
+                    var dateCell = ws.Cell(r, 8);
+
+                    dateCell.Value = date.Value;
+                    dateCell.Style.DateFormat.Format = "yyyy/MM/dd";
+                }
+
+                // ================= FY I =================
+                // Value calculated by SQL.
+
+                ws.Cell(r, 9).Value = DataText(record, "FY");
+
+                // ================= VERSION STATUS J =================
+
+                string version = DataText(record, "VersionStatus").Trim();
+
+                string versionText = version switch
+                {
+                    "1" => "Latest",
+                    "2" => "Others",
+                    _ => version
+                };
+
+                var versionCell = ws.Cell(r, 10);
+
+                versionCell.Value = versionText;
+                versionCell.Style.Font.Bold = true;
+
+                if (versionText.Equals(
+                    "Latest", StringComparison.OrdinalIgnoreCase))
+                {
+                    versionCell.Style.Fill.BackgroundColor =
+                        XLColor.FromHtml("#DCFCE7");
+
+                    versionCell.Style.Font.FontColor =
+                        XLColor.FromHtml("#166534");
+                }
+                else if (versionText.Equals(
+                    "Others", StringComparison.OrdinalIgnoreCase))
+                {
+                    versionCell.Style.Fill.BackgroundColor =
+                        XLColor.FromHtml("#F1F5F9");
+
+                    versionCell.Style.Font.FontColor =
+                        XLColor.FromHtml("#64748B");
+                }
+
+                // ================= SMT POINTS K =================
+
+                SetCapacityDecimal(
+                    ws, r, 11,
+                    DataDecimal(record, "SMTPointsTotal"));
+
+                // ================= MAN-DAY L:R =================
+                // Use values calculated by SQL.
+                // No Excel formula required.
+
+                for (int c = 12; c <= 18; c++)
+                {
+                    string field = manDayFields[c - 12];
+
+                    decimal value = DataDecimal(record, field);
+
+                    SetCapacityDecimal(ws, r, c, value);
+                }
+
+                // Highlight Total Man-day.
+                var totalCell = ws.Cell(r, 18);
+
+                totalCell.Style.Fill.BackgroundColor = paleTeal;
+                totalCell.Style.Font.Bold = true;
+                totalCell.Style.Font.FontColor =
+                    XLColor.FromHtml("#065E68");
+
+                // ================= HC / OUTPUT S:AF =================
+                // All HC columns now use decimal.
+                // All Output columns are also read as decimal.
+
+                for (int c = 19; c <= 32; c++)
+                {
+                    string field = metricFields[c - 19];
+
+                    decimal value = DataDecimal(record, field);
+
+                    SetCapacityDecimal(ws, r, c, value);
+                }
+
+                // ================= PCB / LAYOUT AG:AK =================
+                // Keep existing integer fields.
+
+                for (int c = 33; c <= 37; c++)
+                {
+                    string field = metricFields[c - 19];
+
+                    SetInt(
+                        ws, r, c,
+                        DataInt(record, field));
+                }
+
+                // ================= ALIGNMENT =================
+
+                ws.Range(r, 8, r, lastCol)
+                    .Style.Alignment.Horizontal =
+                        XLAlignmentHorizontalValues.Center;
+            }
+
+            // ==================== EMPTY DATA ====================
+
+            if (data.Rows.Count == 0)
+            {
+                ws.Range(
+                    firstDataRow, 1,
+                    firstDataRow, lastCol).Merge();
+
+                ws.Cell(firstDataRow, 1).Value =
+                    "No production capacity records found.";
+
+                ws.Cell(firstDataRow, 1).Style.Font.FontColor = gray;
+
+                ws.Cell(firstDataRow, 1)
+                    .Style.Alignment.Horizontal =
+                        XLAlignmentHorizontalValues.Center;
+
+                ws.Row(firstDataRow).Height = 31;
+            }
+            else
+            {
+                int lastDataRow = firstDataRow + data.Rows.Count - 1;
+
+                ws.Range(
+                    headerRow, 1,
+                    lastDataRow, lastCol).SetAutoFilter();
+            }
+
+            // ==================== COLUMN WIDTH ====================
+
+            for (int c = 1; c <= lastCol; c++)
+            {
+                ws.Column(c).Width = c <= 7 ? 16 : 14;
+            }
+
+            ws.Column(2).Width = 18;
+            ws.Column(3).Width = 18;
+            ws.Column(4).Width = 16;
+            ws.Column(5).Width = 18;
+            ws.Column(6).Width = 19;
+            ws.Column(7).Width = 16;
+
+            ws.Column(8).Width = 17;   // Update Date
+            ws.Column(9).Width = 11;   // FY
+            ws.Column(10).Width = 18;  // VersionStatus
+            ws.Column(11).Width = 17;  // SMT Points
+            ws.Column(18).Width = 17;  // Total Man-day
+
+            foreach (int c in new[] { 20, 22, 24, 26, 28, 30, 32 })
+            {
+                ws.Column(c).Width = 18;
+            }
+
+            ws.Column(37).Width = 18;
+
+            // ==================== FREEZE ====================
+
+            ws.SheetView.FreezeRows(headerRow);
+            ws.SheetView.FreezeColumns(7);
+
+            // ==================== PAGE SETUP ====================
+
+            ws.PageSetup.PageOrientation =
+                XLPageOrientation.Landscape;
+        }
+
+
+        private static void BuildProdCapacityUploadSheet(XLWorkbook workbook, DataTable data)
+        {
+            var ws = workbook.Worksheets.Add("Upload Data");
+            ws.ShowGridLines = false;
+            for (int c = 1; c <= ProdCapacityDbColumns.Length; c++)
+            {
+                var header = ws.Cell(1, c);
+                header.Value = ProdCapacityDbColumns[c - 1];
+                header.Style.Fill.BackgroundColor = XLColor.FromHtml("#1E344F");
+                header.Style.Font.FontColor = XLColor.White;
+                header.Style.Font.Bold = true;
+                header.Style.Font.FontName = "Aptos";
+                header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                header.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                ws.Column(c).Width = (c <= 8) ? 17 : 16;
+            }
+            ws.Row(1).Height = 31;
+            ws.Column(6).Width = 20;
+
+            for (int i = 0; i < data.Rows.Count; i++)
+            {
+                var row = data.Rows[i];
+                int r = i + 2;
+                ws.Row(r).Height = 23;
+                for (int j = 0; j < ProdCapacityDbColumns.Length; j++)
+                {
+                    var name = ProdCapacityDbColumns[j];
+                    var cell = ws.Cell(r, j + 1);
+                    if (name == "UpdateDate")
+                    {
+                        var dt = DataDate(row, name);
+                        if (dt.HasValue)
+                        {
+                            cell.Value = dt.Value;
+                            cell.Style.DateFormat.Format = "yyyy/MM/dd";
+                        }
+                    }
+                    else if (j <= 6)
+                        cell.Value = DataText(row, name);
+                    else if (name is "SMTPointsTotal" or "COBOutput" or "SMTOutput"
+                             or "InsertOutput" or "SCOutput" or "AssyOutput" or "MicOutput")
+                        cell.Value = DataDecimal(row, name);
+                    else
+                        cell.Value = DataInt(row, name);
+
+                    cell.Style.Font.FontName = "Aptos";
+                    cell.Style.Font.FontSize = 10;
+                    cell.Style.Font.FontColor = XLColor.FromHtml("#087C59"); // DB-linked values
+                    cell.Style.Fill.BackgroundColor = i % 2 == 0
+                        ? XLColor.White : XLColor.FromHtml("#F4F8FC");
+                    if (j > 7) cell.Style.NumberFormat.Format = "General";
+                    //name is "SMTPointsTotal" or "COBOutput" or "SMTOutput"
+                    //      or "InsertOutput" or "SCOutput" or "AssyOutput" or "MicOutput"
+                    //        ? "#,##0.######" : "#,##0";
+                }
+            }
+            if (data.Rows.Count > 0)
+                ws.Range(1, 1, data.Rows.Count + 1, ProdCapacityDbColumns.Length).SetAutoFilter();
+            ws.SheetView.FreezeRows(1);
+        }
+
+        private static string DataText(DataRow row, string field)
+        {
+            if (!row.Table.Columns.Contains(field) || row.IsNull(field)) return string.Empty;
+            return Convert.ToString(row[field], CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+        private static decimal DataDecimal(DataRow row, string field)
+        {
+            if (!row.Table.Columns.Contains(field) || row.IsNull(field)) return 0m;
+            return Convert.ToDecimal(row[field], CultureInfo.InvariantCulture);
+        }
+
+        private static int DataInt(DataRow row, string field)
+        {
+            if (!row.Table.Columns.Contains(field) || row.IsNull(field)) return 0;
+            return Convert.ToInt32(row[field], CultureInfo.InvariantCulture);
+        }
+
+        private static DateTime? DataDate(DataRow row, string field)
+        {
+            if (!row.Table.Columns.Contains(field) || row.IsNull(field)) return null;
+            return Convert.ToDateTime(row[field], CultureInfo.InvariantCulture);
+        }
+
+        private static void SetDecimal(IXLWorksheet ws, int row, int col,
+            decimal value, string numberFormat)
+        {
+            var cell = ws.Cell(row, col);
+            cell.Value = value;
+            cell.Style.NumberFormat.Format = numberFormat;
+        }
+
+        private static void SetInt(IXLWorksheet ws, int row, int col, int value)
+        {
+            var cell = ws.Cell(row, col);
+            cell.Value = value;
+            cell.Style.NumberFormat.Format = "#,##0";
         }
 
         #endregion

@@ -1,0 +1,149 @@
+@using MESWebDev.Models.PE
+@model ProdCapacityModel
+
+<div class="row g-3">
+    <div class="col-12 mt-4"><div class="capacity-section-heading"><i class="bi bi-box-seam me-2"></i>Product information</div></div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="Type" class="form-label">Type <span class="text-danger">*</span></label>
+        <input asp-for="Type" type="text" maxlength="100" class="form-control form-control-sm" required />
+        <span asp-validation-for="Type" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="Customer1" class="form-label">Customer 1</label>
+        <input asp-for="Customer1" type="text" maxlength="100" class="form-control form-control-sm" />
+        <span asp-validation-for="Customer1" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="Customer2" class="form-label">Customer 2</label>
+        <input asp-for="Customer2" type="text" maxlength="100" class="form-control form-control-sm" />
+        <span asp-validation-for="Customer2" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="UNo" class="form-label">U-No <span class="text-danger">*</span></label>
+        <input asp-for="UNo" type="text" maxlength="100" class="form-control form-control-sm" required />
+        <span asp-validation-for="UNo" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="BModel" class="form-label">B-Model <span class="text-danger">*</span></label>
+        <input asp-for="BModel" type="text" maxlength="100" class="form-control form-control-sm" required />
+        <span asp-validation-for="BModel" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="PCBNo" class="form-label">PCB No </label>
+        <input asp-for="PCBNo" type="text" maxlength="100" class="form-control form-control-sm" />
+        @* <span asp-validation-for="PCBNo" class="text-danger small"></span> *@
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="PCBType" class="form-label">PCB Type </label>
+        <input asp-for="PCBType" type="text" maxlength="100" class="form-control form-control-sm"  />
+        <span asp-validation-for="PCBType" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="UpdateDate" class="form-label">Update Date</label>
+        <input asp-for="UpdateDate" type="date" asp-format="{0:yyyy-MM-dd}" class="form-control form-control-sm" />
+        <span asp-validation-for="UpdateDate" class="text-danger small"></span>
+    </div>
+    <div class="col-12 mt-4"><div class="capacity-section-heading"><i class="bi bi-cpu me-2"></i>SMT & COB</div></div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="SMTPointsTotal" class="form-label">SMT Points Total</label>
+        <input asp-for="SMTPointsTotal" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <span asp-validation-for="SMTPointsTotal" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="COBHC" class="form-label">COB HC</label>
+        <input asp-for="COBHC" type="number" min="0" step="0.01" class="form-control form-control-sm" />
+        <span asp-validation-for="COBHC" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="COBOutput" class="form-label">COB Output</label>
+        <input asp-for="COBOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <span asp-validation-for="COBOutput" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="SMTHC" class="form-label">SMT HC</label>
+        <input asp-for="SMTHC" type="number" min="0" step="0.01" class="form-control form-control-sm" />
+        <span asp-validation-for="SMTHC" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="SMTOutput" class="form-label">SMT Output</label>
+        <input asp-for="SMTOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <span asp-validation-for="SMTOutput" class="text-danger small"></span>
+    </div>
+    <div class="col-12 mt-4"><div class="capacity-section-heading"><i class="bi bi-diagram-3 me-2"></i>Insert, SC & Assembly</div></div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="InsertHC" class="form-label">Insert HC</label>
+        <input asp-for="InsertHC" type="number" min="0" step="0.01" class="form-control form-control-sm" />
+        <span asp-validation-for="InsertHC" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="InsertOutput" class="form-label">Insert Output</label>
+        <input asp-for="InsertOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <span asp-validation-for="InsertOutput" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="SCHC" class="form-label">SC HC</label>
+        <input asp-for="SCHC" type="number" min="0" step="0.01" class="form-control form-control-sm" />
+        <span asp-validation-for="SCHC" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="SCOutput" class="form-label">SC Output</label>
+        <input asp-for="SCOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <span asp-validation-for="SCOutput" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="AssyHC" class="form-label">Assembly HC</label>
+        <input asp-for="AssyHC" type="number" min="0" step="0.01" class="form-control form-control-sm" />
+        <span asp-validation-for="AssyHC" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="AssyOutput" class="form-label">Assembly Output</label>
+        <input asp-for="AssyOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <span asp-validation-for="AssyOutput" class="text-danger small"></span>
+    </div>
+    <div class="col-12 mt-4"><div class="capacity-section-heading"><i class="bi bi-grid-3x3-gap me-2"></i>MIC, Other & PCB layout</div></div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="MicHC" class="form-label">MIC HC</label>
+        <input asp-for="MicHC" type="number" min="0" step="0.01" class="form-control form-control-sm" />
+        <span asp-validation-for="MicHC" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="MicOutput" class="form-label">MIC Output</label>
+        <input asp-for="MicOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <span asp-validation-for="MicOutput" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="OtherHC" class="form-label">Other HC</label>
+        <input asp-for="OtherHC" type="number" min="0" step="0.01" class="form-control form-control-sm" />
+        <span asp-validation-for="OtherHC" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="OtherOutput" class="form-label">Other Output</label>
+        <input asp-for="OtherOutput" type="number" min="0" step="0.01" class="form-control form-control-sm" />
+        <span asp-validation-for="OtherOutput" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="SMTTop" class="form-label">SMT Top</label>
+        <input asp-for="SMTTop" type="number" min="0" step="1" class="form-control form-control-sm" />
+        <span asp-validation-for="SMTTop" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="SMTBottom" class="form-label">SMT Bottom</label>
+        <input asp-for="SMTBottom" type="number" min="0" step="1" class="form-control form-control-sm" />
+        <span asp-validation-for="SMTBottom" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="SMTTotal" class="form-label">SMT Total</label>
+        <input asp-for="SMTTotal" type="number" min="0" step="1" class="form-control form-control-sm" />
+        <span asp-validation-for="SMTTotal" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="Insert" class="form-label">Insert</label>
+        <input asp-for="Insert" type="number" min="0" step="1" class="form-control form-control-sm" />
+        <span asp-validation-for="Insert" class="text-danger small"></span>
+    </div>
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+        <label asp-for="PcsPerSheet" class="form-label">Pcs Per Sheet</label>
+        <input asp-for="PcsPerSheet" type="number" min="0" step="1" class="form-control form-control-sm" />
+        <span asp-validation-for="PcsPerSheet" class="text-danger small"></span>
+    </div>
+</div>

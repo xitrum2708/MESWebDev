@@ -1,26 +1,14 @@
 ﻿using AutoMapper;
-using Azure.Core;
-using ExcelDataReader.Log;
 using MESWebDev.Common;
 using MESWebDev.Data;
-using MESWebDev.Extensions;
 using MESWebDev.Models.COMMON;
-using MESWebDev.Models.IQC;
-using MESWebDev.Models.IQC.VM;
 using MESWebDev.Models.PE;
 using MESWebDev.Models.PE.DTO;
-using MESWebDev.Models.ProdPlan;
-using MESWebDev.Repositories;
 using MESWebDev.Services;
 using MESWebDev.Services.IService;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NuGet.Protocol.Core.Types;
-using OfficeOpenXml;
 using System.Data;
 using System.Drawing;
-using System.Globalization;
-using System.Threading.Tasks;
 using static MESWebDev.Common.Export2Excel;
 
 namespace MESWebDev.Controllers
@@ -148,6 +136,395 @@ namespace MESWebDev.Controllers
             pev.manpower = new();
             return View("Manpower/Index", pev);
         }
+        #endregion
+
+        //======================>> Production Capacity <<======================\\
+        #region PRODUCTION CAPACITY
+
+        private const int DefaultCapacityRows = 1000;
+
+        // Default parameters
+        private static Dictionary<string, object> CapacityDefaultParams()
+        {
+            return new Dictionary<string, object>
+            {
+                ["@filename"] = string.Empty,
+                ["@TopRows"] = DefaultCapacityRows
+            };
+        }
+
+        // Load result table after Upload / Add / Edit / Delete
+        private async Task<IActionResult> CapacityResultAsync()
+        {
+            var data = await _peService.GetProdCapacity(CapacityDefaultParams());
+
+            var rows = data?.AsEnumerable().ToList()
+                       ?? new List<DataRow>();
+            // save to session
+            HttpContext.Session.SetComplexDatatable(SD.SessionParametter.DataDT, data?? new DataTable());
+            return PartialView("ProdCapacity/_Result", rows);
+        }
+
+        // Get first validation error
+        private string CapacityValidationError()
+        {
+            return ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage)
+                .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
+                ?? "Invalid input data.";
+        }
+
+        //====================== INDEX ======================
+
+        [HttpGet]
+        public async Task<IActionResult> ProdCapacity()
+        {
+            await ResetSession();
+
+            PEViewModel pev = new()
+            {
+                data = await _peService.GetProdCapacity(
+                    CapacityDefaultParams()),
+                
+                prodCapacity = new ProdCapacityModel()
+            };
+
+            // save to session
+            HttpContext.Session.SetComplexDatatable(SD.SessionParametter.DataDT, pev.data);
+            return View("ProdCapacity/Index", pev);
+        }
+
+        //====================== SEARCH ======================
+
+        // Open Search Modal
+        [HttpGet]
+        public IActionResult ProdCapacitySearch()
+        {
+            return PartialView(
+                "ProdCapacity/__Search",
+                new ProdCapacitySearchCriteria()
+            );
+        }
+
+        // Search Data
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ProdCapacitySearch(
+            [FromForm] ProdCapacitySearchCriteria search)
+        {
+            if (search == null || !ModelState.IsValid)
+            {
+                return BadRequest(new
+                {
+                    error = CapacityValidationError()
+                });
+            }
+
+            if (search.InvalidDateRange)
+            {
+                return BadRequest(new
+                {
+                    error = "From Date cannot be later than To Date."
+                });
+            }
+
+            try
+            {
+                var parameters = BuildSearchDic(search);
+
+                var data = await _peService.GetProdCapacity(parameters);
+
+                var rows = data?.AsEnumerable().ToList()
+                           ?? new List<DataRow>();
+                HttpContext.Session.SetComplexDatatable(SD.SessionParametter.DataDT, data?? new DataTable());
+
+                return PartialView("ProdCapacity/_Result", rows);
+            }
+            catch (Exception)
+            {
+                // Log exception using ILogger in production.
+                return StatusCode(500, new
+                {
+                    error = "Unable to search Production Capacity."
+                });
+            }
+        }
+
+        private Dictionary<string,object> BuildSearchDic(ProdCapacitySearchCriteria search, string? fileName = null)
+        {
+            return new Dictionary<string, object>
+            {
+                ["@filename"] = fileName?? string.Empty,
+
+                ["@StartDate"] = search.StartDate.HasValue
+                        ? (object)search.StartDate.Value.Date
+                        : DBNull.Value,
+
+                ["@EndDate"] = search.EndDate.HasValue
+                        ? (object)search.EndDate.Value.Date
+                        : DBNull.Value,
+
+                ["@Type"] = search.Type?.Trim() ?? "",
+                ["@Customer1"] = search.Customer1?.Trim() ?? "",
+                ["@UNo"] = search.UNo?.Trim() ?? "",
+                ["@BModel"] = search.BModel?.Trim() ?? "",
+                ["@PCBNo"] = search.PCBNo?.Trim() ?? "",
+
+                ["@Version"] = search.Version ?? 0,
+
+                ["@TopRows"] = 0//search.HasSearch ? 0 : DefaultCapacityRows
+            };
+        }
+
+        //====================== UPLOAD ======================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadProdCapacity(IFormFile file1)
+        {
+            if (file1 == null || file1.Length == 0)
+            {
+                return BadRequest(new
+                {
+                    error = "No files to upload."
+                });
+            }
+
+            try
+            {
+                var result = await _peService.UploadProdCapacity(file1);
+
+                // Business validation error
+                if (!string.IsNullOrWhiteSpace(result.error_msg))
+                {
+                    return BadRequest(new
+                    {
+                        error = result.error_msg
+                    });
+                }
+
+                // Upload success -> Reload latest 1000 records
+
+                var rows = result.data?.AsEnumerable().ToList()
+                           ?? new List<DataRow>();
+
+                return PartialView("ProdCapacity/_Result", rows);
+            }
+            catch (Exception)
+            {
+                // Log exception using ILogger in production.
+                return StatusCode(500, new
+                {
+                    error = "An error occurred while uploading."
+                });
+            }
+        }
+
+        //====================== EXPORT ======================
+
+        [HttpGet]
+        public async Task<IActionResult> ExportProdCapacityExcel(
+                                            [FromQuery] ProdCapacitySearchCriteria? search,
+                                            string? filename = null)
+        {
+            search ??= new();
+
+            if (!ModelState.IsValid)
+                return BadRequest(new { error = "Invalid export parameters." });
+
+            if (search.InvalidDateRange)
+                return BadRequest(new { error = "Invalid date range." });
+
+            try
+            {
+                DataTable dt = HttpContext.Session.GetComplexDatatable(SD.SessionParametter.DataDT) ?? new DataTable();
+
+                byte[] fileBytes = await _peService.ExportProdCapacityExcel(dt);
+
+                return File(
+                    fileBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"PEProdCapacity_{DateTime.Now:yyyyMMddHHmmss}.xlsx"
+                );
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new
+                {
+                    error = "Unable to export Production Capacity."
+                });
+            }
+        }
+
+        //====================== DELETE ======================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteProdCapacity(
+            [FromBody] List<int> ids)
+        {
+            if (ids == null || ids.Count == 0 || ids.Any(id => id <= 0))
+            {
+                return BadRequest(new
+                {
+                    error = "Please select valid records to delete."
+                });
+            }
+
+            try
+            {
+                string msg = await _peService.DeleteProdCapacity(ids.Distinct().ToList());
+
+                if (!string.IsNullOrWhiteSpace(msg))
+                {
+                    return BadRequest(new
+                    {
+                        error = msg
+                    });
+                }
+
+                // Delete success -> Reload table
+                return await CapacityResultAsync();
+            }
+            catch (Exception)
+            {
+                // Log exception using ILogger in production.
+                return StatusCode(500, new
+                {
+                    error = "Unable to delete Production Capacity."
+                });
+            }
+        }
+
+        //====================== GET DETAIL ======================
+
+        [HttpGet]
+        public async Task<IActionResult> GetProdCapacityDetail(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new
+                {
+                    error = "Invalid Production Capacity ID."
+                });
+            }
+
+            try
+            {
+                ProdCapacityModel model =
+                    await _peService.GetProdCapacityDetail(id);
+
+                if (model == null || model.Id == 0)
+                {
+                    return NotFound(new
+                    {
+                        error = "Production Capacity record not found."
+                    });
+                }
+
+                return PartialView("ProdCapacity/_Edit", model);
+            }
+            catch (Exception)
+            {
+                // Log exception using ILogger in production.
+                return StatusCode(500, new
+                {
+                    error = "Unable to load Production Capacity detail."
+                });
+            }
+        }
+
+        //====================== EDIT ======================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProdCapacity(
+            [FromForm] ProdCapacityModel model)
+        {
+            if (model == null || !ModelState.IsValid)
+            {
+                return BadRequest(new
+                {
+                    error = CapacityValidationError()
+                });
+            }
+
+            if (model.Id <= 0)
+            {
+                return BadRequest(new
+                {
+                    error = "Invalid Production Capacity ID."
+                });
+            }
+
+            try
+            {
+                string msg = await _peService.EditProdCapacity(model);
+
+                // Business validation error
+                if (!string.IsNullOrWhiteSpace(msg))
+                {
+                    return BadRequest(new
+                    {
+                        error = msg
+                    });
+                }
+
+                // Edit success -> Reload table
+                return await CapacityResultAsync();
+            }
+            catch (Exception)
+            {
+                // Log exception using ILogger in production.
+                return StatusCode(500, new
+                {
+                    error = "Unable to update Production Capacity."
+                });
+            }
+        }
+
+        //====================== ADD ======================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddProdCapacity(
+            [FromForm] ProdCapacityModel model)
+        {
+            if (model == null || !ModelState.IsValid)
+            {
+                return BadRequest(new
+                {
+                    error = CapacityValidationError()
+                });
+            }
+
+            try
+            {
+                string msg = await _peService.AddProdCapacity(model);
+
+                // Business validation error
+                if (!string.IsNullOrWhiteSpace(msg))
+                {
+                    return BadRequest(new
+                    {
+                        error = msg
+                    });
+                }
+
+                // Add success -> Reload table
+                return await CapacityResultAsync();
+            }
+            catch (Exception)
+            {
+                // Log exception using ILogger in production.
+                return StatusCode(500, new
+                {
+                    error = "Unable to add Production Capacity."
+                });
+            }
+        }
+
         #endregion
 
         //======================>> Operation Master <<======================\\

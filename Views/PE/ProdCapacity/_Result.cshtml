@@ -1,0 +1,68 @@
+@using MESWebDev.Models.PE
+@using System.Data
+@using System.Collections.Generic
+@model IReadOnlyList<DataRow>
+
+
+<div class="capacity-result" data-record-count="@Model.Count">
+    @if (Model.Count == 0)
+    {
+        <div class="capacity-empty">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+            No matching Production Capacity records.
+        </div>
+    }
+@*     else
+    {
+        <div class="text-muted small mb-2">Records: @Model.Count</div>
+    } *@
+    <div class="capacity-table-scroll @(Model.Count == 0 ? "d-none" : "")">
+    @* Keep this ID + CSS class; they are required by the existing pagination.js. *@
+    <table class="table table-hover table-striped table-bordered align-middle paginated" id="mytable">
+        <thead>
+            <tr class="capacity-group">
+                <th rowspan="2" class="capacity-checkbox-column other">
+                    <input id="capacitySelectAll" class="form-check-input form-check" type="checkbox"
+                           aria-label="Select all rows on current page" />
+                </th>
+                @foreach (var group in ProdCapacityTable.Groups)
+                {
+                    <th colspan="@group.Count">@group.Name</th>
+                }
+                <th class="other" rowspan="2">Action</th>
+            </tr>
+            <tr class="capacity-columns">
+                @foreach (var col in ProdCapacityTable.Columns)
+                {
+                    <th class="@(col.Type == "man-day" ? "capacity-man-day" : "")">@col.Label</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                var id = ProdCapacityTable.Text(row, "Id");
+                <tr>
+                    <td class="capacity-checkbox-column text-center">
+                        <input type="checkbox" class="form-check-input capacity-check form-check"
+                               value="@id" aria-label="Select record @id" />
+                    </td>
+                    @foreach (var col in ProdCapacityTable.Columns)
+                    {
+                        <td class="capacity-value @(col.IsNumeric ? "text-end" : "text-start") @(col.Type == "man-day" ? "capacity-man-day" : "")">
+                            @ProdCapacityTable.Display(row, col)
+                        </td>
+                    }
+                    <td class="text-center">
+                        <button type="button" class="btn btn-warning btn-sm capacity-edit"
+                                data-id="@id" title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+</div>

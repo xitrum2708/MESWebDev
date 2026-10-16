@@ -1,4 +1,5 @@
-﻿using MESWebDev.Models.COMMON;
+﻿
+using MESWebDev.Models.COMMON;
 using MESWebDev.Models.PE;
 using MESWebDev.Models.PE.DTO;
 using System.ComponentModel;
@@ -17,6 +18,15 @@ namespace MESWebDev.Services.IService
         Task<string> EditManpower(ManpowerModel mm);
         Task<string> AddManpower(ManpowerModel mm);
         Task<ManpowerModel> GetManpowerDetail(int id);
+
+        // Prod Capacity 
+        Task<DataTable> GetProdCapacity(Dictionary<string, object> dic);
+        Task<PEViewModel> UploadProdCapacity(IFormFile f);
+        Task<string> DeleteProdCapacity(List<int> ids);
+        Task<string> EditProdCapacity(ProdCapacityModel model);
+        Task<string> AddProdCapacity(ProdCapacityModel model);
+        Task<ProdCapacityModel> GetProdCapacityDetail(int id);
+        Task<byte[]> ExportProdCapacityExcel(DataTable dt);
 
         // Operation
         Task<List<OperationModel>> GetOperation();

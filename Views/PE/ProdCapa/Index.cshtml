@@ -1,0 +1,103 @@
+@using MESWebDev.Common
+@using MESWebDev.Models.IQC.VM
+@using MESWebDev.Models.PE
+@using MESWebDev.Models.ProdPlan
+@using MESWebDev.Services
+@using System.Data
+@using System.Linq
+@inject ITranslationService TranslationService
+@model PEViewModel
+
+@{
+    var languageCode = Context.Session.GetString("LanguageCode") ?? "vi";
+    ViewData["Title"] = TranslationService.GetTranslation("MenuManagement", languageCode);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var rows = Model?.data?.AsEnumerable().ToList() ?? new List<DataRow>();
+}
+
+@section ContentHeader {
+    @await Html.PartialAsync("_Breadcrumb", ViewBag.Breadcrumbs as List<MESWebDev.DTO.BreadcrumbItemDto>)
+}
+
+<link rel="stylesheet" href="~/css/prod-capacity.css" asp-append-version="true" />
+
+<div class="app-content" id="prodCapacityPage"
+     data-url-index="@Url.Action("ProdCapacity", "PE")"
+     data-url-search="@Url.Action("ProdCapacitySearch", "PE")"
+     data-url-export="@Url.Action("ExportProdCapacityExcel", "PE")"
+     data-url-delete="@Url.Action("DeleteProdCapacity", "PE")"
+     data-url-detail="@Url.Action("GetProdCapacityDetail", "PE")">
+    <div class="container-fluid py-3">
+        @Html.AntiForgeryToken()
+        <div class="card border-0 shadow-sm">
+            <div class="capacity-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <h3 class="h5 fw-bold mb-0">
+                    <i class="bi bi-speedometer2 me-2"></i>Production Capacity
+                </h3>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" id="btnCapacitySearch" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-search me-1"></i>Search
+                    </button>
+                    <button type="button" id="btnCapacityUpload" class="btn btn-info btn-sm">
+                        <i class="bi bi-cloud-arrow-up me-1"></i>Upload
+                    </button>
+                    <button type="button" id="btnCapacityAdd" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i>Add
+                    </button>
+                    <button type="button" id="btnCapacityDelete" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash3 me-1"></i>Delete
+                        <span id="selectedCapacityCount" class="badge text-bg-light ms-1">0</span>
+                    </button>
+                    <button type="button" id="btnCapacityExport" class="btn btn-light btn-sm"
+                            title="Export all records returned by the export service">
+                        <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @if (ViewBag.Success != null)
+                {
+                    <div class="alert alert-success py-2">@ViewBag.Success</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model?.error_msg))
+                {
+                    <div class="alert alert-danger py-2">@Model.error_msg</div>
+                }
+                <div id="ResultArea" class="result-area">
+                    <partial name="_Result" model="rows" />
+                </div>
+            </div>
+
+            @* Keep the old pager structure. panigation.js listens to dataChanged. *@
+            <div class="card-footer pager p-0" id="prodCapacityPager"
+                 style="@(rows.Count == 0 ? "display:none" : "")">
+                <partial name="_PagingPartialView" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Search modal is requested from the controller, just like SMT LotPcb Search. *@
+<div id="capacitySearchArea"></div>
+<partial name="ProdCapacity/_Upload" />
+<partial name="ProdCapacity/_Delete" />
+<partial name="ProdCapacity/_Add" model="@(Model?.prodCapacity ?? new ProdCapacityModel())" />
+<div id="capacityEditArea"></div>
+
+@section Scripts {
+    <link href="~/css/pecss.css" rel="stylesheet" />
+    <link href="~/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/loadingpage.js" asp-append-version="true"></script>
+    <script src="~/js/panigation.js"></script>
+
+    <link href="~/css/DatetimePicker.css" rel="stylesheet" asp-append-version="true" />
+    <script src="~/js/DatetimePicker-IU.js" asp-append-version="true"></script>
+    <script src="~/js/DatetimePicker.js" asp-append-version="true"></script>
+    <link href="~/css/TableSort.css" rel="stylesheet" asp-append-version="true" />
+    <script src="~/js/TableSort.js" asp-append-version="true"></script>
+    <script src="~/js/prod-capacity.js" asp-append-version="true"></script>
+}

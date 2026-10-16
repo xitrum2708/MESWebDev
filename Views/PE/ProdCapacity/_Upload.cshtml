@@ -1,0 +1,33 @@
+<form id="UploadCapacityForm" enctype="multipart/form-data" asp-controller="PE" asp-action="UploadProdCapacity" method="post">
+    @Html.AntiForgeryToken()
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadCapacityLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content">
+                <div class="modal-header capacity-modal-header">
+                    <h5 class="modal-title" id="uploadCapacityLabel"><i class="bi bi-cloud-arrow-up me-2"></i>Upload Production Capacity</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-4">
+                    <div id="capacityUploadError"
+                         class="alert alert-danger d-none"
+                         role="alert">
+                    </div>
+@*                     <div class="alert alert-info py-2 small">
+                        <i class="bi bi-info-circle me-1"></i>Import requires the 28-column upload format (one header row). The formatted report sheet cannot be uploaded directly.
+                    </div> *@
+                    <label class="form-label fw-semibold" for="fileCapacityUpload">Excel file</label>
+                    <input id="fileCapacityUpload" name="file1" type="file" accept=".xlsx,.xls" class="form-control" required />
+                    <div class="form-text">Excel .xlsx or .xls, maximum 20 MB.</div>
+                    <a class="d-inline-flex align-items-center gap-2 mt-3" href="@Url.Content("~/UploadTemplate/PE/PEProdCapacity_Upload_Template.xlsx")" download>
+                        <i class="bi bi-file-earmark-excel"></i>Download upload template
+                    </a>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="btnUploadCapacity"><i class="bi bi-cloud-arrow-up me-1"></i>Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

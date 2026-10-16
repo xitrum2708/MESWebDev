@@ -97,6 +97,8 @@ namespace MESWebDev.Data
         public DbSet<TimeStudyNewDtlModel> UV_PE_TimeStudyNew_Dtl { get; set; }
         public DbSet<TimeStudyNewStepDtlModel> UV_PE_TimeStudyNewStep_Dtl { get; set; }
 
+        public DbSet<ProdCapacityModel> UV_PE_ProdCapacity_tbl { get; set; }
+
         //-------------- CHANGE MASTER -------------------
         public DbSet<ActionModel> Auth_Master_Action { get; set; }
         public DbSet<RoleModel> Auth_Master_Role { get; set; }
