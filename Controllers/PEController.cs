@@ -196,6 +196,14 @@ namespace MESWebDev.Controllers
         }
 
         //====================== SEARCH ======================
+        // fileter for search modal
+        [HttpGet]
+        public async Task<IActionResult> GetProdCapacityFilterOptions()
+        {
+            var result = await _peService.GetProdCapacityFilterOptions();
+
+            return Json(result);
+        }
 
         // Open Search Modal
         [HttpGet]

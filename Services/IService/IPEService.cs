@@ -28,6 +28,8 @@ namespace MESWebDev.Services.IService
         Task<ProdCapacityModel> GetProdCapacityDetail(int id);
         Task<byte[]> ExportProdCapacityExcel(DataTable dt);
 
+        Task<List<ProdCapacitySearchCriteria>> GetProdCapacityFilterOptions();
+
         // Operation
         Task<List<OperationModel>> GetOperation();
         Task<string> DeleteOperation(int id);

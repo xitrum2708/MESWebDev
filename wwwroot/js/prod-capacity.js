@@ -583,10 +583,25 @@
 
                 if (!$form.length) return;
 
+                // Reset to default
                 $form.trigger('reset');
 
+                // Type = All
+                // Trigger change to update list of Customer1
+                $form.find('#Type')
+                    .val('')
+                    .trigger('change');
+
+                // Customer1 = All
+                $form.find('#Customer1').val('');
+
+                // Version = All
+                $form.find('#Version').val('0');
+
+                // delete any previous error messages
                 clearModalError('searchModal');
 
+                // automatically submit the form to reload the default records
                 $form.trigger('submit');
             }
         );
@@ -1024,4 +1039,113 @@
         );
 
     });
+
+    (function () {
+        const filterUrl = $('#prodCapacityPage').data('url-filters');
+
+        if (!filterUrl) return;
+
+        let filterOptions = [];
+
+        // Get unique values from an array, remove empty strings, and sort alphabetically.
+        function getUniqueValues(values) {
+            return [...new Set(values.filter(Boolean))]
+                .sort((a, b) => a.localeCompare(b));
+        }
+
+        // Get data to select, includes All.
+        function fillSelect($select, values, selectedValue = '') {
+            const items = getUniqueValues(values);
+
+            $select.empty();
+            $select.append(new Option('All', ''));
+
+            items.forEach(value => {
+                $select.append(new Option(value, value));
+            });
+
+            $select.val(
+                items.includes(selectedValue) ? selectedValue : ''
+            );
+        }
+
+        // Filter Customer 1 by Type.
+        function loadCustomers($modal, selectedCustomer = '') {
+            const type = $modal.find('#Type').val() || '';
+
+            const customers = filterOptions
+                .filter(x => !type || x.type === type)
+                .map(x => x.customer1);
+
+            fillSelect(
+                $modal.find('#Customer1'),
+                customers,
+                selectedCustomer
+            );
+        }
+
+        // when modal Search open
+        $(document).on('shown.bs.modal', '#searchModal', function () {
+            const $modal = $(this);
+            const $type = $modal.find('#Type');
+            const $customer = $modal.find('#Customer1');
+            const $error = $modal.find('#capacitySearchError');
+
+            // Keep value from previous search to restore after AJAX load.
+            const selectedType =
+                $type.attr('data-selected') || $type.val() || '';
+
+            const selectedCustomer =
+                $customer.attr('data-selected') || $customer.val() || '';
+
+            $type.removeAttr('data-selected');
+            $customer.removeAttr('data-selected');
+
+            $error.text('');
+            $type.prop('disabled', true);
+            $customer.prop('disabled', true);
+
+            // Get data from database.
+            $.getJSON(filterUrl)
+                .done(function (data) {
+
+                    filterOptions = (Array.isArray(data) ? data : [])
+                        .map(x => ({
+                            type: String(x.type ?? x.Type ?? '').trim(),
+                            customer1: String(
+                                x.customer1 ?? x.Customer1 ?? ''
+                            ).trim()
+                        }))
+                        .filter(x => x.type);
+
+                    // Load all Type.
+                    fillSelect(
+                        $type,
+                        filterOptions.map(x => x.type),
+                        selectedType
+                    );
+
+                    // Load Customer 1 base on Tyle
+                    loadCustomers($modal, selectedCustomer);
+                })
+                .fail(function () {
+                    $error.text(
+                        'Cannot load Type and Customer list.'
+                    );
+                })
+                .always(function () {
+                    $type.prop('disabled', false);
+                    $customer.prop('disabled', false);
+                });
+        });
+
+        // When change Type.
+        $(document).on('change', '#searchModal #Type', function () {
+            const $modal = $(this).closest('#searchModal');
+
+            // Customer 1 back to All.
+            loadCustomers($modal);
+        });
+
+    })();
 })(jQuery);

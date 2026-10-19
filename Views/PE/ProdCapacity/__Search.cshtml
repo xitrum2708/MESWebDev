@@ -32,14 +32,28 @@
                             </div>
                         </div>
 
-                        <label class="col-4 col-form-label" asp-for="Customer1">Type</label>
+                        <!-- Type -->
+                        <label class="col-4 col-form-label" asp-for="Type">
+                            Type
+                        </label>
                         <div class="col-8">
-                            <input class="form-control" asp-for="Type" placeholder="Type" />
+                            <select asp-for="Type"
+                                    class="form-select form-select-sm"
+                                    data-selected="@Model?.Type">
+                                <option value="">All</option>
+                            </select>
                         </div>
 
-                        <label class="col-4 col-form-label" asp-for="Customer1">Customer 1</label>
+                        <!-- Customer 1 -->
+                        <label class="col-4 col-form-label" asp-for="Customer1">
+                            Customer 1
+                        </label>
                         <div class="col-8">
-                            <input class="form-control" asp-for="Customer1" placeholder="Customer 1" />
+                            <select asp-for="Customer1"
+                                    class="form-select form-select-sm"
+                                    data-selected="@Model?.Customer1">
+                                <option value="">All</option>
+                            </select>
                         </div>
 
                         <label class="col-4 col-form-label" asp-for="UNo">U-No</label>

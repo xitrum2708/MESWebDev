@@ -141,7 +141,7 @@ namespace MESWebDev.Models.PE
 
                 if (valid)
                     return number.ToString(
-                        column.Type == "man-day" ? "0.000000" : "#,##0.######",
+                        column.Type == "man-day" ? "0.0000" : "#,##0.####",
                         CultureInfo.InvariantCulture);
             }
 

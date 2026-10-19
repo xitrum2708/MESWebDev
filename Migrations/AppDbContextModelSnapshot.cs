@@ -4451,8 +4451,8 @@ namespace MESWebDev.Migrations
                     b.Property<decimal>("AssyHC")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("AssyOutput")
-                        .HasColumnType("decimal(18,6)");
+                    b.Property<int>("AssyOutput")
+                        .HasColumnType("int");
 
                     b.Property<string>("BModel")
                         .HasColumnType("nvarchar(max)");
@@ -4460,8 +4460,8 @@ namespace MESWebDev.Migrations
                     b.Property<decimal>("COBHC")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("COBOutput")
-                        .HasColumnType("decimal(18,6)");
+                    b.Property<int>("COBOutput")
+                        .HasColumnType("int");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
@@ -4482,8 +4482,8 @@ namespace MESWebDev.Migrations
                     b.Property<decimal>("InsertHC")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("InsertOutput")
-                        .HasColumnType("decimal(18,6)");
+                    b.Property<int>("InsertOutput")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -4491,14 +4491,14 @@ namespace MESWebDev.Migrations
                     b.Property<decimal>("MicHC")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("MicOutput")
-                        .HasColumnType("decimal(18,6)");
+                    b.Property<int>("MicOutput")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("OtherHC")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("OtherOutput")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<int>("OtherOutput")
+                        .HasColumnType("int");
 
                     b.Property<string>("PCBNo")
                         .HasColumnType("nvarchar(max)");
@@ -4512,8 +4512,8 @@ namespace MESWebDev.Migrations
                     b.Property<decimal>("SCHC")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("SCOutput")
-                        .HasColumnType("decimal(18,6)");
+                    b.Property<int>("SCOutput")
+                        .HasColumnType("int");
 
                     b.Property<int>("SMTBottom")
                         .HasColumnType("int");
@@ -4521,11 +4521,11 @@ namespace MESWebDev.Migrations
                     b.Property<decimal>("SMTHC")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("SMTOutput")
-                        .HasColumnType("decimal(18,6)");
+                    b.Property<int>("SMTOutput")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("SMTPointsTotal")
-                        .HasColumnType("decimal(18,6)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<int>("SMTTop")
                         .HasColumnType("int");

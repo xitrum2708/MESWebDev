@@ -441,12 +441,12 @@ namespace MESWebDev.Services
 
                 string[] requiredColumns =
                 {
-                    "Type", "Customer1", "Customer2", "UNo", "BModel", "PCBNo",
-                    "PCBType", "UpdateDate", "SMTPointsTotal", "COBHC", "COBOutput",
-                    "SMTHC", "SMTOutput", "InsertHC", "InsertOutput", "SCHC",
-                    "SCOutput", "AssyHC", "AssyOutput", "MicHC", "MicOutput",
-                    "OtherHC", "OtherOutput", "SMTTop", "SMTBottom", "SMTTotal", "Insert"
-                };
+             "Type", "Customer1", "Customer2", "UNo", "BModel", "PCBNo",
+             "PCBType", "UpdateDate", "SMTPointsTotal", "COBHC", "COBOutput",
+             "SMTHC", "SMTOutput", "InsertHC", "InsertOutput", "SCHC",
+             "SCOutput", "AssyHC", "AssyOutput", "MicHC", "MicOutput",
+             "OtherHC", "OtherOutput", "SMTTop", "SMTBottom", "SMTTotal", "Insert"
+         };
 
                 var missing = requiredColumns.Where(x => !colMap.ContainsKey(x)).ToArray();
                 if (missing.Length > 0)
@@ -489,6 +489,7 @@ namespace MESWebDev.Services
 
                     string Txt(string column) => Convert.ToString(Raw(column), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
                     int Int(string column) => ParseProdCapacityInt(Raw(column), excelRow, column);
+                    int Output(string column) => ParseProdCapacityOutputInt(Raw(column), excelRow, column);
                     decimal Dec(string column) => ParseProdCapacityDecimal(Raw(column), excelRow, column);
 
                     // Skip entirely blank rows, not rows where numeric values happen to be 0.
@@ -506,21 +507,22 @@ namespace MESWebDev.Services
                         PCBNo = Txt("PCBNo"),
                         PCBType = Txt("PCBType"),
                         UpdateDate = ParseProdCapacityDate(Raw("UpdateDate"), excelRow),
-                        SMTPointsTotal = Dec("SMTPointsTotal"),
+                        // Match decimal(18,4) in the current entity/database model.
+                        SMTPointsTotal = Math.Round(Dec("SMTPointsTotal"), 4, MidpointRounding.AwayFromZero),
                         COBHC = Dec("COBHC"),
-                        COBOutput = Dec("COBOutput"),
+                        COBOutput = Output("COBOutput"),
                         SMTHC = Dec("SMTHC"),
-                        SMTOutput = Dec("SMTOutput"),
+                        SMTOutput = Output("SMTOutput"),
                         InsertHC = Dec("InsertHC"),
-                        InsertOutput = Dec("InsertOutput"),
+                        InsertOutput = Output("InsertOutput"),
                         SCHC = Dec("SCHC"),
-                        SCOutput = Dec("SCOutput"),
+                        SCOutput = Output("SCOutput"),
                         AssyHC = Dec("AssyHC"),
-                        AssyOutput = Dec("AssyOutput"),
+                        AssyOutput = Output("AssyOutput"),
                         MicHC = Dec("MicHC"),
-                        MicOutput = Dec("MicOutput"),
+                        MicOutput = Output("MicOutput"),
                         OtherHC = Dec("OtherHC"),
-                        OtherOutput = Dec("OtherOutput"),
+                        OtherOutput = Output("OtherOutput"),
                         SMTTop = Int("SMTTop"),
                         SMTBottom = Int("SMTBottom"),
                         SMTTotal = Int("SMTTotal"),
@@ -548,7 +550,7 @@ namespace MESWebDev.Services
                     return result;
                 }
 
-                var duplicate = rows.Where(i=>i.UpdateDate != null).GroupBy(ProdCapacityKey, StringComparer.OrdinalIgnoreCase)
+                var duplicate = rows.Where(i => i.UpdateDate != null).GroupBy(ProdCapacityKey, StringComparer.OrdinalIgnoreCase)
                     //.Select(ProdCapacityKey)
                     .FirstOrDefault(x => x.Count() > 1);
                 if (duplicate != null)
@@ -609,6 +611,27 @@ namespace MESWebDev.Services
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
             return stream.ToArray();
+        }
+
+        // --------- for Search Filter Options ----------------
+        public async Task<List<ProdCapacitySearchCriteria>> GetProdCapacityFilterOptions()
+        {
+            return await _con.UV_PE_ProdCapacity_tbl
+                .AsNoTracking()
+                .Where(x => x.IsActive
+                    && x.Type != null
+                    && x.Type.Trim() != "")
+                .Select(x => new ProdCapacitySearchCriteria
+                {
+                    Type = x.Type!.Trim(),
+                    Customer1 = x.Customer1 == null
+                        ? ""
+                        : x.Customer1.Trim()
+                })
+                .Distinct()
+                .OrderBy(x => x.Type)
+                .ThenBy(x => x.Customer1)
+                .ToListAsync();
         }
 
         // ----------------------------------------------------------------------
@@ -685,7 +708,11 @@ namespace MESWebDev.Services
                     return Convert.ToDecimal(value, CultureInfo.InvariantCulture);
 
                 var text = ((string)value).Trim();
-                if (decimal.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out var number)
+                // Prefer an explicit decimal separator before allowing thousands separators.
+                // This prevents "12.5" being interpreted as 125 under a vi-VN culture.
+                if (decimal.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var number)
+                    || decimal.TryParse(text, NumberStyles.Float, CultureInfo.GetCultureInfo("vi-VN"), out number)
+                    || decimal.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out number)
                     || decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out number))
                     return number;
             }
@@ -696,6 +723,24 @@ namespace MESWebDev.Services
             throw new FormatException($"Invalid decimal at row {row}, column {column}: '{value}'.");
         }
 
+        // Output fields accept decimal Excel cells and round halves away from zero.
+        // Examples: 12.49 -> 12, 12.50 -> 13, -12.50 -> -13.
+        private static int ParseProdCapacityOutputInt(object? value, int row, string column)
+        {
+            var number = ParseProdCapacityDecimal(value, row, column);
+            return RoundProdCapacityToInt(number, $"Row {row}, column {column}");
+        }
+
+        private static int RoundProdCapacityToInt(decimal number, string source)
+        {
+            var rounded = Math.Round(number, 0, MidpointRounding.AwayFromZero);
+            if (rounded < int.MinValue || rounded > int.MaxValue)
+                throw new OverflowException($"{source}: rounded value {rounded} is outside Int32 range.");
+
+            return (int)rounded;
+        }
+
+        // Keep strict validation for SMTTop, SMTBottom, SMTTotal, Insert, PcsPerSheet.
         private static int ParseProdCapacityInt(object? value, int row, string column)
         {
             if (IsBlankProdCapacityCell(value)) return 0;
@@ -761,13 +806,13 @@ namespace MESWebDev.Services
 
         private static readonly string[] ProdCapacityDbColumns =
         {
-            "Type", "Customer1", "Customer2", "UNo", "BModel", "PCBNo",
-            "PCBType", "UpdateDate", "SMTPointsTotal", "COBHC", "COBOutput",
-            "SMTHC", "SMTOutput", "InsertHC", "InsertOutput", "SCHC",
-            "SCOutput", "AssyHC", "AssyOutput", "MicHC", "MicOutput",
-            "OtherHC", "OtherOutput", "SMTTop", "SMTBottom", "SMTTotal",
-            "Insert", "PcsPerSheet"
-        };
+     "Type", "Customer1", "Customer2", "UNo", "BModel", "PCBNo",
+     "PCBType", "UpdateDate", "SMTPointsTotal", "COBHC", "COBOutput",
+     "SMTHC", "SMTOutput", "InsertHC", "InsertOutput", "SCHC",
+     "SCOutput", "AssyHC", "AssyOutput", "MicHC", "MicOutput",
+     "OtherHC", "OtherOutput", "SMTTop", "SMTBottom", "SMTTotal",
+     "Insert", "PcsPerSheet"
+ };
 
         private static string CapacityNumberFormat(
                                 decimal value,
@@ -820,40 +865,40 @@ namespace MESWebDev.Services
 
             string[] headings =
             {
-                "Type", "Customer 1", "Customer 2", "U-No",
-                "B-Model", "PCB No", "PCB Type",
-                "Update Date", "FY", "VersionStatus", "SMT Points",
-                "SMT", "Insert", "SC", "Assy", "MIC", "Other", "TOTAL",
-                "COB HC", "COB Output",
-                "SMT HC", "SMT Output",
-                "Insert HC", "Insert Output",
-                "SC HC", "SC Output",
-                "Assy HC", "Assy Output",
-                "MIC HC", "MIC Output",
-                "Other HC", "Other Output",
-                "TOP", "Bottom", "TTL", "Insert", "Pcs / Sheet"
-            };
+         "Type", "Customer 1", "Customer 2", "U-No",
+         "B-Model", "PCB No", "PCB Type",
+         "Update Date", "FY", "VersionStatus", "SMT Points",
+         "SMT", "Insert", "SC", "Assy", "MIC", "Other", "TOTAL",
+         "COB HC", "COB Output",
+         "SMT HC", "SMT Output",
+         "Insert HC", "Insert Output",
+         "SC HC", "SC Output",
+         "Assy HC", "Assy Output",
+         "MIC HC", "MIC Output",
+         "Other HC", "Other Output",
+         "TOP", "Bottom", "TTL", "Insert", "Pcs / Sheet"
+     };
 
             int lastCol = headings.Length;
 
             // Ensure SQL returns calculated values.
             string[] manDayFields =
             {
-                "MdSMT",
-                "MdInsert",
-                "MdSC",
-                "MdAssy",
-                "MdMic",
-                "MdOther",
-                "MdTotal"
-            };
+         "MdSMT",
+         "MdInsert",
+         "MdSC",
+         "MdAssy",
+         "MdMic",
+         "MdOther",
+         "MdTotal"
+     };
 
             string[] requiredFields =
             {
-                "FY",
-                "VersionStatus",
-                "SMTPointsTotal"
-            };
+         "FY",
+         "VersionStatus",
+         "SMTPointsTotal"
+     };
 
             foreach (string field in requiredFields.Concat(manDayFields))
             {
@@ -877,19 +922,19 @@ namespace MESWebDev.Services
 
             var groups = new (string title, int from, int to, string hex)[]
             {
-                ("PRODUCT INFORMATION", 1, 7, "#263A52"),
-                ("PERIOD / POINTS", 8, 11, "#475569"),
-                ("MAN-DAY / PERSON-DAYS PER PIECE", 12, 18, "#087E8B"),
-                ("COB", 19, 20, "#263A52"),
-                ("SMT", 21, 22, "#263A52"),
-                ("INSERT", 23, 24, "#263A52"),
-                ("SC", 25, 26, "#263A52"),
-                ("ASSEMBLY", 27, 28, "#263A52"),
-                ("MIC", 29, 30, "#263A52"),
-                ("OTHER", 31, 32, "#263A52"),
-                ("SMT / PCB SIDE", 33, 35, "#445D75"),
-                ("INSERT", 36, 36, "#445D75"),
-                ("SHEET", 37, 37, "#445D75")
+         ("PRODUCT INFORMATION", 1, 7, "#263A52"),
+         ("PERIOD / POINTS", 8, 11, "#475569"),
+         ("MAN-DAY / PERSON-DAYS PER PIECE", 12, 18, "#087E8B"),
+         ("COB", 19, 20, "#263A52"),
+         ("SMT", 21, 22, "#263A52"),
+         ("INSERT", 23, 24, "#263A52"),
+         ("SC", 25, 26, "#263A52"),
+         ("ASSEMBLY", 27, 28, "#263A52"),
+         ("MIC", 29, 30, "#263A52"),
+         ("OTHER", 31, 32, "#263A52"),
+         ("SMT / PCB SIDE", 33, 35, "#445D75"),
+         ("INSERT", 36, 36, "#445D75"),
+         ("SHEET", 37, 37, "#445D75")
             };
 
             ws.Row(groupRow).Height = 29;
@@ -957,22 +1002,22 @@ namespace MESWebDev.Services
 
             string[] productFields =
             {
-                "Type", "Customer1", "Customer2",
-                "UNo", "BModel", "PCBNo", "PCBType"
-            };
+         "Type", "Customer1", "Customer2",
+         "UNo", "BModel", "PCBNo", "PCBType"
+     };
 
             string[] metricFields =
             {
-                "COBHC", "COBOutput",
-                "SMTHC", "SMTOutput",
-                "InsertHC", "InsertOutput",
-                "SCHC", "SCOutput",
-                "AssyHC", "AssyOutput",
-                "MicHC", "MicOutput",
-                "OtherHC", "OtherOutput",
-                "SMTTop", "SMTBottom", "SMTTotal",
-                "Insert", "PcsPerSheet"
-            };
+         "COBHC", "COBOutput",
+         "SMTHC", "SMTOutput",
+         "InsertHC", "InsertOutput",
+         "SCHC", "SCOutput",
+         "AssyHC", "AssyOutput",
+         "MicHC", "MicOutput",
+         "OtherHC", "OtherOutput",
+         "SMTTop", "SMTBottom", "SMTTotal",
+         "Insert", "PcsPerSheet"
+     };
 
             // ==================== DATA ====================
 
@@ -1092,16 +1137,16 @@ namespace MESWebDev.Services
                     XLColor.FromHtml("#065E68");
 
                 // ================= HC / OUTPUT S:AF =================
-                // All HC columns now use decimal.
-                // All Output columns are also read as decimal.
+                // Odd columns 19,21,...,31 are decimal HC; even columns are integer Output.
 
                 for (int c = 19; c <= 32; c++)
                 {
                     string field = metricFields[c - 19];
 
-                    decimal value = DataDecimal(record, field);
-
-                    SetCapacityDecimal(ws, r, c, value);
+                    if (c % 2 == 1)
+                        SetCapacityDecimal(ws, r, c, DataDecimal(record, field));
+                    else
+                        SetInt(ws, r, c, DataInt(record, field));
                 }
 
                 // ================= PCB / LAYOUT AG:AK =================
@@ -1228,22 +1273,30 @@ namespace MESWebDev.Services
                         }
                     }
                     else if (j <= 6)
+                    {
                         cell.Value = DataText(row, name);
-                    else if (name is "SMTPointsTotal" or "COBOutput" or "SMTOutput"
-                             or "InsertOutput" or "SCOutput" or "AssyOutput" or "MicOutput")
-                        cell.Value = DataDecimal(row, name);
+                    }
+                    else if (name == "SMTPointsTotal")
+                    {
+                        var value = DataDecimal(row, name);
+                        SetDecimal(ws, r, j + 1, value, CapacityNumberFormat(value, 4));
+                    }
+                    else if (name is "COBHC" or "SMTHC" or "InsertHC" or "SCHC"
+                             or "AssyHC" or "MicHC" or "OtherHC")
+                    {
+                        SetCapacityDecimal(ws, r, j + 1, DataDecimal(row, name));
+                    }
                     else
-                        cell.Value = DataInt(row, name);
+                    {
+                        // All Output and PCB/layout columns are integers.
+                        SetInt(ws, r, j + 1, DataInt(row, name));
+                    }
 
                     cell.Style.Font.FontName = "Aptos";
                     cell.Style.Font.FontSize = 10;
                     cell.Style.Font.FontColor = XLColor.FromHtml("#087C59"); // DB-linked values
                     cell.Style.Fill.BackgroundColor = i % 2 == 0
                         ? XLColor.White : XLColor.FromHtml("#F4F8FC");
-                    if (j > 7) cell.Style.NumberFormat.Format = "General";
-                    //name is "SMTPointsTotal" or "COBOutput" or "SMTOutput"
-                    //      or "InsertOutput" or "SCOutput" or "AssyOutput" or "MicOutput"
-                    //        ? "#,##0.######" : "#,##0";
                 }
             }
             if (data.Rows.Count > 0)
@@ -1266,7 +1319,8 @@ namespace MESWebDev.Services
         private static int DataInt(DataRow row, string field)
         {
             if (!row.Table.Columns.Contains(field) || row.IsNull(field)) return 0;
-            return Convert.ToInt32(row[field], CultureInfo.InvariantCulture);
+            // Handle legacy/stored procedure decimal values consistently with Excel upload.
+            return RoundProdCapacityToInt(DataDecimal(row, field), $"Column {field}");
         }
 
         private static DateTime? DataDate(DataRow row, string field)

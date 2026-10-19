@@ -34,56 +34,50 @@ public class ProdCapacityModel
     public DateTime? UpdateDate { get; set; }
 
     [DisplayName("SMT Points Total")]
-    [Column(TypeName = "decimal(18,6)")]
+    [Column(TypeName = "decimal(18,4)")]
     public decimal SMTPointsTotal { get; set; } = 0;
 
     [DisplayName("COB HC")]
     public decimal COBHC { get; set; } = 0;
 
     [DisplayName("COB Output")]
-    [Column(TypeName = "decimal(18,6)")]
-    public decimal COBOutput { get; set; } = 0;
+    public int COBOutput { get; set; } = 0;
 
     [DisplayName("SMT HC")]
     public decimal SMTHC { get; set; } = 0;
 
     [DisplayName("SMT Output")]
-    [Column(TypeName = "decimal(18,6)")]
-    public decimal SMTOutput { get; set; } = 0;
+    public int SMTOutput { get; set; } = 0;
 
     [DisplayName("Insert HC")]
     public decimal InsertHC { get; set; } = 0;
 
     [DisplayName("Insert Output")]
-    [Column(TypeName = "decimal(18,6)")]
-    public decimal InsertOutput { get; set; } = 0;
+    public int InsertOutput { get; set; } = 0;
 
     [DisplayName("SC HC")]
     public decimal SCHC { get; set; } = 0;
 
     [DisplayName("SC Output")]
-    [Column(TypeName = "decimal(18,6)")]
-    public decimal SCOutput { get; set; } = 0;
+    public int SCOutput { get; set; } = 0;
 
     [DisplayName("Assy HC")]
     public decimal AssyHC { get; set; } = 0;
 
     [DisplayName("Assy Output")]
-    [Column(TypeName = "decimal(18,6)")]
-    public decimal AssyOutput { get; set; } = 0;
+    public int AssyOutput { get; set; } = 0;
 
     [DisplayName("Mic HC")]
     public decimal MicHC { get; set; } = 0;
 
     [DisplayName("Mic Output")]
-    [Column(TypeName = "decimal(18,6)")]
-    public decimal MicOutput { get; set; } = 0;
+    public int MicOutput { get; set; } = 0;
 
     [DisplayName("Other HC")]
     public decimal OtherHC { get; set; } = 0;
 
     [DisplayName("Other Output")]
-    public decimal OtherOutput { get; set; } = 0;
+    public int OtherOutput { get; set; } = 0;
 
     [DisplayName("SMT Top")]
     public int SMTTop { get; set; } = 0;

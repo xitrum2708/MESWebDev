@@ -46,7 +46,7 @@
     <div class="col-12 mt-4"><div class="capacity-section-heading"><i class="bi bi-cpu me-2"></i>SMT & COB</div></div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
         <label asp-for="SMTPointsTotal" class="form-label">SMT Points Total</label>
-        <input asp-for="SMTPointsTotal" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <input asp-for="SMTPointsTotal" type="number" min="0" step="0.0001" class="form-control form-control-sm" />
         <span asp-validation-for="SMTPointsTotal" class="text-danger small"></span>
     </div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
@@ -56,7 +56,7 @@
     </div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
         <label asp-for="COBOutput" class="form-label">COB Output</label>
-        <input asp-for="COBOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <input asp-for="COBOutput" type="number" min="0" step="1" class="form-control form-control-sm" />
         <span asp-validation-for="COBOutput" class="text-danger small"></span>
     </div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
@@ -66,7 +66,7 @@
     </div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
         <label asp-for="SMTOutput" class="form-label">SMT Output</label>
-        <input asp-for="SMTOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <input asp-for="SMTOutput" type="number" min="0" step="1" class="form-control form-control-sm" />
         <span asp-validation-for="SMTOutput" class="text-danger small"></span>
     </div>
     <div class="col-12 mt-4"><div class="capacity-section-heading"><i class="bi bi-diagram-3 me-2"></i>Insert, SC & Assembly</div></div>
@@ -77,7 +77,7 @@
     </div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
         <label asp-for="InsertOutput" class="form-label">Insert Output</label>
-        <input asp-for="InsertOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <input asp-for="InsertOutput" type="number" min="0" step="1" class="form-control form-control-sm" />
         <span asp-validation-for="InsertOutput" class="text-danger small"></span>
     </div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
@@ -87,7 +87,7 @@
     </div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
         <label asp-for="SCOutput" class="form-label">SC Output</label>
-        <input asp-for="SCOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <input asp-for="SCOutput" type="number" min="0" step="1" class="form-control form-control-sm" />
         <span asp-validation-for="SCOutput" class="text-danger small"></span>
     </div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
@@ -97,7 +97,7 @@
     </div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
         <label asp-for="AssyOutput" class="form-label">Assembly Output</label>
-        <input asp-for="AssyOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <input asp-for="AssyOutput" type="number" min="0" step="1" class="form-control form-control-sm" />
         <span asp-validation-for="AssyOutput" class="text-danger small"></span>
     </div>
     <div class="col-12 mt-4"><div class="capacity-section-heading"><i class="bi bi-grid-3x3-gap me-2"></i>MIC, Other & PCB layout</div></div>
@@ -108,7 +108,7 @@
     </div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
         <label asp-for="MicOutput" class="form-label">MIC Output</label>
-        <input asp-for="MicOutput" type="number" min="0" step="0.000001" class="form-control form-control-sm" />
+        <input asp-for="MicOutput" type="number" min="0" step="1" class="form-control form-control-sm" />
         <span asp-validation-for="MicOutput" class="text-danger small"></span>
     </div>
     <div class="col-sm-6 col-lg-4 col-xl-3">
