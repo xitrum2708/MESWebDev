@@ -816,7 +816,7 @@ namespace MESWebDev.Services
 
         private static string CapacityNumberFormat(
                                 decimal value,
-                                int maxDecimals = 6)
+                                int maxDecimals = 4)
         {
             decimal rounded = Math.Round(
                 value,
@@ -1125,7 +1125,8 @@ namespace MESWebDev.Services
 
                     decimal value = DataDecimal(record, field);
 
-                    SetCapacityDecimal(ws, r, c, value);
+                    //SetCapacityDecimal(ws, r, c, value);
+                    SetDecimal(ws, r, c, value, "0.0000");
                 }
 
                 // Highlight Total Man-day.
